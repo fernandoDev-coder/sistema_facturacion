@@ -28,14 +28,51 @@ export default async function CompanySettingsPage({
         <form action={saveCompanySettingsAction} className="space-y-6">
           <div className="grid gap-4 md:grid-cols-2">
             <Field label="Nombre fiscal" name="fiscal_name" defaultValue={company?.fiscal_name} />
-            <Field label="CIF/NIF" name="tax_id" defaultValue={company?.tax_id} />
+            <Field
+              label="CIF/NIF"
+              name="tax_id"
+              defaultValue={company?.tax_id}
+              autoComplete="off"
+              maxLength={12}
+              pattern="([0-9]{8}[A-Za-z]|[XYZxyz][0-9]{7}[A-Za-z]|[A-Za-z][0-9]{7}[0-9A-Za-z])"
+              placeholder="B12345678"
+              title="Introduce un DNI, NIE o CIF válido."
+            />
             <Field label="Dirección" name="address" defaultValue={company?.address} className="md:col-span-2" />
-            <Field label="Código postal" name="postal_code" defaultValue={company?.postal_code} />
+            <Field
+              label="Código postal"
+              name="postal_code"
+              defaultValue={company?.postal_code}
+              inputMode="numeric"
+              maxLength={5}
+              pattern="[0-9]{5}"
+              placeholder="28001"
+              title="Debe tener 5 dígitos."
+            />
             <Field label="Ciudad" name="city" defaultValue={company?.city} />
             <Field label="Provincia" name="province" defaultValue={company?.province} />
             <Field label="Email" name="email" type="email" defaultValue={company?.email} />
-            <Field label="Teléfono" name="phone" defaultValue={company?.phone} />
-            <Field label="IBAN" name="iban" defaultValue={company?.iban} />
+            <Field
+              label="Teléfono"
+              name="phone"
+              defaultValue={company?.phone}
+              inputMode="tel"
+              maxLength={18}
+              pattern={"(\\+34|0034)?[\\s.-]?[6789][0-9\\s.-]{8,}"}
+              placeholder="+34600111222"
+              title="Introduce un teléfono español válido."
+            />
+            <Field
+              label="IBAN"
+              name="iban"
+              defaultValue={company?.iban}
+              autoComplete="off"
+              maxLength={42}
+              pattern={"[A-Za-z]{2}[0-9]{2}[A-Za-z0-9\\s]{11,38}"}
+              placeholder="ES9121000418450200051332"
+              title="Introduce un IBAN válido."
+              className="md:col-span-2"
+            />
             <label className="block md:col-span-2">
               <span className="text-sm font-medium text-zinc-800">Texto legal o pie de factura</span>
               <textarea

@@ -21,7 +21,19 @@ create table if not exists public.company_settings (
   invoice_footer text,
   created_at timestamp with time zone not null default now(),
   updated_at timestamp with time zone not null default now(),
-  constraint company_settings_owner_id_key unique (owner_id)
+  constraint company_settings_owner_id_key unique (owner_id),
+  constraint company_settings_tax_id_format_check check (
+    tax_id is null or tax_id ~ '^[A-Z0-9]{8,12}$'
+  ),
+  constraint company_settings_postal_code_format_check check (
+    postal_code is null or (postal_code ~ '^[0-9]{5}$' and substring(postal_code from 1 for 2)::int between 1 and 52)
+  ),
+  constraint company_settings_phone_format_check check (
+    phone is null or phone ~ '^\+34[6789][0-9]{8}$'
+  ),
+  constraint company_settings_iban_format_check check (
+    iban is null or iban ~ '^[A-Z]{2}[0-9]{2}[A-Z0-9]{11,30}$'
+  )
 );
 
 create table if not exists public.communities (
@@ -39,7 +51,19 @@ create table if not exists public.communities (
   default_vat numeric not null default 21,
   notes text,
   created_at timestamp with time zone not null default now(),
-  updated_at timestamp with time zone not null default now()
+  updated_at timestamp with time zone not null default now(),
+  constraint communities_tax_id_format_check check (
+    tax_id is null or tax_id ~ '^[A-Z0-9]{8,12}$'
+  ),
+  constraint communities_postal_code_format_check check (
+    postal_code is null or (postal_code ~ '^[0-9]{5}$' and substring(postal_code from 1 for 2)::int between 1 and 52)
+  ),
+  constraint communities_phone_format_check check (
+    phone is null or phone ~ '^\+34[6789][0-9]{8}$'
+  ),
+  constraint communities_default_vat_range_check check (
+    default_vat >= 0 and default_vat <= 100
+  )
 );
 
 create table if not exists public.invoices (
@@ -75,6 +99,46 @@ create index if not exists communities_owner_id_name_idx on public.communities(o
 create index if not exists invoices_owner_id_idx on public.invoices(owner_id);
 create index if not exists invoices_owner_year_month_idx on public.invoices(owner_id, year, month);
 create index if not exists invoices_community_id_idx on public.invoices(community_id);
+
+alter table public.company_settings drop constraint if exists company_settings_tax_id_format_check;
+alter table public.company_settings add constraint company_settings_tax_id_format_check check (
+  tax_id is null or tax_id ~ '^[A-Z0-9]{8,12}$'
+);
+
+alter table public.company_settings drop constraint if exists company_settings_postal_code_format_check;
+alter table public.company_settings add constraint company_settings_postal_code_format_check check (
+  postal_code is null or (postal_code ~ '^[0-9]{5}$' and substring(postal_code from 1 for 2)::int between 1 and 52)
+);
+
+alter table public.company_settings drop constraint if exists company_settings_phone_format_check;
+alter table public.company_settings add constraint company_settings_phone_format_check check (
+  phone is null or phone ~ '^\+34[6789][0-9]{8}$'
+);
+
+alter table public.company_settings drop constraint if exists company_settings_iban_format_check;
+alter table public.company_settings add constraint company_settings_iban_format_check check (
+  iban is null or iban ~ '^[A-Z]{2}[0-9]{2}[A-Z0-9]{11,30}$'
+);
+
+alter table public.communities drop constraint if exists communities_tax_id_format_check;
+alter table public.communities add constraint communities_tax_id_format_check check (
+  tax_id is null or tax_id ~ '^[A-Z0-9]{8,12}$'
+);
+
+alter table public.communities drop constraint if exists communities_postal_code_format_check;
+alter table public.communities add constraint communities_postal_code_format_check check (
+  postal_code is null or (postal_code ~ '^[0-9]{5}$' and substring(postal_code from 1 for 2)::int between 1 and 52)
+);
+
+alter table public.communities drop constraint if exists communities_phone_format_check;
+alter table public.communities add constraint communities_phone_format_check check (
+  phone is null or phone ~ '^\+34[6789][0-9]{8}$'
+);
+
+alter table public.communities drop constraint if exists communities_default_vat_range_check;
+alter table public.communities add constraint communities_default_vat_range_check check (
+  default_vat >= 0 and default_vat <= 100
+);
 
 create or replace function public.set_updated_at()
 returns trigger

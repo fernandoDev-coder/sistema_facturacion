@@ -12,18 +12,47 @@ export function CommunityForm({ action, community }: CommunityFormProps) {
       {community ? <input type="hidden" name="id" value={community.id} /> : null}
       <div className="grid gap-4 md:grid-cols-2">
         <Field label="Nombre / razón social" name="name" required defaultValue={community?.name} />
-        <Field label="CIF/NIF" name="tax_id" defaultValue={community?.tax_id} />
+        <Field
+          label="CIF/NIF"
+          name="tax_id"
+          defaultValue={community?.tax_id}
+          autoComplete="off"
+          maxLength={12}
+          pattern="([0-9]{8}[A-Za-z]|[XYZxyz][0-9]{7}[A-Za-z]|[A-Za-z][0-9]{7}[0-9A-Za-z])"
+          placeholder="B12345678"
+          title="Introduce un DNI, NIE o CIF válido."
+        />
         <Field label="Dirección" name="address" defaultValue={community?.address} className="md:col-span-2" />
-        <Field label="Código postal" name="postal_code" defaultValue={community?.postal_code} />
+        <Field
+          label="Código postal"
+          name="postal_code"
+          defaultValue={community?.postal_code}
+          inputMode="numeric"
+          maxLength={5}
+          pattern="[0-9]{5}"
+          placeholder="28001"
+          title="Debe tener 5 dígitos."
+        />
         <Field label="Ciudad" name="city" defaultValue={community?.city} />
         <Field label="Provincia" name="province" defaultValue={community?.province} />
         <Field label="Email" name="email" type="email" defaultValue={community?.email} />
-        <Field label="Teléfono" name="phone" defaultValue={community?.phone} />
+        <Field
+          label="Teléfono"
+          name="phone"
+          defaultValue={community?.phone}
+          inputMode="tel"
+          maxLength={18}
+          pattern={"(\\+34|0034)?[\\s.-]?[6789][0-9\\s.-]{8,}"}
+          placeholder="+34600111222"
+          title="Introduce un teléfono español válido."
+        />
         <Field
           label="IVA habitual"
           name="default_vat"
           type="number"
           step="0.01"
+          min={0}
+          max={100}
           defaultValue={community?.default_vat ?? 21}
         />
         <Field
