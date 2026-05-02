@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { buttonClass } from "@/components/button-styles";
+import { InvoiceLogo } from "@/components/invoice-logo";
 import { PrintButton } from "@/components/print-button";
 import { formatDate, money } from "@/lib/format";
 import { createClient, requireUser } from "@/lib/supabase/server";
@@ -45,6 +46,7 @@ export default async function PrintInvoicePage({ params }: { params: Promise<{ i
       <article className="print-page mx-auto min-h-[297mm] max-w-[210mm] bg-white p-10 text-zinc-950 shadow-sm ring-1 ring-zinc-200 print:p-0 print:shadow-none print:ring-0">
         <header className="flex items-start justify-between gap-10 border-b border-zinc-300 pb-8">
           <div>
+            <InvoiceLogo />
             <h1 className="text-2xl font-semibold">{company?.fiscal_name ?? "Configura los datos de tu empresa"}</h1>
             <div className="mt-3 space-y-1 text-sm text-zinc-700">
               <p>{company?.tax_id}</p>
