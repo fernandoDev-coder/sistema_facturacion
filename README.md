@@ -1,36 +1,69 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Facturación para comunidades
 
-## Getting Started
+Aplicación SaaS sencilla con Next.js App Router, TypeScript, Tailwind CSS y Supabase. Permite registrar usuarios, guardar comunidades, crear facturas individuales o mensuales y abrir una plantilla A4 imprimible desde el navegador.
 
-First, run the development server:
+## Requisitos
+
+- Node.js compatible con Next.js 16.
+- Cuenta en Supabase.
+- Cuenta en Vercel para despliegue.
+
+## Instalación
+
+```bash
+npm install
+cp .env.example .env.local
+```
+
+Rellena `.env.local`:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+```
+
+No se usa `SUPABASE_SERVICE_ROLE_KEY`; las operaciones funcionan con Supabase Auth, cookies SSR y Row Level Security.
+
+## Crear proyecto Supabase
+
+1. Crea un proyecto en Supabase.
+2. En `Authentication > Providers`, activa Email.
+3. Si quieres que el registro entre directamente sin email de confirmación, desactiva temporalmente `Confirm email`.
+4. Copia `Project URL` y `anon public key` en `.env.local`.
+
+## Ejecutar SQL
+
+Abre `SQL Editor` en Supabase y ejecuta el contenido de:
+
+```bash
+supabase/schema.sql
+```
+
+El script crea las tablas `profiles`, `company_settings`, `communities` e `invoices`, índices, triggers de `updated_at`, trigger de perfil al registrar usuario y políticas RLS para que cada usuario solo lea y modifique sus propias filas.
+
+## Desarrollo local
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abre `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Flujo de uso
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Registra un usuario o inicia sesión.
+2. Completa `/settings/company`.
+3. Crea comunidades en `/communities/new`.
+4. Crea una factura individual en `/invoices/new` o facturas mensuales en `/invoices/create-month`.
+5. Abre `/invoices/[id]/print` desde el botón `Imprimir`.
 
-## Learn More
+## Despliegue en Vercel
 
-To learn more about Next.js, take a look at the following resources:
+1. Sube el proyecto a un repositorio Git.
+2. Importa el repositorio en Vercel.
+3. Añade estas variables en `Project Settings > Environment Variables`:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+4. Despliega.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+La aplicación está preparada para Vercel y no requiere claves privadas en el servidor para esta versión.
