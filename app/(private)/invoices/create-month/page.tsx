@@ -19,7 +19,7 @@ export default async function CreateMonthPage({
 
   const [{ data: communities }, { data: existingInvoices }] = await Promise.all([
     supabase.from("communities").select("*").eq("owner_id", user.id).order("name"),
-    supabase.from("invoices").select("community_id,month,year").eq("owner_id", user.id),
+    supabase.from("invoices").select("community_id,month,year").eq("owner_id", user.id).eq("document_type", "invoice"),
   ]);
 
   return (

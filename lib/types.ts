@@ -1,3 +1,5 @@
+export type DocumentType = "invoice" | "budget";
+
 export type InvoiceStatus = "draft" | "pending" | "paid" | "cancelled";
 
 export const invoiceStatuses: Array<{ value: InvoiceStatus; label: string }> = [
@@ -43,6 +45,7 @@ export type Database = {
         Insert: Partial<Invoice> & {
           owner_id: string;
           community_id: string;
+          document_type?: DocumentType;
           invoice_number: string;
           invoice_date: string;
           month: number;
@@ -107,6 +110,7 @@ export type Invoice = {
   id: string;
   owner_id: string;
   community_id: string;
+  document_type: DocumentType;
   community_name: string | null;
   community_tax_id: string | null;
   community_address: string | null;

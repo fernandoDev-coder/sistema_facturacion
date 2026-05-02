@@ -2,18 +2,20 @@
 
 import { useMemo, useState } from "react";
 import { FormButton } from "@/components/form-button";
-import { money, monthNames } from "@/lib/format";
-import { invoiceStatuses, type Community, type Invoice } from "@/lib/types";
+import { documentLabel, money, monthNames } from "@/lib/format";
+import { invoiceStatuses, type Community, type DocumentType, type Invoice } from "@/lib/types";
 
 type InvoiceFormProps = {
   action: (formData: FormData) => Promise<void>;
   communities: Community[];
+  documentType: DocumentType;
   invoice?: Invoice;
   suggestedNumber?: string;
 };
 
-export function InvoiceForm({ action, communities, invoice, suggestedNumber }: InvoiceFormProps) {
+export function InvoiceForm({ action, communities, documentType, invoice, suggestedNumber }: InvoiceFormProps) {
   const today = new Date().toISOString().slice(0, 10);
+  const label = documentLabel(documentType).toLowerCase();
   const [communityId, setCommunityId] = useState(invoice?.community_id ?? communities[0]?.id ?? "");
   const [subject, setSubject] = useState(invoice?.subject ?? selectedCommunity(communityId)?.default_subject ?? "");
   const [amount, setAmount] = useState(String(invoice?.amount ?? 0));
@@ -40,6 +42,7 @@ export function InvoiceForm({ action, communities, invoice, suggestedNumber }: I
   return (
     <form action={action} className="space-y-6">
       {invoice ? <input type="hidden" name="id" value={invoice.id} /> : null}
+      <input type="hidden" name="document_type" value={documentType} />
       <div className="grid gap-4 md:grid-cols-2">
         <label className="block">
           <span className="text-sm font-medium text-zinc-800">Comunidad</span>
@@ -59,12 +62,18 @@ export function InvoiceForm({ action, communities, invoice, suggestedNumber }: I
         </label>
 
         <Field
-          label="Número de factura"
+          label={`Numero de ${label}`}
           name="invoice_number"
           required
           defaultValue={invoice?.invoice_number ?? suggestedNumber}
         />
-        <Field label="Fecha de factura" name="invoice_date" type="date" required defaultValue={invoice?.invoice_date ?? today} />
+        <Field
+          label={`Fecha de ${label}`}
+          name="invoice_date"
+          type="date"
+          required
+          defaultValue={invoice?.invoice_date ?? today}
+        />
         <label className="block">
           <span className="text-sm font-medium text-zinc-800">Mes</span>
           <select
@@ -80,7 +89,7 @@ export function InvoiceForm({ action, communities, invoice, suggestedNumber }: I
             ))}
           </select>
         </label>
-        <Field label="Año" name="year" type="number" required defaultValue={invoice?.year ?? new Date().getFullYear()} />
+        <Field label="Anio" name="year" type="number" required defaultValue={invoice?.year ?? new Date().getFullYear()} />
         <label className="block">
           <span className="text-sm font-medium text-zinc-800">Estado</span>
           <select
@@ -97,12 +106,13 @@ export function InvoiceForm({ action, communities, invoice, suggestedNumber }: I
         </label>
         <label className="block md:col-span-2">
           <span className="text-sm font-medium text-zinc-800">Asunto / concepto</span>
-          <input
+          <textarea
             name="subject"
             required
+            rows={4}
             value={subject}
             onChange={(event) => setSubject(event.target.value)}
-            className="mt-1 h-10 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
+            className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
           />
         </label>
         <label className="block">
@@ -147,7 +157,7 @@ export function InvoiceForm({ action, communities, invoice, suggestedNumber }: I
           />
         </label>
       </div>
-      <FormButton>{invoice ? "Guardar cambios" : "Crear factura"}</FormButton>
+      <FormButton>{invoice ? "Guardar cambios" : `Crear ${label}`}</FormButton>
     </form>
   );
 }

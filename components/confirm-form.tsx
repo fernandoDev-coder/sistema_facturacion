@@ -8,9 +8,10 @@ type ConfirmFormProps = {
   label: string;
   message: string;
   className?: string;
+  fields?: Record<string, string>;
 };
 
-export function ConfirmForm({ action, id, label, message, className = "" }: ConfirmFormProps) {
+export function ConfirmForm({ action, id, label, message, className = "", fields }: ConfirmFormProps) {
   return (
     <form
       action={action}
@@ -22,6 +23,9 @@ export function ConfirmForm({ action, id, label, message, className = "" }: Conf
       className="inline"
     >
       <input type="hidden" name="id" value={id} />
+      {fields
+        ? Object.entries(fields).map(([name, value]) => <input key={name} type="hidden" name={name} value={value} />)
+        : null}
       <button
         type="submit"
         className={buttonClass({ variant: "danger", size: "sm", className })}

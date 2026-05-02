@@ -1,3 +1,5 @@
+import type { DocumentType } from "@/lib/types";
+
 export const monthNames = [
   "Enero",
   "Febrero",
@@ -27,6 +29,15 @@ export function formatDate(value: string | null | undefined) {
   return new Intl.DateTimeFormat("es-ES").format(new Date(`${value}T00:00:00`));
 }
 
+export function formatLongDate(value: string | null | undefined) {
+  if (!value) return "";
+  return new Intl.DateTimeFormat("es-ES", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(new Date(`${value}T00:00:00`));
+}
+
 export function currentMonthYear() {
   const now = new Date();
   return {
@@ -35,8 +46,13 @@ export function currentMonthYear() {
   };
 }
 
-export function invoiceNumber(year: number, month: number, sequence: number) {
-  return `FAC-${year}-${String(month).padStart(2, "0")}-${String(sequence).padStart(4, "0")}`;
+export function documentNumber(documentType: DocumentType, year: number, sequence: number) {
+  const base = `${String(sequence).padStart(4, "0")}-${year}`;
+  return documentType === "budget" ? `P-${base}` : base;
+}
+
+export function documentLabel(documentType: DocumentType) {
+  return documentType === "budget" ? "Presupuesto" : "Factura";
 }
 
 export function toDecimal(value: FormDataEntryValue | null, fallback = 0) {

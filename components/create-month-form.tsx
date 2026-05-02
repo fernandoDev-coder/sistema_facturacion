@@ -133,10 +133,11 @@ export function CreateMonthForm({
                   ) : null}
                 </td>
                 <td className="px-4 py-3 align-top">
-                  <input
+                  <textarea
                     name={`subject_${community.id}`}
                     defaultValue={community.default_subject ?? `Cuota comunidad ${monthNames[month - 1]} ${year}`}
-                    className="h-10 w-full min-w-72 rounded-md border border-zinc-300 px-3 text-sm"
+                    rows={3}
+                    className="w-full min-w-[28rem] rounded-md border border-zinc-300 px-3 py-2 text-sm leading-6"
                   />
                 </td>
                 <td className="px-4 py-3 align-top">

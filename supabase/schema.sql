@@ -70,6 +70,7 @@ create table if not exists public.invoices (
   id uuid primary key default gen_random_uuid(),
   owner_id uuid not null references auth.users(id) on delete cascade,
   community_id uuid not null references public.communities(id) on delete cascade,
+  document_type text not null default 'invoice',
   community_name text,
   community_tax_id text,
   community_address text,
@@ -93,11 +94,14 @@ create table if not exists public.invoices (
   updated_at timestamp with time zone not null default now()
 );
 
+alter table public.invoices add column if not exists document_type text not null default 'invoice';
+
 create index if not exists company_settings_owner_id_idx on public.company_settings(owner_id);
 create index if not exists communities_owner_id_idx on public.communities(owner_id);
 create index if not exists communities_owner_id_name_idx on public.communities(owner_id, name);
 create index if not exists invoices_owner_id_idx on public.invoices(owner_id);
 create index if not exists invoices_owner_year_month_idx on public.invoices(owner_id, year, month);
+create index if not exists invoices_owner_document_year_idx on public.invoices(owner_id, document_type, year);
 create index if not exists invoices_community_id_idx on public.invoices(community_id);
 
 alter table public.company_settings drop constraint if exists company_settings_tax_id_format_check;
@@ -138,6 +142,11 @@ alter table public.communities add constraint communities_phone_format_check che
 alter table public.communities drop constraint if exists communities_default_vat_range_check;
 alter table public.communities add constraint communities_default_vat_range_check check (
   default_vat >= 0 and default_vat <= 100
+);
+
+alter table public.invoices drop constraint if exists invoices_document_type_check;
+alter table public.invoices add constraint invoices_document_type_check check (
+  document_type in ('invoice', 'budget')
 );
 
 create or replace function public.set_updated_at()

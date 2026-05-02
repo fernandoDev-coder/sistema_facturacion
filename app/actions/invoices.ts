@@ -2,13 +2,15 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { calculateTotals, invoiceNumber, nullableText, requiredText, toDecimal } from "@/lib/format";
+import { calculateTotals, documentNumber, nullableText, requiredText, toDecimal } from "@/lib/format";
 import { createClient, requireUser } from "@/lib/supabase/server";
-import type { Community, InvoiceStatus } from "@/lib/types";
+import type { Community, DocumentType, InvoiceStatus } from "@/lib/types";
 
 const allowedStatuses: InvoiceStatus[] = ["draft", "pending", "paid", "cancelled"];
+const allowedDocumentTypes: DocumentType[] = ["invoice", "budget"];
 
 function parseInvoicePayload(formData: FormData) {
+  const documentType = requiredText(formData.get("document_type")) as DocumentType;
   const communityId = requiredText(formData.get("community_id"));
   const invoiceNumber = requiredText(formData.get("invoice_number"));
   const invoiceDate = requiredText(formData.get("invoice_date"));
@@ -21,14 +23,19 @@ function parseInvoicePayload(formData: FormData) {
   const totals = calculateTotals(amount, vatRate);
 
   if (!communityId || !invoiceNumber || !invoiceDate || !subject || !month || !year) {
-    throw new Error("Faltan campos obligatorios de la factura.");
+    throw new Error("Faltan campos obligatorios del documento.");
+  }
+
+  if (!allowedDocumentTypes.includes(documentType)) {
+    throw new Error("Tipo de documento no valido.");
   }
 
   if (!allowedStatuses.includes(status)) {
-    throw new Error("Estado de factura no válido.");
+    throw new Error("Estado no valido.");
   }
 
   return {
+    document_type: documentType,
     community_id: communityId,
     invoice_number: invoiceNumber,
     invoice_date: invoiceDate,
@@ -46,59 +53,37 @@ function parseInvoicePayload(formData: FormData) {
 }
 
 export async function createInvoiceAction(formData: FormData) {
-  const user = await requireUser();
-  const supabase = await createClient();
-  const payload = parseInvoicePayload(formData);
-  const snapshot = await getCommunitySnapshot(supabase, user.id, payload.community_id);
+  return createDocumentAction(formData, "invoice");
+}
 
-  const { error } = await supabase.from("invoices").insert({
-    owner_id: user.id,
-    ...snapshot,
-    ...payload,
-  });
-
-  if (error) {
-    redirect(`/invoices/new?message=${encodeURIComponent(error.message)}`);
-  }
-
-  revalidatePath("/invoices");
-  redirect("/invoices");
+export async function createBudgetAction(formData: FormData) {
+  return createDocumentAction(formData, "budget");
 }
 
 export async function updateInvoiceAction(formData: FormData) {
-  const user = await requireUser();
-  const id = requiredText(formData.get("id"));
-  const supabase = await createClient();
-  const payload = parseInvoicePayload(formData);
-  const snapshot = await getCommunitySnapshot(supabase, user.id, payload.community_id);
+  return updateDocumentAction(formData, "invoice");
+}
 
-  const { error } = await supabase
-    .from("invoices")
-    .update({ ...snapshot, ...payload })
-    .eq("id", id)
-    .eq("owner_id", user.id);
-
-  if (error) {
-    redirect(`/invoices/${id}/edit?message=${encodeURIComponent(error.message)}`);
-  }
-
-  revalidatePath("/invoices");
-  redirect("/invoices");
+export async function updateBudgetAction(formData: FormData) {
+  return updateDocumentAction(formData, "budget");
 }
 
 export async function deleteInvoiceAction(formData: FormData) {
   const user = await requireUser();
   const id = requiredText(formData.get("id"));
+  const redirectPath = requiredText(formData.get("redirect_path")) || "/invoices";
   const supabase = await createClient();
 
   const { error } = await supabase.from("invoices").delete().eq("id", id).eq("owner_id", user.id);
 
   if (error) {
-    redirect(`/invoices?message=${encodeURIComponent(error.message)}`);
+    redirect(`${redirectPath}?message=${encodeURIComponent(error.message)}`);
   }
 
   revalidatePath("/invoices");
-  redirect("/invoices");
+  revalidatePath("/budgets");
+  revalidatePath("/dashboard");
+  redirect(redirectPath);
 }
 
 export async function markInvoicePaidAction(formData: FormData) {
@@ -110,13 +95,15 @@ export async function markInvoicePaidAction(formData: FormData) {
     .from("invoices")
     .update({ status: "paid", updated_at: new Date().toISOString() })
     .eq("id", id)
-    .eq("owner_id", user.id);
+    .eq("owner_id", user.id)
+    .eq("document_type", "invoice");
 
   if (error) {
     redirect(`/invoices?message=${encodeURIComponent(error.message)}`);
   }
 
   revalidatePath("/invoices");
+  revalidatePath("/dashboard");
   redirect("/invoices");
 }
 
@@ -129,13 +116,14 @@ export async function createMonthlyInvoicesAction(formData: FormData) {
   const selectedCommunityIds = formData.getAll("include").map(String);
 
   if (!month || !year || selectedCommunityIds.length === 0) {
-    redirect("/invoices/create-month?message=Selecciona mes, año y al menos una comunidad.");
+    redirect("/invoices/create-month?message=Selecciona mes, anio y al menos una comunidad.");
   }
 
   const { data: duplicates, error: duplicateError } = await supabase
     .from("invoices")
     .select("community_id")
     .eq("owner_id", user.id)
+    .eq("document_type", "invoice")
     .eq("month", month)
     .eq("year", year)
     .in("community_id", selectedCommunityIds);
@@ -157,7 +145,7 @@ export async function createMonthlyInvoicesAction(formData: FormData) {
     .select("id", { count: "exact", head: true })
     .eq("owner_id", user.id)
     .eq("year", year)
-    .eq("month", month);
+    .eq("document_type", "invoice");
 
   const { data: selectedCommunities, error: communitiesError } = await supabase
     .from("communities")
@@ -180,8 +168,9 @@ export async function createMonthlyInvoicesAction(formData: FormData) {
     return {
       owner_id: user.id,
       community_id: communityId,
+      document_type: "invoice" as const,
       ...snapshotFromCommunity(community),
-      invoice_number: invoiceNumber(year, month, (count ?? 0) + index + 1),
+      invoice_number: documentNumber("invoice", year, (count ?? 0) + index + 1),
       invoice_date: `${year}-${String(month).padStart(2, "0")}-01`,
       month,
       year,
@@ -202,7 +191,58 @@ export async function createMonthlyInvoicesAction(formData: FormData) {
   }
 
   revalidatePath("/invoices");
+  revalidatePath("/dashboard");
   redirect("/invoices");
+}
+
+async function createDocumentAction(formData: FormData, documentType: DocumentType) {
+  const user = await requireUser();
+  const supabase = await createClient();
+  const payload = parseInvoicePayload(formData);
+  const snapshot = await getCommunitySnapshot(supabase, user.id, payload.community_id);
+
+  if (payload.document_type !== documentType) {
+    throw new Error("Tipo de documento incoherente.");
+  }
+
+  const { error } = await supabase.from("invoices").insert({
+    owner_id: user.id,
+    ...snapshot,
+    ...payload,
+  });
+
+  if (error) {
+    redirect(`${basePath(documentType)}/new?message=${encodeURIComponent(error.message)}`);
+  }
+
+  revalidateDocumentPaths(documentType);
+  redirect(basePath(documentType));
+}
+
+async function updateDocumentAction(formData: FormData, documentType: DocumentType) {
+  const user = await requireUser();
+  const id = requiredText(formData.get("id"));
+  const supabase = await createClient();
+  const payload = parseInvoicePayload(formData);
+  const snapshot = await getCommunitySnapshot(supabase, user.id, payload.community_id);
+
+  if (payload.document_type !== documentType) {
+    throw new Error("Tipo de documento incoherente.");
+  }
+
+  const { error } = await supabase
+    .from("invoices")
+    .update({ ...snapshot, ...payload })
+    .eq("id", id)
+    .eq("owner_id", user.id)
+    .eq("document_type", documentType);
+
+  if (error) {
+    redirect(`${basePath(documentType)}/${id}/edit?message=${encodeURIComponent(error.message)}`);
+  }
+
+  revalidateDocumentPaths(documentType);
+  redirect(basePath(documentType));
 }
 
 async function getCommunitySnapshot(
@@ -231,4 +271,13 @@ function snapshotFromCommunity(community?: Community | null) {
     community_email: community?.email ?? null,
     community_phone: community?.phone ?? null,
   };
+}
+
+function basePath(documentType: DocumentType) {
+  return documentType === "budget" ? "/budgets" : "/invoices";
+}
+
+function revalidateDocumentPaths(documentType: DocumentType) {
+  revalidatePath(basePath(documentType));
+  revalidatePath("/dashboard");
 }

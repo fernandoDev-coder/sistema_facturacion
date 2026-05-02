@@ -6,6 +6,7 @@ const navItems = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/communities", label: "Comunidades" },
   { href: "/invoices", label: "Facturas" },
+  { href: "/budgets", label: "Presupuestos" },
   { href: "/settings/company", label: "Empresa" },
 ];
 

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { deleteInvoiceAction, markInvoicePaidAction } from "@/app/actions/invoices";
+import { deleteInvoiceAction } from "@/app/actions/invoices";
 import { buttonClass } from "@/components/button-styles";
 import { ConfirmForm } from "@/components/confirm-form";
 import { Message } from "@/components/message";
@@ -8,7 +8,7 @@ import { money, monthNames } from "@/lib/format";
 import { createClient, requireUser } from "@/lib/supabase/server";
 import { invoiceStatuses, type InvoiceStatus, type InvoiceWithCommunity } from "@/lib/types";
 
-export default async function InvoicesPage({
+export default async function BudgetsPage({
   searchParams,
 }: {
   searchParams: Promise<{
@@ -29,7 +29,7 @@ export default async function InvoicesPage({
     .from("invoices")
     .select("*, communities(id,name,tax_id,city)")
     .eq("owner_id", user.id)
-    .eq("document_type", "invoice")
+    .eq("document_type", "budget")
     .order("invoice_date", { ascending: false })
     .order("invoice_number", { ascending: false });
 
@@ -39,20 +39,17 @@ export default async function InvoicesPage({
   if (isInvoiceStatus(filters.status)) query = query.eq("status", filters.status);
 
   const { data, error } = await query;
-  const invoices = (data ?? []) as InvoiceWithCommunity[];
+  const budgets = (data ?? []) as InvoiceWithCommunity[];
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">Facturas</h1>
-          <p className="mt-1 text-sm text-zinc-600">Listado, filtros y acciones de cobro.</p>
+          <h1 className="text-2xl font-semibold">Presupuestos</h1>
+          <p className="mt-1 text-sm text-zinc-600">Listado y edicion de presupuestos imprimibles.</p>
         </div>
         <div className="flex gap-2">
-          <Link href="/invoices/create-month" className={buttonClass({ variant: "secondary" })}>
-            Crear mes
-          </Link>
-          <Link href="/invoices/new" className={buttonClass({ variant: "primary" })}>
+          <Link href="/budgets/new" className={buttonClass({ variant: "primary" })}>
             Crear
           </Link>
         </div>
@@ -112,38 +109,32 @@ export default async function InvoicesPage({
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-100">
-            {invoices.length ? (
-              invoices.map((invoice) => (
-                <tr key={invoice.id}>
-                  <td className="px-4 py-3 font-medium">{invoice.invoice_number}</td>
-                  <td className="px-4 py-3 text-sm text-zinc-700">{invoice.communities?.name ?? "-"}</td>
+            {budgets.length ? (
+              budgets.map((budget) => (
+                <tr key={budget.id}>
+                  <td className="px-4 py-3 font-medium">{budget.invoice_number}</td>
+                  <td className="px-4 py-3 text-sm text-zinc-700">{budget.communities?.name ?? "-"}</td>
                   <td className="px-4 py-3 text-sm text-zinc-600">
-                    {monthNames[invoice.month - 1]} {invoice.year}
+                    {monthNames[budget.month - 1]} {budget.year}
                   </td>
-                  <td className="px-4 py-3 text-sm font-medium">{money(invoice.total)}</td>
+                  <td className="px-4 py-3 text-sm font-medium">{money(budget.total)}</td>
                   <td className="px-4 py-3">
-                    <StatusBadge status={invoice.status} />
+                    <StatusBadge status={budget.status} />
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex flex-wrap justify-end gap-2">
-                      <Link href={`/invoices/${invoice.id}/print`} className={buttonClass({ variant: "print", size: "sm" })}>
+                      <Link href={`/budgets/${budget.id}/print`} className={buttonClass({ variant: "print", size: "sm" })}>
                         Imprimir
                       </Link>
-                      <Link href={`/invoices/${invoice.id}/edit`} className={buttonClass({ variant: "warning", size: "sm" })}>
+                      <Link href={`/budgets/${budget.id}/edit`} className={buttonClass({ variant: "warning", size: "sm" })}>
                         Editar
                       </Link>
-                      {invoice.status !== "paid" ? (
-                        <form action={markInvoicePaidAction} className="inline">
-                          <input type="hidden" name="id" value={invoice.id} />
-                          <button className={buttonClass({ variant: "success", size: "sm" })}>Pagada</button>
-                        </form>
-                      ) : null}
                       <ConfirmForm
                         action={deleteInvoiceAction}
-                        id={invoice.id}
+                        id={budget.id}
                         label="Eliminar"
-                        message="Eliminar esta factura?"
-                        fields={{ redirect_path: "/invoices" }}
+                        message="Eliminar este presupuesto?"
+                        fields={{ redirect_path: "/budgets" }}
                       />
                     </div>
                   </td>
@@ -152,7 +143,7 @@ export default async function InvoicesPage({
             ) : (
               <tr>
                 <td colSpan={6} className="px-4 py-10 text-center text-sm text-zinc-500">
-                  No hay facturas con estos filtros.
+                  No hay presupuestos con estos filtros.
                 </td>
               </tr>
             )}
