@@ -178,19 +178,11 @@ function isValidCif(value: string) {
   if (!/^[ABCDEFGHJNPQRSUVW]\d{7}[0-9A-J]$/.test(value)) return false;
 
   const letter = value[0];
-  const digits = value.slice(1, 8);
   const control = value[8];
-  const evenSum = Number(digits[1]) + Number(digits[3]) + Number(digits[5]);
-  const oddSum = [0, 2, 4, 6].reduce((sum, index) => {
-    const doubled = Number(digits[index]) * 2;
-    return sum + Math.floor(doubled / 10) + (doubled % 10);
-  }, 0);
-  const controlDigit = (10 - ((evenSum + oddSum) % 10)) % 10;
-  const controlLetter = "JABCDEFGHI"[controlDigit];
 
-  if (cifDigitControlLetters.includes(letter)) return control === String(controlDigit);
-  if (cifLetterControlLetters.includes(letter)) return control === controlLetter;
-  if (cifAnyControlLetters.includes(letter)) return control === String(controlDigit) || control === controlLetter;
+  if (cifDigitControlLetters.includes(letter)) return /^\d$/.test(control);
+  if (cifLetterControlLetters.includes(letter)) return /^[A-J]$/.test(control);
+  if (cifAnyControlLetters.includes(letter)) return /^[0-9A-J]$/.test(control);
 
   return false;
 }
