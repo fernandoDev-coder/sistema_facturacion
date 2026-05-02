@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { buttonClass } from "@/components/button-styles";
 import { PrintButton } from "@/components/print-button";
 import { formatDate, money } from "@/lib/format";
 import { createClient, requireUser } from "@/lib/supabase/server";
@@ -35,7 +36,7 @@ export default async function PrintInvoicePage({ params }: { params: Promise<{ i
   return (
     <div className="space-y-4 print:space-y-0">
       <div className="flex items-center justify-between print:hidden">
-        <Link href="/invoices" className="text-sm font-medium text-zinc-600 hover:text-zinc-950">
+        <Link href="/invoices" className={buttonClass({ variant: "ghost", size: "sm" })}>
           Volver
         </Link>
         <PrintButton />

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { deleteInvoiceAction, markInvoicePaidAction } from "@/app/actions/invoices";
+import { buttonClass } from "@/components/button-styles";
 import { ConfirmForm } from "@/components/confirm-form";
 import { Message } from "@/components/message";
 import { StatusBadge } from "@/components/status-badge";
@@ -51,10 +52,10 @@ export default async function InvoicesPage({
           <p className="mt-1 text-sm text-zinc-600">Listado, filtros y acciones de cobro.</p>
         </div>
         <div className="flex gap-2">
-          <Link href="/invoices/create-month" className="rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-white">
+          <Link href="/invoices/create-month" className={buttonClass({ variant: "secondary" })}>
             Crear mes
           </Link>
-          <Link href="/invoices/new" className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700">
+          <Link href="/invoices/new" className={buttonClass({ variant: "primary" })}>
             Crear
           </Link>
         </div>
@@ -97,7 +98,7 @@ export default async function InvoicesPage({
           </select>
         </label>
         <div className="flex items-end">
-          <button className="h-10 w-full rounded-md bg-slate-900 px-4 text-sm font-medium text-white hover:bg-slate-700">
+          <button className={buttonClass({ variant: "secondary", size: "full" })}>
             Filtrar
           </button>
         </div>
@@ -129,17 +130,17 @@ export default async function InvoicesPage({
                     <StatusBadge status={invoice.status} />
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <div className="flex flex-wrap justify-end gap-3">
-                      <Link href={`/invoices/${invoice.id}/print`} className="text-sm font-medium text-slate-800 hover:underline">
+                    <div className="flex flex-wrap justify-end gap-2">
+                      <Link href={`/invoices/${invoice.id}/print`} className={buttonClass({ variant: "print", size: "sm" })}>
                         Imprimir
                       </Link>
-                      <Link href={`/invoices/${invoice.id}/edit`} className="text-sm font-medium text-slate-800 hover:underline">
+                      <Link href={`/invoices/${invoice.id}/edit`} className={buttonClass({ variant: "warning", size: "sm" })}>
                         Editar
                       </Link>
                       {invoice.status !== "paid" ? (
                         <form action={markInvoicePaidAction} className="inline">
                           <input type="hidden" name="id" value={invoice.id} />
-                          <button className="text-sm font-medium text-emerald-700 hover:underline">Pagada</button>
+                          <button className={buttonClass({ variant: "success", size: "sm" })}>Pagada</button>
                         </form>
                       ) : null}
                       <ConfirmForm action={deleteInvoiceAction} id={invoice.id} label="Eliminar" message="¿Eliminar esta factura?" />

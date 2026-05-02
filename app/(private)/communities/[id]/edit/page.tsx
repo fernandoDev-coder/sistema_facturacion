@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { updateCommunityAction } from "@/app/actions/communities";
+import { buttonClass } from "@/components/button-styles";
 import { CommunityForm } from "@/components/community-form";
 import { Message } from "@/components/message";
 import { createClient, requireUser } from "@/lib/supabase/server";
@@ -28,7 +29,7 @@ export default async function EditCommunityPage({
   return (
     <div className="space-y-6">
       <div>
-        <Link href="/communities" className="text-sm font-medium text-zinc-600 hover:text-zinc-950">
+        <Link href="/communities" className={buttonClass({ variant: "ghost", size: "sm" })}>
           Volver
         </Link>
         <h1 className="mt-2 text-2xl font-semibold">Editar comunidad</h1>

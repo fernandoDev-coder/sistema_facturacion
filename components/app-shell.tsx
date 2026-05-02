@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { logoutAction } from "@/app/actions/auth";
+import { buttonClass } from "@/components/button-styles";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard" },
@@ -29,7 +30,7 @@ export function AppShell({ children, email }: { children: React.ReactNode; email
         <div className="absolute bottom-6 left-5 right-5">
           <p className="truncate text-xs text-zinc-500">{email}</p>
           <form action={logoutAction} className="mt-3">
-            <button className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm font-medium hover:bg-zinc-100">
+            <button className={buttonClass({ variant: "secondary", size: "full" })}>
               Cerrar sesión
             </button>
           </form>
@@ -42,7 +43,7 @@ export function AppShell({ children, email }: { children: React.ReactNode; email
             Facturación
           </Link>
           <form action={logoutAction}>
-            <button className="text-sm font-medium text-zinc-700">Salir</button>
+            <button className={buttonClass({ variant: "secondary", size: "sm" })}>Salir</button>
           </form>
         </div>
         <nav className="mt-3 flex gap-2 overflow-x-auto">

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createCommunityAction } from "@/app/actions/communities";
+import { buttonClass } from "@/components/button-styles";
 import { CommunityForm } from "@/components/community-form";
 import { Message } from "@/components/message";
 
@@ -13,7 +14,7 @@ export default async function NewCommunityPage({
   return (
     <div className="space-y-6">
       <div>
-        <Link href="/communities" className="text-sm font-medium text-zinc-600 hover:text-zinc-950">
+        <Link href="/communities" className={buttonClass({ variant: "ghost", size: "sm" })}>
           Volver
         </Link>
         <h1 className="mt-2 text-2xl font-semibold">Nueva comunidad</h1>

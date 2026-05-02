@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { buttonClass, type ButtonVariant } from "@/components/button-styles";
 import { createClient, requireUser } from "@/lib/supabase/server";
 
 export default async function DashboardPage() {
@@ -31,10 +32,10 @@ export default async function DashboardPage() {
       <section>
         <h2 className="text-lg font-semibold">Accesos rápidos</h2>
         <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <QuickLink href="/communities/new" label="Nueva comunidad" />
-          <QuickLink href="/communities" label="Ver comunidades" />
-          <QuickLink href="/invoices/create-month" label="Crear facturas del mes" />
-          <QuickLink href="/invoices" label="Ver facturas" />
+          <QuickLink href="/communities/new" label="Nueva comunidad" variant="primary" />
+          <QuickLink href="/communities" label="Ver comunidades" variant="secondary" />
+          <QuickLink href="/invoices/create-month" label="Crear facturas del mes" variant="success" />
+          <QuickLink href="/invoices" label="Ver facturas" variant="print" />
         </div>
       </section>
     </div>
@@ -50,12 +51,17 @@ function Metric({ label, value }: { label: string; value: number }) {
   );
 }
 
-function QuickLink({ href, label }: { href: string; label: string }) {
+function QuickLink({
+  href,
+  label,
+  variant,
+}: {
+  href: string;
+  label: string;
+  variant: ButtonVariant;
+}) {
   return (
-    <Link
-      href={href}
-      className="rounded-md border border-zinc-200 bg-white px-4 py-3 text-sm font-medium text-zinc-800 shadow-sm hover:border-slate-400 hover:bg-zinc-50"
-    >
+    <Link href={href} className={buttonClass({ variant, className: "justify-start shadow-sm" })}>
       {label}
     </Link>
   );

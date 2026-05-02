@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { deleteCommunityAction } from "@/app/actions/communities";
+import { buttonClass } from "@/components/button-styles";
 import { ConfirmForm } from "@/components/confirm-form";
 import { Message } from "@/components/message";
 import { createClient, requireUser } from "@/lib/supabase/server";
@@ -32,7 +33,7 @@ export default async function CommunitiesPage({
           <h1 className="text-2xl font-semibold">Comunidades</h1>
           <p className="mt-1 text-sm text-zinc-600">Clientes y comunidades para facturar.</p>
         </div>
-        <Link href="/communities/new" className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700">
+        <Link href="/communities/new" className={buttonClass({ variant: "primary" })}>
           Crear
         </Link>
       </div>
@@ -44,7 +45,7 @@ export default async function CommunitiesPage({
           placeholder="Buscar por nombre, CIF o ciudad"
           className="h-10 flex-1 rounded-md border border-zinc-300 bg-white px-3 text-sm"
         />
-        <button className="rounded-md border border-zinc-300 px-4 text-sm font-medium hover:bg-white">Buscar</button>
+        <button className={buttonClass({ variant: "secondary" })}>Buscar</button>
       </form>
 
       <div className="overflow-hidden rounded-md border border-zinc-200 bg-white">
@@ -67,8 +68,8 @@ export default async function CommunitiesPage({
                   <td className="px-4 py-3 text-sm text-zinc-600">{community.city ?? "-"}</td>
                   <td className="px-4 py-3 text-sm text-zinc-600">{community.email ?? community.phone ?? "-"}</td>
                   <td className="px-4 py-3 text-right">
-                    <div className="flex justify-end gap-3">
-                      <Link href={`/communities/${community.id}/edit`} className="text-sm font-medium text-slate-800 hover:underline">
+                    <div className="flex justify-end gap-2">
+                      <Link href={`/communities/${community.id}/edit`} className={buttonClass({ variant: "warning", size: "sm" })}>
                         Editar
                       </Link>
                       <ConfirmForm

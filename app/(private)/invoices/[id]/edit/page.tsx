@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { updateInvoiceAction } from "@/app/actions/invoices";
+import { buttonClass } from "@/components/button-styles";
 import { InvoiceForm } from "@/components/invoice-form";
 import { Message } from "@/components/message";
 import { createClient, requireUser } from "@/lib/supabase/server";
@@ -26,7 +27,7 @@ export default async function EditInvoicePage({
   return (
     <div className="space-y-6">
       <div>
-        <Link href="/invoices" className="text-sm font-medium text-zinc-600 hover:text-zinc-950">
+        <Link href="/invoices" className={buttonClass({ variant: "ghost", size: "sm" })}>
           Volver
         </Link>
         <h1 className="mt-2 text-2xl font-semibold">Editar factura</h1>

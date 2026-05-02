@@ -1,21 +1,28 @@
 "use client";
 
 import { useFormStatus } from "react-dom";
+import { buttonClass, type ButtonVariant } from "@/components/button-styles";
 
 type FormButtonProps = {
   children: React.ReactNode;
   className?: string;
   pendingText?: string;
+  variant?: ButtonVariant;
 };
 
-export function FormButton({ children, className = "", pendingText = "Guardando..." }: FormButtonProps) {
+export function FormButton({
+  children,
+  className = "",
+  pendingText = "Guardando...",
+  variant = "primary",
+}: FormButtonProps) {
   const { pending } = useFormStatus();
 
   return (
     <button
       type="submit"
       disabled={pending}
-      className={`inline-flex h-10 items-center justify-center rounded-md bg-slate-900 px-4 text-sm font-medium text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60 ${className}`}
+      className={buttonClass({ variant, size: className.includes("w-full") ? "full" : "md", className })}
     >
       {pending ? pendingText : children}
     </button>

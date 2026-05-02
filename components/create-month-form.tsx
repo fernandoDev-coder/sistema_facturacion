@@ -163,7 +163,9 @@ export function CreateMonthForm({
         </table>
       </div>
 
-      <FormButton pendingText="Creando...">Crear facturas seleccionadas</FormButton>
+      <FormButton variant="success" pendingText="Creando...">
+        Crear facturas seleccionadas
+      </FormButton>
     </form>
   );
 }
