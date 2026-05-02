@@ -63,6 +63,24 @@ export type Database = {
           },
         ];
       };
+      invoice_items: {
+        Row: InvoiceItem;
+        Insert: Partial<InvoiceItem> & {
+          owner_id: string;
+          invoice_id: string;
+          description: string;
+        };
+        Update: Partial<Omit<InvoiceItem, "id" | "owner_id" | "invoice_id" | "created_at">>;
+        Relationships: [
+          {
+            foreignKeyName: "invoice_items_invoice_id_fkey";
+            columns: ["invoice_id"];
+            isOneToOne: false;
+            referencedRelation: "invoices";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
@@ -132,6 +150,19 @@ export type Invoice = {
   notes: string | null;
   created_at: string;
   updated_at: string;
+};
+
+export type InvoiceItem = {
+  id: string;
+  owner_id: string;
+  invoice_id: string;
+  description: string;
+  amount: number;
+  vat_rate: number;
+  vat_amount: number;
+  total: number;
+  sort_order: number;
+  created_at: string;
 };
 
 export type InvoiceWithCommunity = Invoice & {

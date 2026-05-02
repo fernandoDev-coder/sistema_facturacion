@@ -96,6 +96,19 @@ create table if not exists public.invoices (
 
 alter table public.invoices add column if not exists document_type text not null default 'invoice';
 
+create table if not exists public.invoice_items (
+  id uuid primary key default gen_random_uuid(),
+  owner_id uuid not null references auth.users(id) on delete cascade,
+  invoice_id uuid not null references public.invoices(id) on delete cascade,
+  description text not null,
+  amount numeric not null default 0,
+  vat_rate numeric not null default 21,
+  vat_amount numeric not null default 0,
+  total numeric not null default 0,
+  sort_order int not null default 0,
+  created_at timestamp with time zone not null default now()
+);
+
 create index if not exists company_settings_owner_id_idx on public.company_settings(owner_id);
 create index if not exists communities_owner_id_idx on public.communities(owner_id);
 create index if not exists communities_owner_id_name_idx on public.communities(owner_id, name);
@@ -103,6 +116,8 @@ create index if not exists invoices_owner_id_idx on public.invoices(owner_id);
 create index if not exists invoices_owner_year_month_idx on public.invoices(owner_id, year, month);
 create index if not exists invoices_owner_document_year_idx on public.invoices(owner_id, document_type, year);
 create index if not exists invoices_community_id_idx on public.invoices(community_id);
+create index if not exists invoice_items_owner_id_idx on public.invoice_items(owner_id);
+create index if not exists invoice_items_invoice_id_idx on public.invoice_items(invoice_id);
 
 alter table public.company_settings drop constraint if exists company_settings_tax_id_format_check;
 alter table public.company_settings add constraint company_settings_tax_id_format_check check (
@@ -197,6 +212,7 @@ alter table public.profiles enable row level security;
 alter table public.company_settings enable row level security;
 alter table public.communities enable row level security;
 alter table public.invoices enable row level security;
+alter table public.invoice_items enable row level security;
 
 drop policy if exists "profiles_select_own" on public.profiles;
 create policy "profiles_select_own"
@@ -275,4 +291,25 @@ with check (auth.uid() = owner_id);
 drop policy if exists "invoices_delete_own" on public.invoices;
 create policy "invoices_delete_own"
 on public.invoices for delete
+using (auth.uid() = owner_id);
+
+drop policy if exists "invoice_items_select_own" on public.invoice_items;
+create policy "invoice_items_select_own"
+on public.invoice_items for select
+using (auth.uid() = owner_id);
+
+drop policy if exists "invoice_items_insert_own" on public.invoice_items;
+create policy "invoice_items_insert_own"
+on public.invoice_items for insert
+with check (auth.uid() = owner_id);
+
+drop policy if exists "invoice_items_update_own" on public.invoice_items;
+create policy "invoice_items_update_own"
+on public.invoice_items for update
+using (auth.uid() = owner_id)
+with check (auth.uid() = owner_id);
+
+drop policy if exists "invoice_items_delete_own" on public.invoice_items;
+create policy "invoice_items_delete_own"
+on public.invoice_items for delete
 using (auth.uid() = owner_id);

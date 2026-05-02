@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { DocumentPrint } from "@/components/document-print";
+import { fallbackInvoiceItems } from "@/lib/invoice-items";
 import { createClient, requireUser } from "@/lib/supabase/server";
 
 export default async function PrintInvoicePage({ params }: { params: Promise<{ id: string }> }) {
@@ -16,14 +17,16 @@ export default async function PrintInvoicePage({ params }: { params: Promise<{ i
 
   if (!invoice) notFound();
 
-  const [{ data: community }, { data: company }] = await Promise.all([
+  const [{ data: community }, { data: company }, { data: items }] = await Promise.all([
     supabase.from("communities").select("*").eq("id", invoice.community_id).eq("owner_id", user.id).single(),
     supabase.from("company_settings").select("*").eq("owner_id", user.id).maybeSingle(),
+    supabase.from("invoice_items").select("*").eq("owner_id", user.id).eq("invoice_id", id).order("sort_order"),
   ]);
 
   return (
     <DocumentPrint
       document={invoice}
+      items={items?.length ? items : fallbackInvoiceItems(invoice)}
       company={company}
       title="Factura"
       backHref="/invoices"

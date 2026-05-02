@@ -3,7 +3,7 @@ import { buttonClass } from "@/components/button-styles";
 import { InvoiceLogo } from "@/components/invoice-logo";
 import { PrintButton } from "@/components/print-button";
 import { formatLongDate, money } from "@/lib/format";
-import type { CompanySettings, Invoice } from "@/lib/types";
+import type { CompanySettings, Invoice, InvoiceItem } from "@/lib/types";
 
 type CustomerSnapshot = {
   name?: string | null;
@@ -18,12 +18,14 @@ type CustomerSnapshot = {
 
 export function DocumentPrint({
   document,
+  items,
   company,
   customer,
   title,
   backHref,
 }: {
   document: Invoice;
+  items: InvoiceItem[];
   company: CompanySettings | null;
   customer: CustomerSnapshot;
   title: string;
@@ -84,28 +86,30 @@ export function DocumentPrint({
         <section className="mt-10">
           <table className="w-full table-fixed border-collapse text-sm">
             <colgroup>
-              <col className="w-[58%]" />
-              <col className="w-[14%]" />
-              <col className="w-[14%]" />
-              <col className="w-[14%]" />
+              <col className="w-[46%]" />
+              <col className="w-[16%]" />
+              <col className="w-[18%]" />
+              <col className="w-[20%]" />
             </colgroup>
             <thead>
               <tr className="border-b border-zinc-300 text-left">
                 <th className="py-3 pr-6 font-semibold">Concepto</th>
-                <th className="py-3 text-right font-semibold">Base imponible</th>
+                <th className="py-3 text-right font-semibold">Base</th>
                 <th className="py-3 text-right font-semibold">IVA</th>
                 <th className="py-3 text-right font-semibold">Total</th>
               </tr>
             </thead>
             <tbody>
-              <tr className="border-b border-zinc-200 align-top">
-                <td className="whitespace-pre-line break-words py-4 pr-6 leading-6">{document.subject}</td>
-                <td className="py-4 text-right">{money(document.amount)}</td>
-                <td className="py-4 text-right">
-                  {document.vat_rate}% ({money(document.vat_amount)})
-                </td>
-                <td className="py-4 text-right font-semibold">{money(document.total)}</td>
-              </tr>
+              {items.map((item) => (
+                <tr key={item.id} className="border-b border-zinc-200 align-top">
+                  <td className="whitespace-pre-line break-words py-4 pr-6 leading-6">{item.description}</td>
+                  <td className="py-4 text-right">{money(item.amount)}</td>
+                  <td className="py-4 text-right">
+                    {item.vat_rate}% ({money(item.vat_amount)})
+                  </td>
+                  <td className="py-4 text-right font-semibold">{money(item.total)}</td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </section>
@@ -113,7 +117,7 @@ export function DocumentPrint({
         <section className="mt-8 flex justify-end">
           <div className="w-full max-w-xs space-y-3 text-sm">
             <SummaryRow label="Base imponible" value={money(document.amount)} />
-            <SummaryRow label={`IVA ${document.vat_rate}%`} value={money(document.vat_amount)} />
+            <SummaryRow label="IVA total" value={money(document.vat_amount)} />
             <div className="flex justify-between border-t border-zinc-300 pt-3 text-lg font-semibold">
               <span>Total</span>
               <span>{money(document.total)}</span>

@@ -9,6 +9,15 @@ import type { Community, DocumentType, InvoiceStatus } from "@/lib/types";
 const allowedStatuses: InvoiceStatus[] = ["draft", "pending", "paid", "cancelled"];
 const allowedDocumentTypes: DocumentType[] = ["invoice", "budget"];
 
+type ParsedLineItem = {
+  description: string;
+  amount: number;
+  vat_rate: number;
+  vat_amount: number;
+  total: number;
+  sort_order: number;
+};
+
 function parseInvoicePayload(formData: FormData) {
   const documentType = requiredText(formData.get("document_type")) as DocumentType;
   const communityId = requiredText(formData.get("community_id"));
@@ -16,13 +25,10 @@ function parseInvoicePayload(formData: FormData) {
   const invoiceDate = requiredText(formData.get("invoice_date"));
   const month = Number(formData.get("month"));
   const year = Number(formData.get("year"));
-  const subject = requiredText(formData.get("subject"));
-  const amount = toDecimal(formData.get("amount"));
-  const vatRate = toDecimal(formData.get("vat_rate"), 21);
   const status = requiredText(formData.get("status")) as InvoiceStatus;
-  const totals = calculateTotals(amount, vatRate);
+  const items = parseLineItems(formData);
 
-  if (!communityId || !invoiceNumber || !invoiceDate || !subject || !month || !year) {
+  if (!communityId || !invoiceNumber || !invoiceDate || !month || !year) {
     throw new Error("Faltan campos obligatorios del documento.");
   }
 
@@ -34,6 +40,15 @@ function parseInvoicePayload(formData: FormData) {
     throw new Error("Estado no valido.");
   }
 
+  if (!items.length) {
+    throw new Error("Anade al menos un concepto.");
+  }
+
+  const amount = items.reduce((sum, item) => sum + item.amount, 0);
+  const vatAmount = items.reduce((sum, item) => sum + item.vat_amount, 0);
+  const total = items.reduce((sum, item) => sum + item.total, 0);
+  const uniqueVatRates = Array.from(new Set(items.map((item) => item.vat_rate)));
+
   return {
     document_type: documentType,
     community_id: communityId,
@@ -41,14 +56,53 @@ function parseInvoicePayload(formData: FormData) {
     invoice_date: invoiceDate,
     month,
     year,
-    subject,
+    subject: items.map((item) => item.description).join(" | "),
+    amount,
+    vat_rate: uniqueVatRates.length === 1 ? uniqueVatRates[0] : 0,
+    vat_amount: vatAmount,
+    total,
+    status,
+    notes: nullableText(formData.get("notes")),
+    updated_at: new Date().toISOString(),
+    items,
+  };
+}
+
+function parseLineItems(formData: FormData): ParsedLineItem[] {
+  const raw = requiredText(formData.get("items_json"));
+
+  if (raw) {
+    const parsed = JSON.parse(raw) as Array<{ description?: string; amount?: string; vat_rate?: string }>;
+
+    return parsed
+      .map((item, index) => buildLineItem(item.description ?? "", item.amount ?? "0", item.vat_rate ?? "21", index))
+      .filter((item): item is ParsedLineItem => item !== null);
+  }
+
+  const subject = requiredText(formData.get("subject"));
+  const amount = toDecimal(formData.get("amount"));
+  const vatRate = toDecimal(formData.get("vat_rate"), 21);
+  const fallback = buildLineItem(subject, String(amount), String(vatRate), 0);
+
+  return fallback ? [fallback] : [];
+}
+
+function buildLineItem(description: string, amountValue: string, vatRateValue: string, index: number) {
+  const cleanDescription = description.trim();
+  const amount = toDecimal(amountValue);
+  const vatRate = toDecimal(vatRateValue, 21);
+
+  if (!cleanDescription) return null;
+
+  const totals = calculateTotals(amount, vatRate);
+
+  return {
+    description: cleanDescription,
     amount,
     vat_rate: vatRate,
     vat_amount: totals.vatAmount,
     total: totals.total,
-    status,
-    notes: nullableText(formData.get("notes")),
-    updated_at: new Date().toISOString(),
+    sort_order: index,
   };
 }
 
@@ -164,6 +218,7 @@ export async function createMonthlyInvoicesAction(formData: FormData) {
     const amount = toDecimal(formData.get(`amount_${communityId}`));
     const vatRate = toDecimal(formData.get(`vat_${communityId}`), 21);
     const totals = calculateTotals(amount, vatRate);
+    const subject = requiredText(formData.get(`subject_${communityId}`)) || `Factura ${month}/${year}`;
 
     return {
       owner_id: user.id,
@@ -174,20 +229,55 @@ export async function createMonthlyInvoicesAction(formData: FormData) {
       invoice_date: `${year}-${String(month).padStart(2, "0")}-01`,
       month,
       year,
-      subject: requiredText(formData.get(`subject_${communityId}`)) || `Factura ${month}/${year}`,
+      subject,
       amount,
       vat_rate: vatRate,
       vat_amount: totals.vatAmount,
       total: totals.total,
       status: "draft" as const,
       notes: nullableText(formData.get(`notes_${communityId}`)),
+      items: [
+        {
+          description: subject,
+          amount,
+          vat_rate: vatRate,
+          vat_amount: totals.vatAmount,
+          total: totals.total,
+          sort_order: 0,
+        },
+      ],
     };
   });
 
-  const { error } = await supabase.from("invoices").insert(rows);
+  const { data: createdInvoices, error } = await supabase
+    .from("invoices")
+    .insert(
+      rows.map((row) => {
+        const { items, ...invoiceRow } = row;
+        void items;
+        return invoiceRow;
+      }),
+    )
+    .select("id, community_id");
 
-  if (error) {
-    redirect(`/invoices/create-month?message=${encodeURIComponent(error.message)}`);
+  if (error || !createdInvoices) {
+    redirect(`/invoices/create-month?message=${encodeURIComponent(error?.message ?? "No se pudieron crear las facturas.")}`);
+  }
+
+  const itemsByCommunity = new Map(rows.map((row) => [row.community_id, row.items]));
+  const itemRows = createdInvoices.flatMap((invoice) =>
+    (itemsByCommunity.get(invoice.community_id) ?? []).map((item) => ({
+      owner_id: user.id,
+      invoice_id: invoice.id,
+      ...item,
+    })),
+  );
+
+  if (itemRows.length) {
+    const { error: itemError } = await supabase.from("invoice_items").insert(itemRows);
+    if (itemError) {
+      redirect(`/invoices/create-month?message=${encodeURIComponent(itemError.message)}`);
+    }
   }
 
   revalidatePath("/invoices");
@@ -205,14 +295,32 @@ async function createDocumentAction(formData: FormData, documentType: DocumentTy
     throw new Error("Tipo de documento incoherente.");
   }
 
-  const { error } = await supabase.from("invoices").insert({
-    owner_id: user.id,
-    ...snapshot,
-    ...payload,
-  });
+  const { items, ...invoicePayload } = payload;
+  const { data: createdInvoice, error } = await supabase
+    .from("invoices")
+    .insert({
+      owner_id: user.id,
+      ...snapshot,
+      ...invoicePayload,
+    })
+    .select("id")
+    .single();
 
-  if (error) {
-    redirect(`${basePath(documentType)}/new?message=${encodeURIComponent(error.message)}`);
+  if (error || !createdInvoice) {
+    redirect(`${basePath(documentType)}/new?message=${encodeURIComponent(error?.message ?? "No se pudo crear el documento.")}`);
+  }
+
+  const { error: itemError } = await supabase.from("invoice_items").insert(
+    items.map((item) => ({
+      owner_id: user.id,
+      invoice_id: createdInvoice.id,
+      ...item,
+    })),
+  );
+
+  if (itemError) {
+    await supabase.from("invoices").delete().eq("id", createdInvoice.id).eq("owner_id", user.id);
+    redirect(`${basePath(documentType)}/new?message=${encodeURIComponent(itemError.message)}`);
   }
 
   revalidateDocumentPaths(documentType);
@@ -230,15 +338,35 @@ async function updateDocumentAction(formData: FormData, documentType: DocumentTy
     throw new Error("Tipo de documento incoherente.");
   }
 
+  const { items, ...invoicePayload } = payload;
+
   const { error } = await supabase
     .from("invoices")
-    .update({ ...snapshot, ...payload })
+    .update({ ...snapshot, ...invoicePayload })
     .eq("id", id)
     .eq("owner_id", user.id)
     .eq("document_type", documentType);
 
   if (error) {
     redirect(`${basePath(documentType)}/${id}/edit?message=${encodeURIComponent(error.message)}`);
+  }
+
+  const { error: deleteItemsError } = await supabase.from("invoice_items").delete().eq("invoice_id", id).eq("owner_id", user.id);
+
+  if (deleteItemsError) {
+    redirect(`${basePath(documentType)}/${id}/edit?message=${encodeURIComponent(deleteItemsError.message)}`);
+  }
+
+  const { error: itemError } = await supabase.from("invoice_items").insert(
+    items.map((item) => ({
+      owner_id: user.id,
+      invoice_id: id,
+      ...item,
+    })),
+  );
+
+  if (itemError) {
+    redirect(`${basePath(documentType)}/${id}/edit?message=${encodeURIComponent(itemError.message)}`);
   }
 
   revalidateDocumentPaths(documentType);
