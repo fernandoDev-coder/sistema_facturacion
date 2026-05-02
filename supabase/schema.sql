@@ -23,7 +23,7 @@ create table if not exists public.company_settings (
   updated_at timestamp with time zone not null default now(),
   constraint company_settings_owner_id_key unique (owner_id),
   constraint company_settings_tax_id_format_check check (
-    tax_id is null or tax_id ~ '^[A-Z0-9]{8,12}$'
+    tax_id is null or tax_id ~ '^([0-9]{8}[A-Z]|[XYZ][0-9]{7}[A-Z]|[ABEH][0-9]{7}[0-9]|[NPQSW][0-9]{7}[A-J]|[CDFGJUVR][0-9]{7}[0-9A-J])$'
   ),
   constraint company_settings_postal_code_format_check check (
     postal_code is null or (postal_code ~ '^[0-9]{5}$' and substring(postal_code from 1 for 2)::int between 1 and 52)
@@ -53,7 +53,7 @@ create table if not exists public.communities (
   created_at timestamp with time zone not null default now(),
   updated_at timestamp with time zone not null default now(),
   constraint communities_tax_id_format_check check (
-    tax_id is null or tax_id ~ '^[A-Z0-9]{8,12}$'
+    tax_id is null or tax_id ~ '^([0-9]{8}[A-Z]|[XYZ][0-9]{7}[A-Z]|[ABEH][0-9]{7}[0-9]|[NPQSW][0-9]{7}[A-J]|[CDFGJUVR][0-9]{7}[0-9A-J])$'
   ),
   constraint communities_postal_code_format_check check (
     postal_code is null or (postal_code ~ '^[0-9]{5}$' and substring(postal_code from 1 for 2)::int between 1 and 52)
@@ -102,7 +102,7 @@ create index if not exists invoices_community_id_idx on public.invoices(communit
 
 alter table public.company_settings drop constraint if exists company_settings_tax_id_format_check;
 alter table public.company_settings add constraint company_settings_tax_id_format_check check (
-  tax_id is null or tax_id ~ '^[A-Z0-9]{8,12}$'
+  tax_id is null or tax_id ~ '^([0-9]{8}[A-Z]|[XYZ][0-9]{7}[A-Z]|[ABEH][0-9]{7}[0-9]|[NPQSW][0-9]{7}[A-J]|[CDFGJUVR][0-9]{7}[0-9A-J])$'
 );
 
 alter table public.company_settings drop constraint if exists company_settings_postal_code_format_check;
@@ -122,7 +122,7 @@ alter table public.company_settings add constraint company_settings_iban_format_
 
 alter table public.communities drop constraint if exists communities_tax_id_format_check;
 alter table public.communities add constraint communities_tax_id_format_check check (
-  tax_id is null or tax_id ~ '^[A-Z0-9]{8,12}$'
+  tax_id is null or tax_id ~ '^([0-9]{8}[A-Z]|[XYZ][0-9]{7}[A-Z]|[ABEH][0-9]{7}[0-9]|[NPQSW][0-9]{7}[A-J]|[CDFGJUVR][0-9]{7}[0-9A-J])$'
 );
 
 alter table public.communities drop constraint if exists communities_postal_code_format_check;

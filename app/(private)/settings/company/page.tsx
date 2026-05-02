@@ -34,9 +34,9 @@ export default async function CompanySettingsPage({
               defaultValue={company?.tax_id}
               autoComplete="off"
               maxLength={12}
-              pattern="([0-9]{8}[A-Za-z]|[XYZxyz][0-9]{7}[A-Za-z]|[A-Za-z][0-9]{7}[0-9A-Za-z])"
+              pattern="([0-9]{8}[A-Za-z]|[XYZxyz][0-9]{7}[A-Za-z]|[ABEHabeh][0-9]{7}[0-9]|[NPQSWnpqsw][0-9]{7}[A-Ja-j]|[CDFGJUVRcdfgjuvr][0-9]{7}[0-9A-Ja-j])"
               placeholder="B12345678"
-              title="Introduce un DNI, NIE o CIF válido."
+              title="Introduce un DNI, NIE o CIF válido. Ejemplos: 12345678Z, X1234567L, B46066361, N0027810A."
             />
             <Field label="Dirección" name="address" defaultValue={company?.address} className="md:col-span-2" />
             <Field

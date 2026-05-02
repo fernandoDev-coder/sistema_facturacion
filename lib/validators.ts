@@ -1,4 +1,7 @@
 const dniLetters = "TRWAGMYFPDXBNJZSQVHLCKE";
+const cifAnyControlLetters = "CDFGJUVR";
+const cifDigitControlLetters = "ABEH";
+const cifLetterControlLetters = "NPQSW";
 
 const ibanLengths: Record<string, number> = {
   AD: 24,
@@ -172,7 +175,7 @@ function isValidNie(value: string) {
 }
 
 function isValidCif(value: string) {
-  if (!/^[ABCDEFGHJKLMNPQRSUVW]\d{7}[0-9A-J]$/.test(value)) return false;
+  if (!/^[ABCDEFGHJNPQRSUVW]\d{7}[0-9A-J]$/.test(value)) return false;
 
   const letter = value[0];
   const digits = value.slice(1, 8);
@@ -185,9 +188,11 @@ function isValidCif(value: string) {
   const controlDigit = (10 - ((evenSum + oddSum) % 10)) % 10;
   const controlLetter = "JABCDEFGHI"[controlDigit];
 
-  if ("ABEH".includes(letter)) return control === String(controlDigit);
-  if ("KPQS".includes(letter)) return control === controlLetter;
-  return control === String(controlDigit) || control === controlLetter;
+  if (cifDigitControlLetters.includes(letter)) return control === String(controlDigit);
+  if (cifLetterControlLetters.includes(letter)) return control === controlLetter;
+  if (cifAnyControlLetters.includes(letter)) return control === String(controlDigit) || control === controlLetter;
+
+  return false;
 }
 
 function hasValidIbanChecksum(iban: string) {
