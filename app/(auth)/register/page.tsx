@@ -29,11 +29,11 @@ export default async function RegisterPage({
               className="mt-1 h-10 w-full rounded-md border border-zinc-300 px-3 text-sm outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
             />
           </label>
-          <PasswordField minLength={6} autoComplete="new-password" />
+          <PasswordField minLength={10} autoComplete="new-password" />
           <PasswordField
             label="Confirmar contraseña"
             name="password_confirm"
-            minLength={6}
+            minLength={10}
             autoComplete="new-password"
           />
           <RememberSessionField />

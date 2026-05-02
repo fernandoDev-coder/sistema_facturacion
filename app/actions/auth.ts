@@ -7,6 +7,22 @@ function authRedirect(path: string, message: string) {
   redirect(`${path}?message=${encodeURIComponent(message)}`);
 }
 
+function validatePassword(password: string) {
+  if (password.length < 10) {
+    return "La contraseña debe tener al menos 10 caracteres.";
+  }
+
+  if (!/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
+    return "La contraseña debe incluir mayúsculas, minúsculas y números.";
+  }
+
+  if (!/[^A-Za-z0-9]/.test(password)) {
+    return "La contraseña debe incluir al menos un símbolo.";
+  }
+
+  return null;
+}
+
 export async function loginAction(formData: FormData) {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
@@ -32,8 +48,13 @@ export async function registerAction(formData: FormData) {
   const passwordConfirm = String(formData.get("password_confirm") ?? "");
   const remember = formData.get("remember") === "on";
 
-  if (!email || password.length < 6) {
-    authRedirect("/register", "Introduce un email y una contraseña de al menos 6 caracteres.");
+  if (!email) {
+    authRedirect("/register", "Introduce un email válido.");
+  }
+
+  const passwordError = validatePassword(password);
+  if (passwordError) {
+    authRedirect("/register", passwordError);
   }
 
   if (password !== passwordConfirm) {
