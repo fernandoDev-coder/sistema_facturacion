@@ -1,8 +1,9 @@
 import type { User } from "@supabase/supabase-js";
-import type { Profile } from "@/lib/types";
+import type { Database } from "@/lib/types";
 import { createClient } from "@/lib/supabase/server";
 
 type SupabaseClient = Awaited<ReturnType<typeof createClient>>;
+type ProfileUpdate = Database["public"]["Tables"]["profiles"]["Update"];
 
 export async function getCurrentProfile() {
   const supabase = await createClient();
@@ -24,7 +25,7 @@ export async function syncCurrentUserAccess(user: User, supabase?: SupabaseClien
   const superAdminEmails = getConfiguredSuperAdminEmails();
   const shouldBeSuperAdmin = normalizedEmail ? superAdminEmails.includes(normalizedEmail) : false;
 
-  const update: Partial<Profile> = shouldBeSuperAdmin
+  const update: ProfileUpdate = shouldBeSuperAdmin
     ? {
         email: user.email ?? null,
         role: "super_admin",
