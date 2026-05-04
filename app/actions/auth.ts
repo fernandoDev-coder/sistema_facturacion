@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { syncCurrentUserAccess } from "@/lib/profiles";
 
-function authRedirect(path: string, message: string) {
+function authRedirect(path: string, message: string): never {
   redirect(`${path}?message=${encodeURIComponent(message)}`);
 }
 
