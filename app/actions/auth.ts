@@ -1,7 +1,9 @@
 "use server";
 
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { syncCurrentUserAccess } from "@/lib/profiles";
 
 function authRedirect(path: string, message: string) {
   redirect(`${path}?message=${encodeURIComponent(message)}`);
@@ -23,6 +25,30 @@ function validatePassword(password: string) {
   return null;
 }
 
+function translateAuthError(message: string) {
+  if (message === "Email not confirmed") {
+    return "Tu email aún no está verificado. Revisa tu bandeja de entrada y confirma tu cuenta.";
+  }
+
+  if (message === "Invalid login credentials") {
+    return "Email o contraseña incorrectos.";
+  }
+
+  return message;
+}
+
+async function getEmailRedirectTo() {
+  const headerList = await headers();
+  const host = headerList.get("x-forwarded-host") ?? headerList.get("host");
+  const protocol = headerList.get("x-forwarded-proto") ?? "https";
+
+  if (!host) {
+    return undefined;
+  }
+
+  return `${protocol}://${host}/login?message=${encodeURIComponent("Email verificado. Ya puedes iniciar sesión.")}`;
+}
+
 export async function loginAction(formData: FormData) {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
@@ -33,10 +59,27 @@ export async function loginAction(formData: FormData) {
   }
 
   const supabase = await createClient({ persistSession: remember });
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
-    authRedirect("/login", error.message);
+    authRedirect("/login", translateAuthError(error.message));
+  }
+
+  if (data.user) {
+    await syncCurrentUserAccess(data.user, supabase);
+  }
+
+  if (!data.user) {
+    authRedirect("/login", "No se pudo iniciar sesión. Inténtalo de nuevo.");
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("onboarding_completed_at")
+    .eq("id", data.user.id)
+    .maybeSingle();
+  if (profile && !profile.onboarding_completed_at) {
+    redirect("/welcome");
   }
 
   redirect("/dashboard");
@@ -62,18 +105,66 @@ export async function registerAction(formData: FormData) {
   }
 
   const supabase = await createClient({ persistSession: remember });
-  const { data, error } = await supabase.auth.signUp({ email, password });
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      emailRedirectTo: await getEmailRedirectTo(),
+    },
+  });
 
   if (error) {
-    authRedirect("/register", error.message);
+    authRedirect("/register", translateAuthError(error.message));
   }
 
-  if (data.user) {
-    await supabase.from("profiles").upsert({
-      id: data.user.id,
-      email,
-    });
+  if (data.user && data.session) {
+    await syncCurrentUserAccess(data.user, supabase);
+    redirect("/welcome");
   }
+
+  authRedirect(
+    "/login",
+    "Cuenta creada. Revisa tu email y confirma tu dirección antes de iniciar sesión.",
+  );
+}
+
+export async function resendVerificationAction(formData: FormData) {
+  const email = String(formData.get("email") ?? "").trim();
+
+  if (!email) {
+    authRedirect("/login", "Indica el email al que quieres reenviar la verificación.");
+  }
+
+  const supabase = await createClient({ persistSession: false });
+  const { error } = await supabase.auth.resend({
+    type: "signup",
+    email,
+    options: {
+      emailRedirectTo: await getEmailRedirectTo(),
+    },
+  });
+
+  if (error) {
+    authRedirect("/login", translateAuthError(error.message));
+  }
+
+  authRedirect("/login", "Te hemos reenviado el email de verificación.");
+}
+
+export async function completeOnboardingAction() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  await supabase
+    .from("profiles")
+    .update({ onboarding_completed_at: new Date().toISOString() })
+    .eq("id", user.id);
 
   redirect("/dashboard");
 }

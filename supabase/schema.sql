@@ -3,7 +3,14 @@ create extension if not exists pgcrypto;
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   email text,
-  created_at timestamp with time zone not null default now()
+  role text not null default 'user',
+  plan text not null default 'starter',
+  is_super_admin boolean not null default false,
+  has_lifetime_access boolean not null default false,
+  onboarding_completed_at timestamp with time zone,
+  created_at timestamp with time zone not null default now(),
+  constraint profiles_role_check check (role in ('user', 'admin', 'super_admin')),
+  constraint profiles_plan_check check (plan in ('starter', 'pro', 'premium', 'enterprise'))
 );
 
 create table if not exists public.company_settings (
@@ -110,6 +117,7 @@ create table if not exists public.invoice_items (
 );
 
 create index if not exists company_settings_owner_id_idx on public.company_settings(owner_id);
+create index if not exists profiles_email_idx on public.profiles(email);
 create index if not exists communities_owner_id_idx on public.communities(owner_id);
 create index if not exists communities_owner_id_name_idx on public.communities(owner_id, name);
 create index if not exists invoices_owner_id_idx on public.invoices(owner_id);
@@ -118,6 +126,37 @@ create index if not exists invoices_owner_document_year_idx on public.invoices(o
 create index if not exists invoices_community_id_idx on public.invoices(community_id);
 create index if not exists invoice_items_owner_id_idx on public.invoice_items(owner_id);
 create index if not exists invoice_items_invoice_id_idx on public.invoice_items(invoice_id);
+
+alter table public.profiles add column if not exists role text not null default 'user';
+alter table public.profiles add column if not exists plan text not null default 'starter';
+alter table public.profiles add column if not exists is_super_admin boolean not null default false;
+alter table public.profiles add column if not exists has_lifetime_access boolean not null default false;
+alter table public.profiles add column if not exists onboarding_completed_at timestamp with time zone;
+
+alter table public.profiles drop constraint if exists profiles_role_check;
+alter table public.profiles add constraint profiles_role_check check (
+  role in ('user', 'admin', 'super_admin')
+);
+
+alter table public.profiles drop constraint if exists profiles_plan_check;
+alter table public.profiles add constraint profiles_plan_check check (
+  plan in ('starter', 'pro', 'premium', 'enterprise')
+);
+
+update public.profiles
+set role = coalesce(role, 'user'),
+    plan = coalesce(plan, 'starter'),
+    is_super_admin = coalesce(is_super_admin, false),
+    has_lifetime_access = coalesce(has_lifetime_access, false);
+
+update public.profiles
+set onboarding_completed_at = created_at
+where onboarding_completed_at is null
+  and (
+    exists (select 1 from public.company_settings where company_settings.owner_id = profiles.id)
+    or exists (select 1 from public.communities where communities.owner_id = profiles.id)
+    or exists (select 1 from public.invoices where invoices.owner_id = profiles.id)
+  );
 
 alter table public.company_settings drop constraint if exists company_settings_tax_id_format_check;
 alter table public.company_settings add constraint company_settings_tax_id_format_check check (
@@ -203,6 +242,23 @@ begin
 end;
 $$;
 
+create or replace function public.is_super_admin()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select coalesce(
+    (
+      select profiles.is_super_admin
+      from public.profiles
+      where profiles.id = auth.uid()
+    ),
+    false
+  );
+$$;
+
 drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
 after insert on auth.users
@@ -219,6 +275,11 @@ create policy "profiles_select_own"
 on public.profiles for select
 using (auth.uid() = id);
 
+drop policy if exists "profiles_select_super_admin" on public.profiles;
+create policy "profiles_select_super_admin"
+on public.profiles for select
+using (public.is_super_admin());
+
 drop policy if exists "profiles_insert_own" on public.profiles;
 create policy "profiles_insert_own"
 on public.profiles for insert
@@ -229,6 +290,12 @@ create policy "profiles_update_own"
 on public.profiles for update
 using (auth.uid() = id)
 with check (auth.uid() = id);
+
+drop policy if exists "profiles_update_super_admin" on public.profiles;
+create policy "profiles_update_super_admin"
+on public.profiles for update
+using (public.is_super_admin())
+with check (public.is_super_admin());
 
 drop policy if exists "company_settings_select_own" on public.company_settings;
 create policy "company_settings_select_own"

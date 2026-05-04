@@ -10,7 +10,17 @@ const navItems = [
   { href: "/settings/company", label: "Empresa" },
 ];
 
-export function AppShell({ children, email }: { children: React.ReactNode; email?: string | null }) {
+export function AppShell({
+  children,
+  email,
+  showAdminLink = false,
+}: {
+  children: React.ReactNode;
+  email?: string | null;
+  showAdminLink?: boolean;
+}) {
+  const visibleNavItems = showAdminLink ? [...navItems, { href: "/admin/users", label: "Usuarios" }] : navItems;
+
   return (
     <div className="min-h-screen bg-zinc-50 text-zinc-950">
       <aside className="fixed inset-y-0 left-0 hidden w-64 border-r border-zinc-200 bg-white px-5 py-6 lg:block print:hidden">
@@ -18,7 +28,7 @@ export function AppShell({ children, email }: { children: React.ReactNode; email
           Facturación Comunidades
         </Link>
         <nav className="mt-8 space-y-1">
-          {navItems.map((item) => (
+          {visibleNavItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
@@ -48,7 +58,7 @@ export function AppShell({ children, email }: { children: React.ReactNode; email
           </form>
         </div>
         <nav className="mt-3 flex gap-2 overflow-x-auto">
-          {navItems.map((item) => (
+          {visibleNavItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}

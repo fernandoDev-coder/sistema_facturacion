@@ -16,15 +16,30 @@ export type Database = {
         Row: {
           id: string;
           email: string | null;
+          role: ProfileRole;
+          plan: ProfilePlan;
+          is_super_admin: boolean;
+          has_lifetime_access: boolean;
+          onboarding_completed_at: string | null;
           created_at: string;
         };
         Insert: {
           id: string;
           email?: string | null;
+          role?: ProfileRole;
+          plan?: ProfilePlan;
+          is_super_admin?: boolean;
+          has_lifetime_access?: boolean;
+          onboarding_completed_at?: string | null;
           created_at?: string;
         };
         Update: {
           email?: string | null;
+          role?: ProfileRole;
+          plan?: ProfilePlan;
+          is_super_admin?: boolean;
+          has_lifetime_access?: boolean;
+          onboarding_completed_at?: string | null;
         };
         Relationships: [];
       };
@@ -83,11 +98,22 @@ export type Database = {
       };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      is_super_admin: {
+        Args: Record<string, never>;
+        Returns: boolean;
+      };
+    };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
   };
 };
+
+export type ProfileRole = "user" | "admin" | "super_admin";
+
+export type ProfilePlan = "starter" | "pro" | "premium" | "enterprise";
+
+export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
 export type CompanySettings = {
   id: string;

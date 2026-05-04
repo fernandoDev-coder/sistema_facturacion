@@ -16,7 +16,10 @@ export default async function RegisterPage({
     <main className="flex min-h-screen items-center justify-center bg-zinc-50 px-4">
       <section className="w-full max-w-md rounded-lg border border-zinc-200 bg-white p-8 shadow-sm">
         <h1 className="text-2xl font-semibold text-zinc-950">Crear cuenta</h1>
-        <p className="mt-2 text-sm text-zinc-600">Registra un usuario para empezar a facturar.</p>
+        <p className="mt-2 text-sm text-zinc-600">
+          Registra un usuario para empezar a facturar. Si la verificación por email está activa, tendrás que confirmar
+          tu correo antes de entrar.
+        </p>
         <Message text={message} />
         <form action={registerAction} autoComplete="on" className="mt-6 space-y-4">
           <label className="block">

@@ -1,9 +1,17 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { buttonClass, type ButtonVariant } from "@/components/button-styles";
+import { getCurrentProfile } from "@/lib/profiles";
 import { createClient, requireUser } from "@/lib/supabase/server";
 
 export default async function DashboardPage() {
   const user = await requireUser();
+  const profile = await getCurrentProfile();
+
+  if (profile && !profile.onboarding_completed_at) {
+    redirect("/welcome");
+  }
+
   const supabase = await createClient();
 
   const [{ count: communities }, { count: invoices }, { count: pending }, { count: budgets }] = await Promise.all([

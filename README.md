@@ -20,9 +20,11 @@ Rellena `.env.local`:
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+SUPER_ADMIN_EMAILS=tu-email@ejemplo.com
 ```
 
 No se usa `SUPABASE_SERVICE_ROLE_KEY`; las operaciones funcionan con Supabase Auth, cookies SSR y Row Level Security.
+`SUPER_ADMIN_EMAILS` es opcional y permite dar acceso total a una o varias cuentas separando los correos por comas.
 
 ## Crear proyecto Supabase
 
@@ -40,6 +42,7 @@ supabase/schema.sql
 ```
 
 El script crea las tablas `profiles`, `company_settings`, `communities` e `invoices`, índices, triggers de `updated_at`, trigger de perfil al registrar usuario y políticas RLS para que cada usuario solo lea y modifique sus propias filas.
+También añade roles básicos en `profiles`, un flag de `super_admin`, acceso vitalicio, estado de onboarding y permisos para que un super admin pueda ver el listado de usuarios registrados.
 
 ## Desarrollo local
 
@@ -52,10 +55,12 @@ Abre `http://localhost:3000`.
 ## Flujo de uso
 
 1. Registra un usuario o inicia sesión.
-2. Completa `/settings/company`.
-3. Crea comunidades en `/communities/new`.
-4. Crea una factura individual en `/invoices/new` o facturas mensuales en `/invoices/create-month`.
-5. Abre `/invoices/[id]/print` desde el botón `Imprimir`.
+2. Si el proyecto tiene verificación por email activa, confirma el correo y vuelve a iniciar sesión.
+3. Completa el onboarding inicial en `/welcome`.
+4. Completa `/settings/company`.
+5. Crea comunidades en `/communities/new`.
+6. Crea una factura individual en `/invoices/new` o facturas mensuales en `/invoices/create-month`.
+7. Abre `/invoices/[id]/print` desde el botón `Imprimir`.
 
 ## Despliegue en Vercel
 
