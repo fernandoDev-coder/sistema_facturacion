@@ -73,10 +73,12 @@ export async function loginAction(formData: FormData) {
     authRedirect("/login", "No se pudo iniciar sesión. Inténtalo de nuevo.");
   }
 
+  const user = data.user;
+
   const { data: profile } = await supabase
     .from("profiles")
     .select("onboarding_completed_at")
-    .eq("id", data.user.id)
+    .eq("id", user.id)
     .maybeSingle();
   if (profile && !profile.onboarding_completed_at) {
     redirect("/welcome");
