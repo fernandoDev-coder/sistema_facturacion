@@ -38,13 +38,21 @@ function translateAuthError(message: string) {
 }
 
 async function getEmailRedirectTo() {
+  const configuredSiteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? process.env.SITE_URL;
+  if (configuredSiteUrl) {
+    return `${configuredSiteUrl.replace(/\/$/, "")}/login?message=${encodeURIComponent("Email verificado. Ya puedes iniciar sesión.")}`;
+  }
+
   const headerList = await headers();
   const host = headerList.get("x-forwarded-host") ?? headerList.get("host");
-  const protocol = headerList.get("x-forwarded-proto") ?? "https";
 
   if (!host) {
     return undefined;
   }
+
+  const protocol =
+    headerList.get("x-forwarded-proto") ??
+    (host.startsWith("localhost") || host.startsWith("127.0.0.1") ? "http" : "https");
 
   return `${protocol}://${host}/login?message=${encodeURIComponent("Email verificado. Ya puedes iniciar sesión.")}`;
 }

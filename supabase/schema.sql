@@ -270,6 +270,24 @@ alter table public.communities enable row level security;
 alter table public.invoices enable row level security;
 alter table public.invoice_items enable row level security;
 
+grant usage on schema public to anon, authenticated, service_role;
+
+grant select, insert, update, delete
+on public.profiles,
+   public.company_settings,
+   public.communities,
+   public.invoices,
+   public.invoice_items
+to authenticated;
+
+grant select, insert, update, delete
+on public.profiles,
+   public.company_settings,
+   public.communities,
+   public.invoices,
+   public.invoice_items
+to service_role;
+
 drop policy if exists "profiles_select_own" on public.profiles;
 create policy "profiles_select_own"
 on public.profiles for select

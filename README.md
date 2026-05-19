@@ -20,18 +20,22 @@ Rellena `.env.local`:
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
 SUPER_ADMIN_EMAILS=tu-email@ejemplo.com
 ```
 
 No se usa `SUPABASE_SERVICE_ROLE_KEY`; las operaciones funcionan con Supabase Auth, cookies SSR y Row Level Security.
 `SUPER_ADMIN_EMAILS` es opcional y permite dar acceso total a una o varias cuentas separando los correos por comas.
+`NEXT_PUBLIC_SITE_URL` debe coincidir con la URL publica de la app. En local usa `http://localhost:3000`; en produccion usa la URL de Vercel o tu dominio.
 
 ## Crear proyecto Supabase
 
 1. Crea un proyecto en Supabase.
 2. En `Authentication > Providers`, activa Email.
 3. Si quieres que el registro entre directamente sin email de confirmación, desactiva temporalmente `Confirm email`.
-4. Copia `Project URL` y `anon public key` en `.env.local`.
+4. En `Authentication > URL Configuration`, configura `Site URL` y `Redirect URLs` con la misma URL que `NEXT_PUBLIC_SITE_URL`. Para desarrollo local, añade `http://localhost:3000/**`.
+5. Si personalizas la plantilla de confirmación, conserva el enlace `{{ .ConfirmationURL }}` o usa correctamente `{{ .Token }}` con un flujo OTP.
+6. Copia `Project URL` y `anon public key` en `.env.local`.
 
 ## Ejecutar SQL
 
@@ -69,6 +73,7 @@ Abre `http://localhost:3000`.
 3. Añade estas variables en `Project Settings > Environment Variables`:
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `NEXT_PUBLIC_SITE_URL`
 4. Despliega.
 
 La aplicación está preparada para Vercel y no requiere claves privadas en el servidor para esta versión.
