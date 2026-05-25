@@ -73,7 +73,15 @@ export default async function CompanySettingsPage({
               title="Introduce un IBAN válido."
               className="md:col-span-2"
             />
-            <label className="block md:col-span-2">
+            <Field
+              label="URL del logo"
+              name="logo_url"
+              type="url"
+              defaultValue={company?.logo_url}
+              placeholder="https://tudominio.com/logo.png"
+              title="URL publica de una imagen PNG, JPG, JPEG o WebP."
+              className="md:col-span-2"
+            />            <label className="block md:col-span-2">
               <span className="text-sm font-medium text-zinc-800">Texto legal o pie de factura</span>
               <textarea
                 name="invoice_footer"

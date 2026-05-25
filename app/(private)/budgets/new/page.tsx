@@ -41,9 +41,9 @@ export default async function NewBudgetPage({
         </section>
       ) : (
         <div className="rounded-md border border-zinc-200 bg-white p-8 text-center">
-          <p className="text-sm text-zinc-600">Primero crea una comunidad para poder preparar presupuestos.</p>
-          <Link href="/communities/new" className={buttonClass({ variant: "primary", className: "mt-4" })}>
-            Nueva comunidad
+          <p className="text-sm text-zinc-600">Primero crea un cliente para poder preparar presupuestos.</p>
+          <Link href="/clients/new" className={buttonClass({ variant: "primary", className: "mt-4" })}>
+            Nuevo cliente
           </Link>
         </div>
       )}

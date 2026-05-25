@@ -70,7 +70,7 @@ export default async function BudgetsPage({
           </select>
         </label>
         <label>
-          <span className="text-sm font-medium text-zinc-800">Comunidad</span>
+          <span className="text-sm font-medium text-zinc-800">Cliente</span>
           <select name="community" defaultValue={filters.community ?? ""} className="mt-1 h-10 w-full rounded-md border border-zinc-300 px-3 text-sm">
             <option value="">Todas</option>
             {communities?.map((community) => (
@@ -101,7 +101,7 @@ export default async function BudgetsPage({
           <thead className="bg-zinc-50 text-left text-xs font-semibold uppercase tracking-wide text-zinc-500">
             <tr>
               <th className="px-4 py-3">Numero</th>
-              <th className="px-4 py-3">Comunidad</th>
+              <th className="px-4 py-3">Cliente</th>
               <th className="px-4 py-3">Periodo</th>
               <th className="px-4 py-3">Total</th>
               <th className="px-4 py-3">Estado</th>

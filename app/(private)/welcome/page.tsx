@@ -29,18 +29,18 @@ export default async function WelcomePage() {
       cta: "Ir a empresa",
     },
     {
-      title: "Crea tu primera comunidad o cliente",
+      title: "Crea tu primer cliente",
       description: "Guarda los datos fiscales y de contacto para no tener que repetirlos en cada factura.",
-      href: "/communities/new",
+      href: "/clients/new",
       done: (communities ?? 0) > 0,
-      cta: "Nueva comunidad",
+      cta: "Nuevo cliente",
     },
     {
       title: "Genera tu primera factura o presupuesto",
-      description: "Cuando ya tengas una comunidad creada, podrás emitir el primer documento en pocos pasos.",
-      href: (communities ?? 0) > 0 ? "/invoices/new" : "/communities/new",
+      description: "Cuando ya tengas un cliente creado, podras emitir el primer documento en pocos pasos.",
+      href: (communities ?? 0) > 0 ? "/invoices/new" : "/clients/new",
       done: (invoices ?? 0) > 0,
-      cta: (communities ?? 0) > 0 ? "Nueva factura" : "Crear antes una comunidad",
+      cta: (communities ?? 0) > 0 ? "Nueva factura" : "Crear antes un cliente",
     },
   ];
 

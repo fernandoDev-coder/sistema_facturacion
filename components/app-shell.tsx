@@ -4,10 +4,11 @@ import { buttonClass } from "@/components/button-styles";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard" },
-  { href: "/communities", label: "Comunidades" },
+  { href: "/clients", label: "Clientes" },
   { href: "/invoices", label: "Facturas" },
   { href: "/budgets", label: "Presupuestos" },
   { href: "/settings/company", label: "Empresa" },
+  { href: "/settings/billing", label: "Plan" },
 ];
 
 export function AppShell({
@@ -25,7 +26,7 @@ export function AppShell({
     <div className="min-h-screen bg-zinc-50 text-zinc-950">
       <aside className="fixed inset-y-0 left-0 hidden w-64 border-r border-zinc-200 bg-white px-5 py-6 lg:block print:hidden">
         <Link href="/dashboard" className="block text-lg font-semibold">
-          Facturación Comunidades
+          CuotaClara
         </Link>
         <nav className="mt-8 space-y-1">
           {visibleNavItems.map((item) => (
@@ -51,7 +52,7 @@ export function AppShell({
       <header className="sticky top-0 z-20 border-b border-zinc-200 bg-white/95 px-4 py-3 backdrop-blur lg:hidden print:hidden">
         <div className="flex items-center justify-between gap-4">
           <Link href="/dashboard" className="font-semibold">
-            Facturación
+            CuotaClara
           </Link>
           <form action={logoutAction}>
             <button className={buttonClass({ variant: "secondary", size: "sm" })}>Salir</button>

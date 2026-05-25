@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Facturación Comunidades",
-  description: "SaaS sencillo para facturación mensual de comunidades.",
+  title: "CuotaClara",
+  description: "Facturacion mensual sencilla para autonomos, oficios y pequenos negocios.",
 };
 
 export default function RootLayout({

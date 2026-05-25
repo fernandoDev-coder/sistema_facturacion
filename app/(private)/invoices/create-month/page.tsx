@@ -28,8 +28,8 @@ export default async function CreateMonthPage({
         <Link href="/invoices" className={buttonClass({ variant: "ghost", size: "sm" })}>
           Volver
         </Link>
-        <h1 className="mt-2 text-2xl font-semibold">Crear facturas del mes</h1>
-        <p className="mt-1 text-sm text-zinc-600">Genera una factura en borrador por comunidad seleccionada.</p>
+        <h1 className="mt-2 text-2xl font-semibold">Facturacion mensual</h1>
+        <p className="mt-1 text-sm text-zinc-600">Genera una factura en borrador por cada cliente seleccionado.</p>
       </div>
       <Message text={params.message} />
       {communities?.length ? (
@@ -41,9 +41,9 @@ export default async function CreateMonthPage({
         />
       ) : (
         <div className="rounded-md border border-zinc-200 bg-white p-8 text-center">
-          <p className="text-sm text-zinc-600">No hay comunidades disponibles.</p>
-          <Link href="/communities/new" className={buttonClass({ variant: "primary", className: "mt-4" })}>
-            Nueva comunidad
+          <p className="text-sm text-zinc-600">No hay clientes disponibles.</p>
+          <Link href="/clients/new" className={buttonClass({ variant: "primary", className: "mt-4" })}>
+            Nuevo cliente
           </Link>
         </div>
       )}

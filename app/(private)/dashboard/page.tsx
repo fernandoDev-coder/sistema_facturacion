@@ -14,7 +14,7 @@ export default async function DashboardPage() {
 
   const supabase = await createClient();
 
-  const [{ count: communities }, { count: invoices }, { count: pending }, { count: budgets }] = await Promise.all([
+  const [{ count: clients }, { count: invoices }, { count: pending }, { count: budgets }] = await Promise.all([
     supabase.from("communities").select("id", { count: "exact", head: true }).eq("owner_id", user.id),
     supabase
       .from("invoices")
@@ -38,11 +38,11 @@ export default async function DashboardPage() {
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-semibold text-zinc-950">Dashboard</h1>
-        <p className="mt-1 text-sm text-zinc-600">Resumen rapido de comunidades, facturas y presupuestos.</p>
+        <p className="mt-1 text-sm text-zinc-600">Resumen rapido de clientes, facturas y presupuestos.</p>
       </div>
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <Metric label="Comunidades guardadas" value={communities ?? 0} />
+        <Metric label="Clientes guardados" value={clients ?? 0} />
         <Metric label="Facturas creadas" value={invoices ?? 0} />
         <Metric label="Facturas pendientes" value={pending ?? 0} />
         <Metric label="Presupuestos creados" value={budgets ?? 0} />
@@ -51,9 +51,9 @@ export default async function DashboardPage() {
       <section>
         <h2 className="text-lg font-semibold">Accesos rapidos</h2>
         <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          <QuickLink href="/communities/new" label="Nueva comunidad" variant="primary" />
-          <QuickLink href="/communities" label="Ver comunidades" variant="secondary" />
-          <QuickLink href="/invoices/create-month" label="Crear facturas del mes" variant="success" />
+          <QuickLink href="/clients/new" label="Nuevo cliente" variant="primary" />
+          <QuickLink href="/clients" label="Ver clientes" variant="secondary" />
+          <QuickLink href="/invoices/create-month" label="Facturacion mensual" variant="success" />
           <QuickLink href="/invoices" label="Ver facturas" variant="print" />
           <QuickLink href="/budgets/new" label="Nuevo presupuesto" variant="warning" />
           <QuickLink href="/budgets" label="Ver presupuestos" variant="secondary" />

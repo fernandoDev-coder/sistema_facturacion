@@ -20,6 +20,10 @@ export type Database = {
           plan: ProfilePlan;
           is_super_admin: boolean;
           has_lifetime_access: boolean;
+          stripe_customer_id: string | null;
+          stripe_subscription_id: string | null;
+          subscription_status: string | null;
+          subscription_current_period_end: string | null;
           onboarding_completed_at: string | null;
           created_at: string;
         };
@@ -30,6 +34,10 @@ export type Database = {
           plan?: ProfilePlan;
           is_super_admin?: boolean;
           has_lifetime_access?: boolean;
+          stripe_customer_id?: string | null;
+          stripe_subscription_id?: string | null;
+          subscription_status?: string | null;
+          subscription_current_period_end?: string | null;
           onboarding_completed_at?: string | null;
           created_at?: string;
         };
@@ -39,6 +47,10 @@ export type Database = {
           plan?: ProfilePlan;
           is_super_admin?: boolean;
           has_lifetime_access?: boolean;
+          stripe_customer_id?: string | null;
+          stripe_subscription_id?: string | null;
+          subscription_status?: string | null;
+          subscription_current_period_end?: string | null;
           onboarding_completed_at?: string | null;
         };
         Relationships: [];
@@ -96,6 +108,27 @@ export type Database = {
           },
         ];
       };
+      subscriptions: {
+        Row: Subscription;
+        Insert: Partial<Subscription> & {
+          owner_id: string;
+          stripe_customer_id: string;
+          stripe_subscription_id: string;
+          status: string;
+        };
+        Update: Partial<Omit<Subscription, "id" | "owner_id" | "created_at">>;
+        Relationships: [];
+      };
+      billing_events: {
+        Row: BillingEvent;
+        Insert: Partial<BillingEvent> & {
+          event_id: string;
+          type: string;
+          payload: unknown;
+        };
+        Update: Partial<Omit<BillingEvent, "id" | "event_id" | "created_at">>;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -127,6 +160,7 @@ export type CompanySettings = {
   email: string | null;
   phone: string | null;
   iban: string | null;
+  logo_url: string | null;
   invoice_footer: string | null;
   created_at: string;
   updated_at: string;
@@ -188,6 +222,30 @@ export type InvoiceItem = {
   vat_amount: number;
   total: number;
   sort_order: number;
+  created_at: string;
+};
+
+export type Subscription = {
+  id: string;
+  owner_id: string;
+  stripe_customer_id: string;
+  stripe_subscription_id: string;
+  stripe_price_id: string | null;
+  plan: Exclude<ProfilePlan, "starter">;
+  status: string;
+  current_period_end: string | null;
+  cancel_at_period_end: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type BillingEvent = {
+  id: string;
+  event_id: string;
+  type: string;
+  payload: unknown;
+  processed_at: string | null;
+  processing_error: string | null;
   created_at: string;
 };
 

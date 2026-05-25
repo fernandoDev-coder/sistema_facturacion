@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { calculateTotals, documentNumber, nullableText, requiredText, toDecimal } from "@/lib/format";
+import { assertCanCreateDocuments, assertCanUseMonthlyBulkInvoices } from "@/lib/plan-limits";
 import { createClient, requireUser } from "@/lib/supabase/server";
 import type { Community, DocumentType, InvoiceStatus } from "@/lib/types";
 
@@ -170,7 +171,17 @@ export async function createMonthlyInvoicesAction(formData: FormData) {
   const selectedCommunityIds = formData.getAll("include").map(String);
 
   if (!month || !year || selectedCommunityIds.length === 0) {
-    redirect("/invoices/create-month?message=Selecciona mes, anio y al menos una comunidad.");
+    redirect("/invoices/create-month?message=Selecciona mes, anio y al menos un cliente.");
+  }
+
+  const bulkError = await assertCanUseMonthlyBulkInvoices(supabase, user.id);
+  if (bulkError) {
+    redirect(`/invoices/create-month?message=${encodeURIComponent(bulkError)}`);
+  }
+
+  const limitError = await assertCanCreateDocuments(supabase, user.id, selectedCommunityIds.length);
+  if (limitError) {
+    redirect(`/invoices/create-month?message=${encodeURIComponent(limitError)}`);
   }
 
   const { data: duplicates, error: duplicateError } = await supabase
@@ -189,7 +200,7 @@ export async function createMonthlyInvoicesAction(formData: FormData) {
   if ((duplicates?.length ?? 0) > 0 && !confirmDuplicates) {
     redirect(
       `/invoices/create-month?month=${month}&year=${year}&message=${encodeURIComponent(
-        "Ya existen facturas para alguna comunidad seleccionada. Confirma los duplicados para continuar.",
+        "Ya existen facturas para algun cliente seleccionado. Confirma los duplicados para continuar.",
       )}`,
     );
   }
@@ -288,6 +299,12 @@ export async function createMonthlyInvoicesAction(formData: FormData) {
 async function createDocumentAction(formData: FormData, documentType: DocumentType) {
   const user = await requireUser();
   const supabase = await createClient();
+  const limitError = await assertCanCreateDocuments(supabase, user.id);
+
+  if (limitError) {
+    redirect(`${basePath(documentType)}?message=${encodeURIComponent(limitError)}`);
+  }
+
   const payload = parseInvoicePayload(formData);
   const snapshot = await getCommunitySnapshot(supabase, user.id, payload.community_id);
 

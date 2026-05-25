@@ -119,7 +119,7 @@ export function InvoiceForm({
 
       <div className="grid gap-4 md:grid-cols-2">
         <label className="block">
-          <span className="text-sm font-medium text-zinc-800">Comunidad</span>
+          <span className="text-sm font-medium text-zinc-800">Cliente</span>
           <select
             name="community_id"
             required

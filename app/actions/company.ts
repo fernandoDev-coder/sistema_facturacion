@@ -36,6 +36,7 @@ export async function saveCompanySettingsAction(formData: FormData) {
     email: nullableText(formData.get("email")),
     phone: phone.value,
     iban: iban.value,
+    logo_url: nullableText(formData.get("logo_url")),
     invoice_footer: nullableText(formData.get("invoice_footer")),
     updated_at: new Date().toISOString(),
   };

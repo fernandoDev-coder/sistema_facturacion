@@ -3,17 +3,18 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { nullableText, requiredText, toDecimal } from "@/lib/format";
+import { assertCanCreateClient } from "@/lib/plan-limits";
 import { createClient, requireUser } from "@/lib/supabase/server";
 import { assertValidFields, cleanPhone, cleanPostalCode, cleanTaxId } from "@/lib/validators";
 
-function communityPayload(formData: FormData) {
+function clientPayload(formData: FormData) {
   const name = requiredText(formData.get("name"));
   const taxId = cleanTaxId(nullableText(formData.get("tax_id")));
   const postalCode = cleanPostalCode(nullableText(formData.get("postal_code")));
   const phone = cleanPhone(nullableText(formData.get("phone")));
 
   if (!name) {
-    throw new Error("El nombre de la comunidad es obligatorio.");
+    throw new Error("El nombre del cliente es obligatorio.");
   }
 
   assertValidFields([
@@ -38,15 +39,21 @@ function communityPayload(formData: FormData) {
   };
 }
 
-export async function createCommunityAction(formData: FormData) {
+export async function createClientAction(formData: FormData) {
   const user = await requireUser();
   const supabase = await createClient();
-  let payload: ReturnType<typeof communityPayload>;
+  const limitError = await assertCanCreateClient(supabase, user.id);
+
+  if (limitError) {
+    redirect(`/clients?message=${encodeURIComponent(limitError)}`);
+  }
+
+  let payload: ReturnType<typeof clientPayload>;
 
   try {
-    payload = communityPayload(formData);
+    payload = clientPayload(formData);
   } catch (error) {
-    redirect(`/communities/new?message=${encodeURIComponent((error as Error).message)}`);
+    redirect(`/clients/new?message=${encodeURIComponent((error as Error).message)}`);
   }
 
   const { error } = await supabase.from("communities").insert({
@@ -55,23 +62,23 @@ export async function createCommunityAction(formData: FormData) {
   });
 
   if (error) {
-    redirect(`/communities/new?message=${encodeURIComponent(error.message)}`);
+    redirect(`/clients/new?message=${encodeURIComponent(error.message)}`);
   }
 
-  revalidatePath("/communities");
-  redirect("/communities");
+  revalidatePath("/clients");
+  redirect("/clients");
 }
 
-export async function updateCommunityAction(formData: FormData) {
+export async function updateClientAction(formData: FormData) {
   const user = await requireUser();
   const id = requiredText(formData.get("id"));
   const supabase = await createClient();
-  let payload: ReturnType<typeof communityPayload>;
+  let payload: ReturnType<typeof clientPayload>;
 
   try {
-    payload = communityPayload(formData);
+    payload = clientPayload(formData);
   } catch (error) {
-    redirect(`/communities/${id}/edit?message=${encodeURIComponent((error as Error).message)}`);
+    redirect(`/clients/${id}/edit?message=${encodeURIComponent((error as Error).message)}`);
   }
 
   const { error } = await supabase
@@ -81,14 +88,14 @@ export async function updateCommunityAction(formData: FormData) {
     .eq("owner_id", user.id);
 
   if (error) {
-    redirect(`/communities/${id}/edit?message=${encodeURIComponent(error.message)}`);
+    redirect(`/clients/${id}/edit?message=${encodeURIComponent(error.message)}`);
   }
 
-  revalidatePath("/communities");
-  redirect("/communities");
+  revalidatePath("/clients");
+  redirect("/clients");
 }
 
-export async function deleteCommunityAction(formData: FormData) {
+export async function deleteClientAction(formData: FormData) {
   const user = await requireUser();
   const id = requiredText(formData.get("id"));
   const supabase = await createClient();
@@ -96,9 +103,9 @@ export async function deleteCommunityAction(formData: FormData) {
   const { error } = await supabase.from("communities").delete().eq("id", id).eq("owner_id", user.id);
 
   if (error) {
-    redirect(`/communities?message=${encodeURIComponent(error.message)}`);
+    redirect(`/clients?message=${encodeURIComponent(error.message)}`);
   }
 
-  revalidatePath("/communities");
-  redirect("/communities");
+  revalidatePath("/clients");
+  redirect("/clients");
 }

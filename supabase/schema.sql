@@ -7,6 +7,10 @@ create table if not exists public.profiles (
   plan text not null default 'starter',
   is_super_admin boolean not null default false,
   has_lifetime_access boolean not null default false,
+  stripe_customer_id text,
+  stripe_subscription_id text,
+  subscription_status text,
+  subscription_current_period_end timestamp with time zone,
   onboarding_completed_at timestamp with time zone,
   created_at timestamp with time zone not null default now(),
   constraint profiles_role_check check (role in ('user', 'admin', 'super_admin')),
@@ -25,6 +29,7 @@ create table if not exists public.company_settings (
   email text,
   phone text,
   iban text,
+  logo_url text,
   invoice_footer text,
   created_at timestamp with time zone not null default now(),
   updated_at timestamp with time zone not null default now(),
@@ -116,8 +121,49 @@ create table if not exists public.invoice_items (
   created_at timestamp with time zone not null default now()
 );
 
+create table if not exists public.subscriptions (
+  id uuid primary key default gen_random_uuid(),
+  owner_id uuid not null references auth.users(id) on delete cascade,
+  stripe_customer_id text not null,
+  stripe_subscription_id text not null unique,
+  stripe_price_id text,
+  plan text not null default 'pro',
+  status text not null,
+  current_period_end timestamp with time zone,
+  cancel_at_period_end boolean not null default false,
+  created_at timestamp with time zone not null default now(),
+  updated_at timestamp with time zone not null default now(),
+  constraint subscriptions_plan_check check (plan in ('pro', 'premium', 'enterprise'))
+);
+
+create table if not exists public.billing_events (
+  id uuid primary key default gen_random_uuid(),
+  event_id text not null unique,
+  type text not null,
+  payload jsonb not null,
+  processed_at timestamp with time zone,
+  processing_error text,
+  created_at timestamp with time zone not null default now()
+);
+
+alter table public.billing_events alter column processed_at drop not null;
+alter table public.billing_events alter column processed_at drop default;
+alter table public.billing_events add column if not exists processing_error text;
+
+alter table public.profiles add column if not exists role text not null default 'user';
+alter table public.profiles add column if not exists plan text not null default 'starter';
+alter table public.profiles add column if not exists is_super_admin boolean not null default false;
+alter table public.profiles add column if not exists has_lifetime_access boolean not null default false;
+alter table public.profiles add column if not exists stripe_customer_id text;
+alter table public.profiles add column if not exists stripe_subscription_id text;
+alter table public.profiles add column if not exists subscription_status text;
+alter table public.profiles add column if not exists subscription_current_period_end timestamp with time zone;
+alter table public.profiles add column if not exists onboarding_completed_at timestamp with time zone;
+
 create index if not exists company_settings_owner_id_idx on public.company_settings(owner_id);
 create index if not exists profiles_email_idx on public.profiles(email);
+create unique index if not exists profiles_stripe_customer_id_key on public.profiles(stripe_customer_id) where stripe_customer_id is not null;
+create index if not exists profiles_stripe_subscription_id_idx on public.profiles(stripe_subscription_id);
 create index if not exists communities_owner_id_idx on public.communities(owner_id);
 create index if not exists communities_owner_id_name_idx on public.communities(owner_id, name);
 create index if not exists invoices_owner_id_idx on public.invoices(owner_id);
@@ -126,12 +172,10 @@ create index if not exists invoices_owner_document_year_idx on public.invoices(o
 create index if not exists invoices_community_id_idx on public.invoices(community_id);
 create index if not exists invoice_items_owner_id_idx on public.invoice_items(owner_id);
 create index if not exists invoice_items_invoice_id_idx on public.invoice_items(invoice_id);
+create index if not exists subscriptions_owner_id_idx on public.subscriptions(owner_id);
+create index if not exists subscriptions_stripe_customer_id_idx on public.subscriptions(stripe_customer_id);
 
-alter table public.profiles add column if not exists role text not null default 'user';
-alter table public.profiles add column if not exists plan text not null default 'starter';
-alter table public.profiles add column if not exists is_super_admin boolean not null default false;
-alter table public.profiles add column if not exists has_lifetime_access boolean not null default false;
-alter table public.profiles add column if not exists onboarding_completed_at timestamp with time zone;
+alter table public.company_settings add column if not exists logo_url text;
 
 alter table public.profiles drop constraint if exists profiles_role_check;
 alter table public.profiles add constraint profiles_role_check check (
@@ -228,6 +272,11 @@ create trigger set_invoices_updated_at
 before update on public.invoices
 for each row execute function public.set_updated_at();
 
+drop trigger if exists set_subscriptions_updated_at on public.subscriptions;
+create trigger set_subscriptions_updated_at
+before update on public.subscriptions
+for each row execute function public.set_updated_at();
+
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql
@@ -269,6 +318,8 @@ alter table public.company_settings enable row level security;
 alter table public.communities enable row level security;
 alter table public.invoices enable row level security;
 alter table public.invoice_items enable row level security;
+alter table public.subscriptions enable row level security;
+alter table public.billing_events enable row level security;
 
 grant usage on schema public to anon, authenticated, service_role;
 
@@ -277,15 +328,21 @@ on public.profiles,
    public.company_settings,
    public.communities,
    public.invoices,
-   public.invoice_items
+   public.invoice_items,
+   public.subscriptions
 to authenticated;
+
+revoke update on public.profiles from authenticated;
+grant update (email, onboarding_completed_at) on public.profiles to authenticated;
 
 grant select, insert, update, delete
 on public.profiles,
    public.company_settings,
    public.communities,
    public.invoices,
-   public.invoice_items
+   public.invoice_items,
+   public.subscriptions,
+   public.billing_events
 to service_role;
 
 drop policy if exists "profiles_select_own" on public.profiles;
@@ -398,3 +455,13 @@ drop policy if exists "invoice_items_delete_own" on public.invoice_items;
 create policy "invoice_items_delete_own"
 on public.invoice_items for delete
 using (auth.uid() = owner_id);
+
+drop policy if exists "subscriptions_select_own" on public.subscriptions;
+create policy "subscriptions_select_own"
+on public.subscriptions for select
+using (auth.uid() = owner_id);
+
+drop policy if exists "subscriptions_select_super_admin" on public.subscriptions;
+create policy "subscriptions_select_super_admin"
+on public.subscriptions for select
+using (public.is_super_admin());

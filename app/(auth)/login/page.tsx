@@ -17,7 +17,7 @@ export default async function LoginPage({
       <section className="w-full max-w-md rounded-lg border border-zinc-200 bg-white p-8 shadow-sm">
         <h1 className="text-2xl font-semibold text-zinc-950">Iniciar sesión</h1>
         <p className="mt-2 text-sm text-zinc-600">
-          Accede para gestionar comunidades y facturas. Si acabas de registrarte, verifica tu email primero.
+          Accede para gestionar clientes y facturas. Si acabas de registrarte, verifica tu email primero.
         </p>
         <Message text={message} />
         <form action={loginAction} autoComplete="on" className="mt-6 space-y-4">
@@ -60,7 +60,11 @@ export default async function LoginPage({
             Regístrate
           </Link>
         </p>
-      </section>
+        <p className="mt-3 text-center text-sm text-zinc-600">
+          <Link href="/pricing" className="font-medium text-slate-900 hover:underline">
+            Ver planes y precios
+          </Link>
+        </p>      </section>
     </main>
   );
 }

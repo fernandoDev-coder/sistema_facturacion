@@ -1,6 +1,6 @@
 import type { User } from "@supabase/supabase-js";
 import type { Database } from "@/lib/types";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient, createClient } from "@/lib/supabase/server";
 
 type SupabaseClient = Awaited<ReturnType<typeof createClient>>;
 type ProfileUpdate = Database["public"]["Tables"]["profiles"]["Update"];
@@ -25,19 +25,25 @@ export async function syncCurrentUserAccess(user: User, supabase?: SupabaseClien
   const superAdminEmails = getConfiguredSuperAdminEmails();
   const shouldBeSuperAdmin = normalizedEmail ? superAdminEmails.includes(normalizedEmail) : false;
 
-  const update: ProfileUpdate = shouldBeSuperAdmin
-    ? {
-        email: user.email ?? null,
-        role: "super_admin",
-        plan: "enterprise",
-        is_super_admin: true,
-        has_lifetime_access: true,
-      }
-    : {
-        email: user.email ?? null,
-      };
+  await client.from("profiles").update({ email: user.email ?? null }).eq("id", user.id);
 
-  await client.from("profiles").update(update).eq("id", user.id);
+  if (!shouldBeSuperAdmin) {
+    return;
+  }
+
+  const update: ProfileUpdate = {
+    email: user.email ?? null,
+    role: "super_admin",
+    plan: "enterprise",
+    is_super_admin: true,
+    has_lifetime_access: true,
+  };
+
+  try {
+    await createAdminClient().from("profiles").update(update).eq("id", user.id);
+  } catch {
+    // Super admin promotion needs SUPABASE_SERVICE_ROLE_KEY after billing hardening.
+  }
 }
 
 export function getConfiguredSuperAdminEmails() {

@@ -46,7 +46,7 @@ export function CreateMonthForm({
 
         if (duplicates.length > 0 && confirmDuplicates !== "yes") {
           const accepted = window.confirm(
-            "Ya existen facturas para alguna comunidad seleccionada en ese mes. ¿Quieres crear duplicados?",
+            "Ya existen facturas para algun cliente seleccionado en ese mes. Quieres crear duplicados?",
           );
 
           if (!accepted) {
@@ -101,7 +101,7 @@ export function CreateMonthForm({
           <thead className="bg-zinc-50 text-left text-xs font-semibold uppercase tracking-wide text-zinc-500">
             <tr>
               <th className="w-14 px-4 py-3">Incluir</th>
-              <th className="px-4 py-3">Comunidad</th>
+              <th className="px-4 py-3">Cliente</th>
               <th className="px-4 py-3">Concepto</th>
               <th className="w-36 px-4 py-3">Base</th>
               <th className="w-28 px-4 py-3">IVA</th>
@@ -135,7 +135,7 @@ export function CreateMonthForm({
                 <td className="px-4 py-3 align-top">
                   <textarea
                     name={`subject_${community.id}`}
-                    defaultValue={community.default_subject ?? `Cuota comunidad ${monthNames[month - 1]} ${year}`}
+                    defaultValue={community.default_subject ?? `Servicio mensual ${monthNames[month - 1]} ${year}`}
                     rows={3}
                     className="w-full min-w-[28rem] rounded-md border border-zinc-300 px-3 py-2 text-sm leading-6"
                   />

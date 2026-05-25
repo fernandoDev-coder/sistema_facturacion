@@ -10,7 +10,7 @@ const contentSecurityPolicy = `
   object-src 'none';
   script-src 'self' 'unsafe-inline' ${isDevelopment ? "'unsafe-eval'" : ""};
   style-src 'self' 'unsafe-inline';
-  img-src 'self' data: blob:;
+  img-src 'self' https: data: blob:;
   font-src 'self' data:;
   connect-src 'self' https://*.supabase.co wss://*.supabase.co;
   upgrade-insecure-requests;

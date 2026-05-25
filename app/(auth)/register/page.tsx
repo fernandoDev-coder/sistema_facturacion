@@ -48,7 +48,11 @@ export default async function RegisterPage({
             Inicia sesión
           </Link>
         </p>
-      </section>
+        <p className="mt-3 text-center text-sm text-zinc-600">
+          <Link href="/pricing" className="font-medium text-slate-900 hover:underline">
+            Ver planes y precios
+          </Link>
+        </p>      </section>
     </main>
   );
 }
