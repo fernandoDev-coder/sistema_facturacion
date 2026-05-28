@@ -422,13 +422,29 @@ using (auth.uid() = owner_id);
 drop policy if exists "invoices_insert_own" on public.invoices;
 create policy "invoices_insert_own"
 on public.invoices for insert
-with check (auth.uid() = owner_id);
+with check (
+  auth.uid() = owner_id
+  and exists (
+    select 1
+    from public.communities
+    where communities.id = invoices.community_id
+      and communities.owner_id = auth.uid()
+  )
+);
 
 drop policy if exists "invoices_update_own" on public.invoices;
 create policy "invoices_update_own"
 on public.invoices for update
 using (auth.uid() = owner_id)
-with check (auth.uid() = owner_id);
+with check (
+  auth.uid() = owner_id
+  and exists (
+    select 1
+    from public.communities
+    where communities.id = invoices.community_id
+      and communities.owner_id = auth.uid()
+  )
+);
 
 drop policy if exists "invoices_delete_own" on public.invoices;
 create policy "invoices_delete_own"
@@ -438,23 +454,63 @@ using (auth.uid() = owner_id);
 drop policy if exists "invoice_items_select_own" on public.invoice_items;
 create policy "invoice_items_select_own"
 on public.invoice_items for select
-using (auth.uid() = owner_id);
+using (
+  auth.uid() = owner_id
+  and exists (
+    select 1
+    from public.invoices
+    where invoices.id = invoice_items.invoice_id
+      and invoices.owner_id = auth.uid()
+  )
+);
 
 drop policy if exists "invoice_items_insert_own" on public.invoice_items;
 create policy "invoice_items_insert_own"
 on public.invoice_items for insert
-with check (auth.uid() = owner_id);
+with check (
+  auth.uid() = owner_id
+  and exists (
+    select 1
+    from public.invoices
+    where invoices.id = invoice_items.invoice_id
+      and invoices.owner_id = auth.uid()
+  )
+);
 
 drop policy if exists "invoice_items_update_own" on public.invoice_items;
 create policy "invoice_items_update_own"
 on public.invoice_items for update
-using (auth.uid() = owner_id)
-with check (auth.uid() = owner_id);
+using (
+  auth.uid() = owner_id
+  and exists (
+    select 1
+    from public.invoices
+    where invoices.id = invoice_items.invoice_id
+      and invoices.owner_id = auth.uid()
+  )
+)
+with check (
+  auth.uid() = owner_id
+  and exists (
+    select 1
+    from public.invoices
+    where invoices.id = invoice_items.invoice_id
+      and invoices.owner_id = auth.uid()
+  )
+);
 
 drop policy if exists "invoice_items_delete_own" on public.invoice_items;
 create policy "invoice_items_delete_own"
 on public.invoice_items for delete
-using (auth.uid() = owner_id);
+using (
+  auth.uid() = owner_id
+  and exists (
+    select 1
+    from public.invoices
+    where invoices.id = invoice_items.invoice_id
+      and invoices.owner_id = auth.uid()
+  )
+);
 
 drop policy if exists "subscriptions_select_own" on public.subscriptions;
 create policy "subscriptions_select_own"

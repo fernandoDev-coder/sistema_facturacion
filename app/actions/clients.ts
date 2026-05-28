@@ -81,14 +81,16 @@ export async function updateClientAction(formData: FormData) {
     redirect(`/clients/${id}/edit?message=${encodeURIComponent((error as Error).message)}`);
   }
 
-  const { error } = await supabase
+  const { data: updatedClient, error } = await supabase
     .from("communities")
     .update(payload)
     .eq("id", id)
-    .eq("owner_id", user.id);
+    .eq("owner_id", user.id)
+    .select("id")
+    .maybeSingle();
 
-  if (error) {
-    redirect(`/clients/${id}/edit?message=${encodeURIComponent(error.message)}`);
+  if (error || !updatedClient) {
+    redirect(`/clients/${id}/edit?message=${encodeURIComponent(error?.message ?? "Cliente no encontrado.")}`);
   }
 
   revalidatePath("/clients");
@@ -100,10 +102,16 @@ export async function deleteClientAction(formData: FormData) {
   const id = requiredText(formData.get("id"));
   const supabase = await createClient();
 
-  const { error } = await supabase.from("communities").delete().eq("id", id).eq("owner_id", user.id);
+  const { data: deletedClient, error } = await supabase
+    .from("communities")
+    .delete()
+    .eq("id", id)
+    .eq("owner_id", user.id)
+    .select("id")
+    .maybeSingle();
 
-  if (error) {
-    redirect(`/clients?message=${encodeURIComponent(error.message)}`);
+  if (error || !deletedClient) {
+    redirect(`/clients?message=${encodeURIComponent(error?.message ?? "Cliente no encontrado.")}`);
   }
 
   revalidatePath("/clients");

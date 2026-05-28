@@ -4,6 +4,7 @@ import { buttonClass } from "@/components/button-styles";
 import { ConfirmForm } from "@/components/confirm-form";
 import { Message } from "@/components/message";
 import { createClient, requireUser } from "@/lib/supabase/server";
+import type { Community } from "@/lib/types";
 
 export default async function ClientsPage({
   searchParams,
@@ -14,17 +15,7 @@ export default async function ClientsPage({
   const { q, message } = await searchParams;
   const supabase = await createClient();
   const search = (q ?? "").trim().replaceAll(",", " ");
-  let query = supabase
-    .from("communities")
-    .select("*")
-    .eq("owner_id", user.id)
-    .order("name", { ascending: true });
-
-  if (search) {
-    query = query.or(`name.ilike.%${search}%,tax_id.ilike.%${search}%,city.ilike.%${search}%`);
-  }
-
-  const { data: clients, error } = await query;
+  const { clients, errorMessage } = await getClients(supabase, user.id, search);
 
   return (
     <div className="space-y-6">
@@ -37,7 +28,7 @@ export default async function ClientsPage({
           Crear
         </Link>
       </div>
-      <Message text={message ?? error?.message} />
+      <Message text={message ?? errorMessage} />
       <form className="flex max-w-xl gap-2">
         <input
           name="q"
@@ -94,4 +85,45 @@ export default async function ClientsPage({
       </div>
     </div>
   );
+}
+
+async function getClients(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  ownerId: string,
+  search: string,
+) {
+  const baseQuery = () =>
+    supabase
+      .from("communities")
+      .select("*")
+      .eq("owner_id", ownerId);
+
+  if (!search) {
+    const { data, error } = await baseQuery().order("name", { ascending: true });
+    return { clients: data ?? [], errorMessage: error?.message };
+  }
+
+  const pattern = `%${escapeLikePattern(search)}%`;
+  const results = await Promise.all([
+    baseQuery().ilike("name", pattern),
+    baseQuery().ilike("tax_id", pattern),
+    baseQuery().ilike("city", pattern),
+  ]);
+  const error = results.find((result) => result.error)?.error;
+  const clientsById = new Map<string, Community>();
+
+  for (const result of results) {
+    for (const client of result.data ?? []) {
+      clientsById.set(client.id, client);
+    }
+  }
+
+  return {
+    clients: Array.from(clientsById.values()).sort((a, b) => a.name.localeCompare(b.name, "es")),
+    errorMessage: error?.message,
+  };
+}
+
+function escapeLikePattern(value: string) {
+  return value.replace(/[\\%_]/g, "\\$&");
 }

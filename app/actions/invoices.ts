@@ -126,13 +126,19 @@ export async function updateBudgetAction(formData: FormData) {
 export async function deleteInvoiceAction(formData: FormData) {
   const user = await requireUser();
   const id = requiredText(formData.get("id"));
-  const redirectPath = requiredText(formData.get("redirect_path")) || "/invoices";
+  const redirectPath = safeDocumentRedirectPath(formData.get("redirect_path"));
   const supabase = await createClient();
 
-  const { error } = await supabase.from("invoices").delete().eq("id", id).eq("owner_id", user.id);
+  const { data: deletedInvoice, error } = await supabase
+    .from("invoices")
+    .delete()
+    .eq("id", id)
+    .eq("owner_id", user.id)
+    .select("id")
+    .maybeSingle();
 
-  if (error) {
-    redirect(`${redirectPath}?message=${encodeURIComponent(error.message)}`);
+  if (error || !deletedInvoice) {
+    redirect(`${redirectPath}?message=${encodeURIComponent(error?.message ?? "Documento no encontrado.")}`);
   }
 
   revalidatePath("/invoices");
@@ -146,15 +152,17 @@ export async function markInvoicePaidAction(formData: FormData) {
   const id = requiredText(formData.get("id"));
   const supabase = await createClient();
 
-  const { error } = await supabase
+  const { data: updatedInvoice, error } = await supabase
     .from("invoices")
     .update({ status: "paid", updated_at: new Date().toISOString() })
     .eq("id", id)
     .eq("owner_id", user.id)
-    .eq("document_type", "invoice");
+    .eq("document_type", "invoice")
+    .select("id")
+    .maybeSingle();
 
-  if (error) {
-    redirect(`/invoices?message=${encodeURIComponent(error.message)}`);
+  if (error || !updatedInvoice) {
+    redirect(`/invoices?message=${encodeURIComponent(error?.message ?? "Factura no encontrada.")}`);
   }
 
   revalidatePath("/invoices");
@@ -168,7 +176,7 @@ export async function createMonthlyInvoicesAction(formData: FormData) {
   const month = Number(formData.get("month"));
   const year = Number(formData.get("year"));
   const confirmDuplicates = formData.get("confirm_duplicates") === "yes";
-  const selectedCommunityIds = formData.getAll("include").map(String);
+  const selectedCommunityIds = Array.from(new Set(formData.getAll("include").map(String)));
 
   if (!month || !year || selectedCommunityIds.length === 0) {
     redirect("/invoices/create-month?message=Selecciona mes, anio y al menos un cliente.");
@@ -223,6 +231,10 @@ export async function createMonthlyInvoicesAction(formData: FormData) {
   }
 
   const communitiesById = new Map((selectedCommunities ?? []).map((community) => [community.id, community]));
+
+  if (communitiesById.size !== selectedCommunityIds.length) {
+    redirect("/invoices/create-month?message=Alguno de los clientes seleccionados no existe o no pertenece a tu cuenta.");
+  }
 
   const rows = selectedCommunityIds.map((communityId, index) => {
     const community = communitiesById.get(communityId);
@@ -306,7 +318,7 @@ async function createDocumentAction(formData: FormData, documentType: DocumentTy
   }
 
   const payload = parseInvoicePayload(formData);
-  const snapshot = await getCommunitySnapshot(supabase, user.id, payload.community_id);
+  const snapshot = await getCommunitySnapshotOrRedirect(supabase, user.id, payload.community_id, `${basePath(documentType)}/new`);
 
   if (payload.document_type !== documentType) {
     throw new Error("Tipo de documento incoherente.");
@@ -349,7 +361,7 @@ async function updateDocumentAction(formData: FormData, documentType: DocumentTy
   const id = requiredText(formData.get("id"));
   const supabase = await createClient();
   const payload = parseInvoicePayload(formData);
-  const snapshot = await getCommunitySnapshot(supabase, user.id, payload.community_id);
+  const snapshot = await getCommunitySnapshotOrRedirect(supabase, user.id, payload.community_id, `${basePath(documentType)}/${id}/edit`);
 
   if (payload.document_type !== documentType) {
     throw new Error("Tipo de documento incoherente.");
@@ -357,15 +369,17 @@ async function updateDocumentAction(formData: FormData, documentType: DocumentTy
 
   const { items, ...invoicePayload } = payload;
 
-  const { error } = await supabase
+  const { data: updatedInvoice, error } = await supabase
     .from("invoices")
     .update({ ...snapshot, ...invoicePayload })
     .eq("id", id)
     .eq("owner_id", user.id)
-    .eq("document_type", documentType);
+    .eq("document_type", documentType)
+    .select("id")
+    .maybeSingle();
 
-  if (error) {
-    redirect(`${basePath(documentType)}/${id}/edit?message=${encodeURIComponent(error.message)}`);
+  if (error || !updatedInvoice) {
+    redirect(`${basePath(documentType)}/${id}/edit?message=${encodeURIComponent(error?.message ?? "Documento no encontrado.")}`);
   }
 
   const { error: deleteItemsError } = await supabase.from("invoice_items").delete().eq("invoice_id", id).eq("owner_id", user.id);
@@ -395,14 +409,31 @@ async function getCommunitySnapshot(
   ownerId: string,
   communityId: string,
 ) {
-  const { data: community } = await supabase
+  const { data: community, error } = await supabase
     .from("communities")
     .select("*")
     .eq("id", communityId)
     .eq("owner_id", ownerId)
-    .single();
+    .maybeSingle();
+
+  if (error || !community) {
+    throw new Error("El cliente seleccionado no existe o no pertenece a tu cuenta.");
+  }
 
   return snapshotFromCommunity(community);
+}
+
+async function getCommunitySnapshotOrRedirect(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  ownerId: string,
+  communityId: string,
+  path: string,
+) {
+  try {
+    return await getCommunitySnapshot(supabase, ownerId, communityId);
+  } catch (error) {
+    redirect(`${path}?message=${encodeURIComponent((error as Error).message)}`);
+  }
 }
 
 function snapshotFromCommunity(community?: Community | null) {
@@ -420,6 +451,11 @@ function snapshotFromCommunity(community?: Community | null) {
 
 function basePath(documentType: DocumentType) {
   return documentType === "budget" ? "/budgets" : "/invoices";
+}
+
+function safeDocumentRedirectPath(value: FormDataEntryValue | null) {
+  const path = requiredText(value);
+  return path === "/budgets" ? "/budgets" : "/invoices";
 }
 
 function revalidateDocumentPaths(documentType: DocumentType) {

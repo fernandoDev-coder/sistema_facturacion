@@ -85,6 +85,26 @@ npm run dev
 
 Abre `http://localhost:3000`.
 
+## Verificacion de seguridad
+
+```bash
+npm audit --audit-level=moderate
+npm run lint
+npm test
+npm run build
+```
+
+`npm test` ejecuta comprobaciones estaticas de acciones, politicas RLS y dependencias. Tambien incluye una prueba de aislamiento real entre dos usuarios de Supabase; se omite si no existen estas variables:
+
+```bash
+SECURITY_TEST_USER_A_EMAIL=
+SECURITY_TEST_USER_A_PASSWORD=
+SECURITY_TEST_USER_B_EMAIL=
+SECURITY_TEST_USER_B_PASSWORD=
+```
+
+Las dos cuentas deben existir en el proyecto Supabase configurado en `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+
 ## Flujo de uso
 
 1. Registra un usuario o inicia sesion.
