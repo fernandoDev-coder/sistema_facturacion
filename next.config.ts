@@ -19,6 +19,11 @@ const contentSecurityPolicy = `
   .trim();
 
 const nextConfig: NextConfig = {
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "3mb",
+    },
+  },
   async headers() {
     return [
       {

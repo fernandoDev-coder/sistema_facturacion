@@ -54,6 +54,7 @@ supabase/schema.sql
 
 El script crea las tablas `profiles`, `company_settings`, `communities`, `invoices`, `invoice_items`, `subscriptions` y `billing_events`, indices, triggers de `updated_at`, trigger de perfil al registrar usuario y politicas RLS.
 Tambien anade roles basicos en `profiles`, un flag de `super_admin`, acceso vitalicio, estado de onboarding y campos Stripe. La actualizacion de columnas sensibles de perfil queda restringida a la service role.
+Tambien crea el bucket publico `company-logos` en Supabase Storage para que cada usuario pueda subir su logo en una carpeta propia. Los logos se limitan a PNG, JPG o WebP de hasta 2 MB.
 
 ## Monetizacion con Stripe
 

@@ -25,7 +25,7 @@ export default async function CompanySettingsPage({
       </div>
       <Message text={message} />
       <section className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">
-        <form action={saveCompanySettingsAction} className="space-y-6">
+        <form action={saveCompanySettingsAction} encType="multipart/form-data" className="space-y-6">
           <div className="grid gap-4 md:grid-cols-2">
             <Field label="Nombre fiscal" name="fiscal_name" defaultValue={company?.fiscal_name} />
             <Field
@@ -82,6 +82,25 @@ export default async function CompanySettingsPage({
               title="Pega la URL directa de la imagen. Si usas Bing, la app intentara extraer mediaurl o cdnurl."
               className="md:col-span-2"
             />
+            <label className="block md:col-span-2">
+              <span className="text-sm font-medium text-zinc-800">Subir logo desde el ordenador</span>
+              <input
+                name="logo_file"
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                className="mt-1 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm file:mr-4 file:rounded-md file:border-0 file:bg-slate-900 file:px-3 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-slate-700"
+              />
+              <span className="mt-1 block text-xs text-zinc-500">PNG, JPG o WebP. Maximo 2 MB.</span>
+            </label>
+            {company?.logo_url ? (
+              <div className="md:col-span-2">
+                <span className="text-sm font-medium text-zinc-800">Logo actual</span>
+                <div className="mt-2 flex h-24 w-48 items-center rounded-md border border-zinc-200 bg-zinc-50 p-3">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={company.logo_url} alt="Logo actual" className="max-h-full max-w-full object-contain object-left" />
+                </div>
+              </div>
+            ) : null}
             <label className="block md:col-span-2">
               <span className="text-sm font-medium text-zinc-800">Texto legal o pie de factura</span>
               <textarea

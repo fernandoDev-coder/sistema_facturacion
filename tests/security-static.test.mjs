@@ -41,3 +41,33 @@ test("dependency policy pins patched Next and overrides vulnerable PostCSS", () 
   assert.equal(packageJson.devDependencies["eslint-config-next"], "16.2.6");
   assert.equal(packageJson.overrides.postcss, "8.5.13");
 });
+
+test("company logo URLs are normalized and protocol-validated before storing", () => {
+  const validators = readProjectFile("lib/validators.ts");
+  const companyAction = readProjectFile("app/actions/company.ts");
+
+  assert.match(validators, /export function cleanLogoUrl/);
+  assert.match(validators, /\["http:", "https:"\]\.includes\(parsed\.protocol\)/);
+  assert.match(validators, /"mediaurl", "imgurl", "cdnurl"/);
+  assert.match(companyAction, /cleanLogoUrl\(nullableText\(formData\.get\("logo_url"\)\)\)/);
+  assert.match(companyAction, /logo_url: uploadedLogoUrl \?\? logoUrl\.value/);
+});
+
+test("company logo uploads are size-limited and stored in a user-scoped bucket", () => {
+  const companyAction = readProjectFile("app/actions/company.ts");
+  const settingsPage = readProjectFile("app/(private)/settings/company/page.tsx");
+  const schema = readProjectFile("supabase/schema.sql");
+  const nextConfig = readProjectFile("next.config.ts");
+
+  assert.match(companyAction, /const LOGO_BUCKET = "company-logos"/);
+  assert.match(companyAction, /const MAX_LOGO_BYTES = 2 \* 1024 \* 1024/);
+  assert.match(companyAction, /"image\/png": "png"/);
+  assert.match(companyAction, /"image\/jpeg": "jpg"/);
+  assert.match(companyAction, /"image\/webp": "webp"/);
+  assert.match(companyAction, /storage\.upload\(objectPath, Buffer\.from\(await value\.arrayBuffer\(\)\)/);
+  assert.match(settingsPage, /encType="multipart\/form-data"/);
+  assert.match(settingsPage, /name="logo_file"/);
+  assert.match(schema, /insert into storage\.buckets \(id, name, public, file_size_limit, allowed_mime_types\)/);
+  assert.match(schema, /\(storage\.foldername\(name\)\)\[1\] = auth\.uid\(\)::text/);
+  assert.match(nextConfig, /bodySizeLimit: "3mb"/);
+});

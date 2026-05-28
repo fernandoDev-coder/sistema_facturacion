@@ -150,6 +150,19 @@ alter table public.billing_events alter column processed_at drop not null;
 alter table public.billing_events alter column processed_at drop default;
 alter table public.billing_events add column if not exists processing_error text;
 
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'company-logos',
+  'company-logos',
+  true,
+  2097152,
+  array['image/png', 'image/jpeg', 'image/webp']
+)
+on conflict (id) do update
+set public = excluded.public,
+    file_size_limit = excluded.file_size_limit,
+    allowed_mime_types = excluded.allowed_mime_types;
+
 alter table public.profiles add column if not exists role text not null default 'user';
 alter table public.profiles add column if not exists plan text not null default 'starter';
 alter table public.profiles add column if not exists is_super_admin boolean not null default false;
@@ -392,6 +405,43 @@ drop policy if exists "company_settings_delete_own" on public.company_settings;
 create policy "company_settings_delete_own"
 on public.company_settings for delete
 using (auth.uid() = owner_id);
+
+drop policy if exists "company_logos_public_read" on storage.objects;
+create policy "company_logos_public_read"
+on storage.objects for select
+to anon, authenticated
+using (bucket_id = 'company-logos');
+
+drop policy if exists "company_logos_insert_own" on storage.objects;
+create policy "company_logos_insert_own"
+on storage.objects for insert
+to authenticated
+with check (
+  bucket_id = 'company-logos'
+  and (storage.foldername(name))[1] = auth.uid()::text
+);
+
+drop policy if exists "company_logos_update_own" on storage.objects;
+create policy "company_logos_update_own"
+on storage.objects for update
+to authenticated
+using (
+  bucket_id = 'company-logos'
+  and (storage.foldername(name))[1] = auth.uid()::text
+)
+with check (
+  bucket_id = 'company-logos'
+  and (storage.foldername(name))[1] = auth.uid()::text
+);
+
+drop policy if exists "company_logos_delete_own" on storage.objects;
+create policy "company_logos_delete_own"
+on storage.objects for delete
+to authenticated
+using (
+  bucket_id = 'company-logos'
+  and (storage.foldername(name))[1] = auth.uid()::text
+);
 
 drop policy if exists "communities_select_own" on public.communities;
 create policy "communities_select_own"
