@@ -145,6 +145,20 @@ export function cleanIban(value: string | null): ValidationResult {
   return { value: iban };
 }
 
+export function cleanLogoUrl(value: string | null): ValidationResult {
+  const raw = String(value ?? "").trim();
+  if (!raw) return { value: null };
+
+  const candidate = extractNestedImageUrl(raw);
+  const parsed = parseUrl(candidate);
+
+  if (!parsed || !["http:", "https:"].includes(parsed.protocol)) {
+    return { value: candidate, error: "La URL del logo debe ser una URL publica http o https." };
+  }
+
+  return { value: parsed.toString() };
+}
+
 export function assertValidFields(fields: Array<[string, ValidationResult]>) {
   const invalid = fields.find(([, result]) => result.error);
   if (invalid) {
@@ -156,6 +170,26 @@ function compact(value: string | null) {
   return String(value ?? "")
     .toUpperCase()
     .replace(/[\s-]/g, "");
+}
+
+function extractNestedImageUrl(value: string) {
+  const parsed = parseUrl(value);
+  if (!parsed) return value;
+
+  for (const key of ["mediaurl", "imgurl", "cdnurl"]) {
+    const nested = parsed.searchParams.get(key);
+    if (nested) return nested.trim();
+  }
+
+  return value;
+}
+
+function parseUrl(value: string) {
+  try {
+    return new URL(value);
+  } catch {
+    return null;
+  }
 }
 
 function isValidSpanishTaxId(value: string) {

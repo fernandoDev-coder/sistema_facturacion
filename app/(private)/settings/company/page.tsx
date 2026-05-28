@@ -79,9 +79,10 @@ export default async function CompanySettingsPage({
               type="url"
               defaultValue={company?.logo_url}
               placeholder="https://tudominio.com/logo.png"
-              title="URL publica de una imagen PNG, JPG, JPEG o WebP."
+              title="Pega la URL directa de la imagen. Si usas Bing, la app intentara extraer mediaurl o cdnurl."
               className="md:col-span-2"
-            />            <label className="block md:col-span-2">
+            />
+            <label className="block md:col-span-2">
               <span className="text-sm font-medium text-zinc-800">Texto legal o pie de factura</span>
               <textarea
                 name="invoice_footer"

@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { nullableText } from "@/lib/format";
 import { createClient, requireUser } from "@/lib/supabase/server";
-import { assertValidFields, cleanIban, cleanPhone, cleanPostalCode, cleanTaxId } from "@/lib/validators";
+import { assertValidFields, cleanIban, cleanLogoUrl, cleanPhone, cleanPostalCode, cleanTaxId } from "@/lib/validators";
 
 export async function saveCompanySettingsAction(formData: FormData) {
   const user = await requireUser();
@@ -13,6 +13,7 @@ export async function saveCompanySettingsAction(formData: FormData) {
   const postalCode = cleanPostalCode(nullableText(formData.get("postal_code")));
   const phone = cleanPhone(nullableText(formData.get("phone")));
   const iban = cleanIban(nullableText(formData.get("iban")));
+  const logoUrl = cleanLogoUrl(nullableText(formData.get("logo_url")));
 
   try {
     assertValidFields([
@@ -20,6 +21,7 @@ export async function saveCompanySettingsAction(formData: FormData) {
       ["postal_code", postalCode],
       ["phone", phone],
       ["iban", iban],
+      ["logo_url", logoUrl],
     ]);
   } catch (error) {
     redirect(`/settings/company?message=${encodeURIComponent((error as Error).message)}`);
@@ -36,7 +38,7 @@ export async function saveCompanySettingsAction(formData: FormData) {
     email: nullableText(formData.get("email")),
     phone: phone.value,
     iban: iban.value,
-    logo_url: nullableText(formData.get("logo_url")),
+    logo_url: logoUrl.value,
     invoice_footer: nullableText(formData.get("invoice_footer")),
     updated_at: new Date().toISOString(),
   };
