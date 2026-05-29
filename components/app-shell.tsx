@@ -2,31 +2,45 @@ import Link from "next/link";
 import { logoutAction } from "@/app/actions/auth";
 import { BrandLogo } from "@/components/brand-logo";
 import { buttonClass } from "@/components/button-styles";
+import { LanguageSwitcher } from "@/components/language-switcher";
+import { getDictionary } from "@/lib/i18n";
+import type { Locale } from "@/lib/i18n-config";
 
 const navItems = [
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/clients", label: "Clientes" },
-  { href: "/invoices", label: "Facturas" },
-  { href: "/budgets", label: "Presupuestos" },
-  { href: "/settings/company", label: "Empresa" },
-  { href: "/settings/billing", label: "Plan" },
-];
+  { href: "/dashboard", key: "dashboard" },
+  { href: "/clients", key: "clients" },
+  { href: "/invoices", key: "invoices" },
+  { href: "/budgets", key: "budgets" },
+  { href: "/settings/company", key: "company" },
+  { href: "/settings/billing", key: "plan" },
+] as const;
+
+type NavKey = (typeof navItems)[number]["key"] | "users";
 
 export function AppShell({
   children,
   email,
+  locale,
   showAdminLink = false,
 }: {
   children: React.ReactNode;
   email?: string | null;
+  locale: Locale;
   showAdminLink?: boolean;
 }) {
-  const visibleNavItems = showAdminLink ? [...navItems, { href: "/admin/users", label: "Usuarios" }] : navItems;
+  const t = getDictionary(locale);
+  const visibleNavItems: Array<{ href: string; key: NavKey }> = showAdminLink
+    ? [...navItems, { href: "/admin/users", key: "users" }]
+    : [...navItems];
+  const languageLabels = { language: t.common.language, es: t.common.spanish, en: t.common.english };
 
   return (
     <div className="min-h-screen bg-zinc-50 text-zinc-950">
       <aside className="fixed inset-y-0 left-0 hidden w-64 border-r border-zinc-200 bg-white px-5 py-6 lg:block print:hidden">
         <BrandLogo href="/dashboard" />
+        <div className="mt-5">
+          <LanguageSwitcher locale={locale} labels={languageLabels} />
+        </div>
         <nav className="mt-8 space-y-1">
           {visibleNavItems.map((item) => (
             <Link
@@ -34,16 +48,14 @@ export function AppShell({
               href={item.href}
               className="block rounded-md px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-100 hover:text-zinc-950"
             >
-              {item.label}
+              {t.nav[item.key]}
             </Link>
           ))}
         </nav>
         <div className="absolute bottom-6 left-5 right-5">
           <p className="truncate text-xs text-zinc-500">{email}</p>
           <form action={logoutAction} className="mt-3">
-            <button className={buttonClass({ variant: "secondary", size: "full" })}>
-              Cerrar sesión
-            </button>
+            <button className={buttonClass({ variant: "secondary", size: "full" })}>{t.nav.logout}</button>
           </form>
         </div>
       </aside>
@@ -51,9 +63,12 @@ export function AppShell({
       <header className="sticky top-0 z-20 border-b border-zinc-200 bg-white/95 px-4 py-3 backdrop-blur lg:hidden print:hidden">
         <div className="flex items-center justify-between gap-4">
           <BrandLogo href="/dashboard" markClassName="h-7 w-7" textClassName="text-base" />
-          <form action={logoutAction}>
-            <button className={buttonClass({ variant: "secondary", size: "sm" })}>Salir</button>
-          </form>
+          <div className="flex items-center gap-2">
+            <LanguageSwitcher locale={locale} labels={languageLabels} />
+            <form action={logoutAction}>
+              <button className={buttonClass({ variant: "secondary", size: "sm" })}>{t.nav.logoutShort}</button>
+            </form>
+          </div>
         </div>
         <nav className="mt-3 flex gap-2 overflow-x-auto">
           {visibleNavItems.map((item) => (
@@ -62,7 +77,7 @@ export function AppShell({
               href={item.href}
               className="whitespace-nowrap rounded-md border border-zinc-200 px-3 py-1.5 text-sm text-zinc-700"
             >
-              {item.label}
+              {t.nav[item.key]}
             </Link>
           ))}
         </nav>

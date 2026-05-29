@@ -1,6 +1,6 @@
 import type { InvoiceStatus } from "@/lib/types";
 
-const labels: Record<InvoiceStatus, string> = {
+const defaultLabels: Record<InvoiceStatus, string> = {
   draft: "Borrador",
   pending: "Pendiente",
   paid: "Pagada",
@@ -14,7 +14,7 @@ const classes: Record<InvoiceStatus, string> = {
   cancelled: "bg-red-50 text-red-800 ring-red-200",
 };
 
-export function StatusBadge({ status }: { status: InvoiceStatus }) {
+export function StatusBadge({ status, labels = defaultLabels }: { status: InvoiceStatus; labels?: Readonly<Record<InvoiceStatus, string>> }) {
   return (
     <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ring-1 ${classes[status]}`}>
       {labels[status]}

@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { createMonthlyInvoicesAction } from "@/app/actions/invoices";
 import { FormButton } from "@/components/form-button";
-import { monthNames } from "@/lib/format";
+import { monthNames as defaultMonthNames } from "@/lib/format";
 import type { Community } from "@/lib/types";
 
 type ExistingInvoiceKey = {
@@ -12,17 +12,65 @@ type ExistingInvoiceKey = {
   year: number;
 };
 
+type CreateMonthLabels = {
+  previewTitle: string;
+  selectedFor: string;
+  alreadyHaveInvoice: string;
+  selectOne: string;
+  duplicatesConfirm: string;
+  createConfirmStart: string;
+  createConfirmEnd: string;
+  include: string;
+  client: string;
+  concept: string;
+  base: string;
+  vat: string;
+  duplicate: string;
+  monthlyService: string;
+  pending: string;
+  createSelected: string;
+};
+
+type CreateMonthFormProps = {
+  communities: Community[];
+  existingInvoices: ExistingInvoiceKey[];
+  initialMonth: number;
+  initialYear: number;
+  labels?: Readonly<CreateMonthLabels>;
+  months?: readonly string[];
+  monthLabel?: string;
+  yearLabel?: string;
+};
+
+const defaultLabels: CreateMonthLabels = {
+  previewTitle: "Vista previa de generación",
+  selectedFor: "clientes seleccionados para",
+  alreadyHaveInvoice: "ya tienen factura en ese mes.",
+  selectOne: "Selecciona al menos un cliente.",
+  duplicatesConfirm: "Ya existen facturas para algún cliente seleccionado en ese mes. ¿Quieres crear duplicados?",
+  createConfirmStart: "Vas a crear",
+  createConfirmEnd: "facturas en borrador. ¿Quieres continuar?",
+  include: "Incluir",
+  client: "Cliente",
+  concept: "Concepto",
+  base: "Base",
+  vat: "IVA",
+  duplicate: "Ya tiene factura en este mes.",
+  monthlyService: "Servicio mensual",
+  pending: "Creando...",
+  createSelected: "Crear facturas seleccionadas",
+};
+
 export function CreateMonthForm({
   communities,
   existingInvoices,
   initialMonth,
   initialYear,
-}: {
-  communities: Community[];
-  existingInvoices: ExistingInvoiceKey[];
-  initialMonth: number;
-  initialYear: number;
-}) {
+  labels = defaultLabels,
+  months = defaultMonthNames,
+  monthLabel = "Mes",
+  yearLabel = "Año",
+}: CreateMonthFormProps) {
   const [month, setMonth] = useState(initialMonth);
   const [year, setYear] = useState(initialYear);
   const [selected, setSelected] = useState(() => new Set(communities.map((community) => community.id)));
@@ -46,15 +94,13 @@ export function CreateMonthForm({
         const duplicates = selectedIds.filter(hasDuplicate);
 
         if (selectedIds.length === 0) {
-          window.alert("Selecciona al menos un cliente.");
+          window.alert(labels.selectOne);
           event.preventDefault();
           return;
         }
 
         if (duplicates.length > 0 && confirmDuplicates !== "yes") {
-          const accepted = window.confirm(
-            "Ya existen facturas para algun cliente seleccionado en ese mes. Quieres crear duplicados?",
-          );
+          const accepted = window.confirm(labels.duplicatesConfirm);
 
           if (!accepted) {
             event.preventDefault();
@@ -67,7 +113,7 @@ export function CreateMonthForm({
         }
 
         const accepted = window.confirm(
-          `Vas a crear ${selectedIds.length} facturas en borrador para ${monthNames[month - 1]} ${year}. Quieres continuar?`,
+          `${labels.createConfirmStart} ${selectedIds.length} ${labels.createConfirmEnd}`,
         );
 
         if (!accepted) {
@@ -78,16 +124,16 @@ export function CreateMonthForm({
     >
       <input type="hidden" name="confirm_duplicates" value={confirmDuplicates} />
       <section className="rounded-md border border-blue-200 bg-blue-50 p-4 text-sm text-blue-950">
-        <p className="font-semibold">Vista previa de generacion</p>
+        <p className="font-semibold">{labels.previewTitle}</p>
         <p className="mt-1">
-          {selectedIds.length} clientes seleccionados para {monthNames[month - 1]} {year}.
-          {duplicateCount > 0 ? ` ${duplicateCount} ya tienen factura en ese mes.` : ""}
+          {selectedIds.length} {labels.selectedFor} {months[month - 1]} {year}.
+          {duplicateCount > 0 ? ` ${duplicateCount} ${labels.alreadyHaveInvoice}` : ""}
         </p>
       </section>
 
       <div className="grid gap-4 rounded-md border border-zinc-200 bg-white p-4 md:grid-cols-2">
         <label>
-          <span className="text-sm font-medium text-zinc-800">Mes</span>
+          <span className="text-sm font-medium text-zinc-800">{monthLabel}</span>
           <select
             name="month"
             value={month}
@@ -97,7 +143,7 @@ export function CreateMonthForm({
             }}
             className="mt-1 h-10 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm"
           >
-            {monthNames.map((name, index) => (
+            {months.map((name, index) => (
               <option key={name} value={index + 1}>
                 {name}
               </option>
@@ -105,7 +151,7 @@ export function CreateMonthForm({
           </select>
         </label>
         <label>
-          <span className="text-sm font-medium text-zinc-800">Año</span>
+          <span className="text-sm font-medium text-zinc-800">{yearLabel}</span>
           <input
             name="year"
             type="number"
@@ -123,11 +169,11 @@ export function CreateMonthForm({
         <table className="min-w-full divide-y divide-zinc-200">
           <thead className="bg-zinc-50 text-left text-xs font-semibold uppercase tracking-wide text-zinc-500">
             <tr>
-              <th className="w-14 px-4 py-3">Incluir</th>
-              <th className="px-4 py-3">Cliente</th>
-              <th className="px-4 py-3">Concepto</th>
-              <th className="w-36 px-4 py-3">Base</th>
-              <th className="w-28 px-4 py-3">IVA</th>
+              <th className="w-14 px-4 py-3">{labels.include}</th>
+              <th className="px-4 py-3">{labels.client}</th>
+              <th className="px-4 py-3">{labels.concept}</th>
+              <th className="w-36 px-4 py-3">{labels.base}</th>
+              <th className="w-28 px-4 py-3">{labels.vat}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-100">
@@ -152,14 +198,14 @@ export function CreateMonthForm({
                 <td className="px-4 py-3 align-top">
                   <p className="font-medium text-zinc-900">{community.name}</p>
                   {hasDuplicate(community.id) ? (
-                    <p className="mt-1 text-xs text-amber-700">Ya tiene factura en este mes.</p>
+                    <p className="mt-1 text-xs text-amber-700">{labels.duplicate}</p>
                   ) : null}
                 </td>
                 <td className="px-4 py-3 align-top">
                   <textarea
                     key={`${community.id}-${month}-${year}`}
                     name={`subject_${community.id}`}
-                    defaultValue={community.default_subject ?? `Servicio mensual ${monthNames[month - 1]} ${year}`}
+                    defaultValue={community.default_subject ?? `${labels.monthlyService} ${months[month - 1]} ${year}`}
                     rows={3}
                     className="w-full min-w-[28rem] rounded-md border border-zinc-300 px-3 py-2 text-sm leading-6"
                   />
@@ -188,8 +234,8 @@ export function CreateMonthForm({
         </table>
       </div>
 
-      <FormButton variant="success" pendingText="Creando...">
-        Crear {selectedIds.length} facturas seleccionadas
+      <FormButton variant="success" pendingText={labels.pending}>
+        {labels.createSelected}
       </FormButton>
     </form>
   );

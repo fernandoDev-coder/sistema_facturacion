@@ -179,7 +179,7 @@ export async function createMonthlyInvoicesAction(formData: FormData) {
   const selectedCommunityIds = Array.from(new Set(formData.getAll("include").map(String)));
 
   if (!month || !year || selectedCommunityIds.length === 0) {
-    redirect("/invoices/create-month?message=Selecciona mes, anio y al menos un cliente.");
+    redirect("/invoices/create-month?message=Selecciona mes, año y al menos un cliente.");
   }
 
   const bulkError = await assertCanUseMonthlyBulkInvoices(supabase, user.id);

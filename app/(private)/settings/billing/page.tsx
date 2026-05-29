@@ -1,6 +1,7 @@
 import { createCheckoutSessionAction, createCustomerPortalSessionAction } from "@/app/actions/billing";
 import { buttonClass } from "@/components/button-styles";
 import { Message } from "@/components/message";
+import { getDictionary, getLocale } from "@/lib/i18n";
 import {
   getClientCount,
   getCurrentMonthDocumentCount,
@@ -18,6 +19,8 @@ export default async function BillingSettingsPage({
   const user = await requireUser();
   const profile = await getCurrentProfile();
   const { message } = await searchParams;
+  const locale = await getLocale();
+  const t = getDictionary(locale);
   const supabase = await createClient();
   const limits = getPlanLimits(profile);
   const isPro = hasPaidAccess(profile);
@@ -38,8 +41,8 @@ export default async function BillingSettingsPage({
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">Plan y facturacion</h1>
-          <p className="mt-1 text-sm text-zinc-600">Gestiona el acceso Pro y los limites de uso de tu cuenta.</p>
+          <h1 className="text-2xl font-semibold">{t.pages.billing.title}</h1>
+          <p className="mt-1 text-sm text-zinc-600">{t.pages.billing.description}</p>
         </div>
         <PlanBadge isPro={isPro} label={profile?.plan ?? "starter"} />
       </div>
@@ -48,42 +51,40 @@ export default async function BillingSettingsPage({
 
       <section className="grid gap-4 lg:grid-cols-4">
         <Metric
-          label="Clientes"
+          label={t.common.clients}
           value={`${clients}${limits.clients === null ? "" : ` / ${limits.clients}`}`}
         />
         <Metric
-          label="Documentos este mes"
+          label={t.pages.billing.documentsThisMonth}
           value={`${documentsThisMonth}${limits.documentsPerMonth === null ? "" : ` / ${limits.documentsPerMonth}`}`}
         />
-        <Metric label="Facturacion mensual masiva" value={limits.monthlyBulkInvoices ? "Incluida" : "Pro"} />
-        <Metric label="Logo en documentos" value={limits.companyLogo ? "Incluido" : "Pro"} />
+        <Metric label={t.pages.billing.monthlyBulk} value={limits.monthlyBulkInvoices ? t.common.included : "Pro"} />
+        <Metric label={t.pages.billing.logoDocuments} value={limits.companyLogo ? t.common.included : "Pro"} />
       </section>
 
       <section className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">
         <div className="grid gap-6 lg:grid-cols-[1fr_320px] lg:items-center">
           <div>
-            <h2 className="text-lg font-semibold text-zinc-950">Plan Pro</h2>
-            <p className="mt-2 text-sm text-zinc-600">
-              7,90 EUR al mes + IVA. Para trabajar sin limites de clientes ni documentos.
-            </p>
+            <h2 className="text-lg font-semibold text-zinc-950">{t.pages.billing.proTitle}</h2>
+            <p className="mt-2 text-sm text-zinc-600">{t.pages.billing.proDescription}</p>
             <div className="mt-4 grid gap-2 text-sm text-zinc-700 sm:grid-cols-2">
-              <p>Clientes ilimitados</p>
-              <p>Documentos ilimitados</p>
-              <p>Facturacion mensual masiva</p>
-              <p>Logo y datos de empresa en documentos</p>
+              <p>{t.pages.billing.unlimitedClients}</p>
+              <p>{t.pages.billing.unlimitedDocuments}</p>
+              <p>{t.pages.billing.monthlyBulkIncluded}</p>
+              <p>{t.pages.billing.logoIncluded}</p>
             </div>
           </div>
 
           <div className="rounded-md border border-zinc-200 bg-zinc-50 p-4">
-            <p className="text-sm text-zinc-600">Estado actual</p>
+            <p className="text-sm text-zinc-600">{t.pages.billing.currentStatus}</p>
             <p className="mt-1 text-lg font-semibold text-zinc-950">
-              {isPro ? "Acceso Pro activo" : "Plan gratis"}
+              {isPro ? t.pages.billing.proActive : t.pages.billing.freePlan}
             </p>
             {subscription ? (
               <p className="mt-2 text-xs text-zinc-500">
                 Stripe: {subscription.status}
                 {subscription.current_period_end
-                  ? ` hasta ${new Date(subscription.current_period_end).toLocaleDateString("es-ES")}`
+                  ? ` ${t.pages.billing.until} ${new Date(subscription.current_period_end).toLocaleDateString(locale === "es" ? "es-ES" : "en-US")}`
                   : ""}
               </p>
             ) : null}
@@ -91,13 +92,13 @@ export default async function BillingSettingsPage({
               {isPro && profile?.stripe_customer_id ? (
                 <form action={createCustomerPortalSessionAction}>
                   <button className={buttonClass({ variant: "primary", size: "full" })}>
-                    Gestionar suscripcion
+                    {t.pages.billing.manageSubscription}
                   </button>
                 </form>
               ) : (
                 <form action={createCheckoutSessionAction}>
                   <button className={buttonClass({ variant: "primary", size: "full" })}>
-                    Mejorar a Pro
+                    {t.pages.billing.upgrade}
                   </button>
                 </form>
               )}

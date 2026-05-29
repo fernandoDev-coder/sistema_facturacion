@@ -4,6 +4,7 @@ import { updateClientAction } from "@/app/actions/clients";
 import { buttonClass } from "@/components/button-styles";
 import { CommunityForm } from "@/components/community-form";
 import { Message } from "@/components/message";
+import { getDictionary, getLocale } from "@/lib/i18n";
 import { createClient, requireUser } from "@/lib/supabase/server";
 
 export default async function EditClientPage({
@@ -16,6 +17,8 @@ export default async function EditClientPage({
   const user = await requireUser();
   const { id } = await params;
   const { message } = await searchParams;
+  const locale = await getLocale();
+  const t = getDictionary(locale);
   const supabase = await createClient();
   const { data: client } = await supabase
     .from("communities")
@@ -30,13 +33,13 @@ export default async function EditClientPage({
     <div className="space-y-6">
       <div>
         <Link href="/clients" className={buttonClass({ variant: "ghost", size: "sm" })}>
-          Volver
+          {t.common.back}
         </Link>
-        <h1 className="mt-2 text-2xl font-semibold">Editar cliente</h1>
+        <h1 className="mt-2 text-2xl font-semibold">{t.pages.clients.editTitle}</h1>
       </div>
       <Message text={message} />
       <section className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">
-        <CommunityForm action={updateClientAction} community={client} />
+        <CommunityForm action={updateClientAction} community={client} labels={t.forms.client} />
       </section>
     </div>
   );

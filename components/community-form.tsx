@@ -1,53 +1,92 @@
 import { FormButton } from "@/components/form-button";
 import type { Community } from "@/lib/types";
 
+type CommunityFormLabels = {
+  name: string;
+  taxId: string;
+  address: string;
+  postalCode: string;
+  city: string;
+  province: string;
+  email: string;
+  phone: string;
+  defaultVat: string;
+  defaultSubject: string;
+  notes: string;
+  create: string;
+  save: string;
+  taxTitle: string;
+  postalTitle: string;
+  phoneTitle: string;
+};
+
 type CommunityFormProps = {
   action: (formData: FormData) => Promise<void>;
   community?: Community;
+  labels?: Readonly<CommunityFormLabels>;
 };
 
-export function CommunityForm({ action, community }: CommunityFormProps) {
+const defaultLabels: CommunityFormLabels = {
+  name: "Nombre / razón social",
+  taxId: "NIF/CIF",
+  address: "Dirección",
+  postalCode: "Código postal",
+  city: "Ciudad",
+  province: "Provincia",
+  email: "Email",
+  phone: "Teléfono",
+  defaultVat: "IVA habitual",
+  defaultSubject: "Concepto habitual",
+  notes: "Observaciones",
+  create: "Crear cliente",
+  save: "Guardar cambios",
+  taxTitle: "Introduce un DNI, NIE o CIF válido. Ejemplos: 12345678Z, X1234567L, B46066361, N0027810A.",
+  postalTitle: "Debe tener 5 dígitos.",
+  phoneTitle: "Introduce un teléfono español válido.",
+};
+
+export function CommunityForm({ action, community, labels = defaultLabels }: CommunityFormProps) {
   return (
     <form action={action} className="space-y-6">
       {community ? <input type="hidden" name="id" value={community.id} /> : null}
       <div className="grid gap-4 md:grid-cols-2">
-        <Field label="Nombre / razon social" name="name" required defaultValue={community?.name} />
+        <Field label={labels.name} name="name" required defaultValue={community?.name} />
         <Field
-          label="NIF/CIF"
+          label={labels.taxId}
           name="tax_id"
           defaultValue={community?.tax_id}
           autoComplete="off"
           maxLength={12}
           pattern="([0-9]{8}[A-Za-z]|[XYZxyz][0-9]{7}[A-Za-z]|[ABEHabeh][0-9]{7}[0-9]|[NPQSWnpqsw][0-9]{7}[A-Ja-j]|[CDFGJUVRcdfgjuvr][0-9]{7}[0-9A-Ja-j])"
           placeholder="B12345678"
-          title="Introduce un DNI, NIE o CIF valido. Ejemplos: 12345678Z, X1234567L, B46066361, N0027810A."
+          title={labels.taxTitle}
         />
-        <Field label="Direccion" name="address" defaultValue={community?.address} className="md:col-span-2" />
+        <Field label={labels.address} name="address" defaultValue={community?.address} className="md:col-span-2" />
         <Field
-          label="Codigo postal"
+          label={labels.postalCode}
           name="postal_code"
           defaultValue={community?.postal_code}
           inputMode="numeric"
           maxLength={5}
           pattern="[0-9]{5}"
           placeholder="28001"
-          title="Debe tener 5 digitos."
+          title={labels.postalTitle}
         />
-        <Field label="Ciudad" name="city" defaultValue={community?.city} />
-        <Field label="Provincia" name="province" defaultValue={community?.province} />
-        <Field label="Email" name="email" type="email" defaultValue={community?.email} />
+        <Field label={labels.city} name="city" defaultValue={community?.city} />
+        <Field label={labels.province} name="province" defaultValue={community?.province} />
+        <Field label={labels.email} name="email" type="email" defaultValue={community?.email} />
         <Field
-          label="Telefono"
+          label={labels.phone}
           name="phone"
           defaultValue={community?.phone}
           inputMode="tel"
           maxLength={18}
           pattern={"(\\+34|0034)?[\\s.-]?[6789][0-9\\s.-]{8,}"}
           placeholder="+34600111222"
-          title="Introduce un teléfono espanol valido."
+          title={labels.phoneTitle}
         />
         <Field
-          label="IVA habitual"
+          label={labels.defaultVat}
           name="default_vat"
           type="number"
           step="0.01"
@@ -56,15 +95,15 @@ export function CommunityForm({ action, community }: CommunityFormProps) {
           defaultValue={community?.default_vat ?? 21}
         />
         <Field
-          label="Concepto habitual"
+          label={labels.defaultSubject}
           name="default_subject"
           defaultValue={community?.default_subject}
           className="md:col-span-2"
         />
-        <Textarea label="Observaciones" name="notes" defaultValue={community?.notes} />
+        <Textarea label={labels.notes} name="notes" defaultValue={community?.notes} />
       </div>
       <div className="flex items-center gap-3">
-        <FormButton>{community ? "Guardar cambios" : "Crear cliente"}</FormButton>
+        <FormButton>{community ? labels.save : labels.create}</FormButton>
       </div>
     </form>
   );

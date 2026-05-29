@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { DocumentPrint } from "@/components/document-print";
+import { getDictionary, getLocale } from "@/lib/i18n";
 import { fallbackInvoiceItems } from "@/lib/invoice-items";
 import { getPlanLimits } from "@/lib/plan-limits";
 import { getCurrentProfile } from "@/lib/profiles";
@@ -8,6 +9,8 @@ import { createClient, requireUser } from "@/lib/supabase/server";
 export default async function PrintInvoicePage({ params }: { params: Promise<{ id: string }> }) {
   const user = await requireUser();
   const { id } = await params;
+  const locale = await getLocale();
+  const t = getDictionary(locale);
   const profile = await getCurrentProfile();
   const limits = getPlanLimits(profile);
   const supabase = await createClient();
@@ -32,8 +35,24 @@ export default async function PrintInvoicePage({ params }: { params: Promise<{ i
       document={invoice}
       items={items?.length ? items : fallbackInvoiceItems(invoice)}
       company={company}
-      title="Factura"
+      title={t.common.invoice}
       backHref="/invoices"
+      labels={{
+        back: t.common.back,
+        print: t.common.print,
+        configureCompany: t.pages.print.configureCompany,
+        date: t.pages.print.date,
+        client: t.pages.print.client,
+        paymentDetails: t.pages.print.paymentDetails,
+        period: t.pages.print.period,
+        concept: t.pages.print.concept,
+        base: t.common.base,
+        vat: t.common.vat,
+        total: t.common.total,
+        taxableBase: t.pages.print.taxableBase,
+        totalVat: t.pages.print.totalVat,
+        notes: t.pages.print.notes,
+      }}
       showCompanyLogo={limits.companyLogo}
       customer={{
         name: invoice.community_name ?? community?.name,

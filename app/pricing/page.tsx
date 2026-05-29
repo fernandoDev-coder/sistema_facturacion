@@ -1,73 +1,75 @@
 import Link from "next/link";
 import { BrandLogo } from "@/components/brand-logo";
 import { buttonClass } from "@/components/button-styles";
+import { LanguageSwitcher } from "@/components/language-switcher";
 import { LegalFooter } from "@/components/legal-footer";
+import { getDictionary, getLocale } from "@/lib/i18n";
 
-const plans = [
-  {
-    name: "Gratis",
-    price: "0 EUR",
-    cadence: "para empezar",
-    description: "Para probar FaktuFlow con pocos clientes y documentos.",
-    features: ["5 clientes", "25 documentos al mes", "Facturas y presupuestos", "Impresion A4 desde navegador"],
-    notIncluded: ["Facturacion mensual masiva", "Clientes ilimitados", "Documentos ilimitados"],
-    cta: "Crear cuenta gratis",
-    href: "/register",
-    highlighted: false,
-  },
-  {
-    name: "Pro",
-    price: "7,90 EUR",
-    cadence: "al mes + IVA",
-    description: "Para autonomos y pequenos negocios con facturacion recurrente.",
-    features: [
-      "Clientes ilimitados",
-      "Documentos ilimitados",
-      "Facturacion mensual masiva",
-      "Logo y datos de empresa en documentos",
-    ],
-    notIncluded: [],
-    cta: "Empezar con Pro",
-    href: "/register",
-    highlighted: true,
-  },
-];
+export default async function PricingPage() {
+  const locale = await getLocale();
+  const t = getDictionary(locale);
+  const languageLabels = { language: t.common.language, es: t.common.spanish, en: t.common.english };
+  const plans = [
+    {
+      name: "Gratis",
+      price: "0 EUR",
+      cadence: t.pricing.freeCadence,
+      description: t.pricing.freeDescription,
+      features: [
+        t.pricing.features.fiveClients,
+        t.pricing.features.twentyFiveDocuments,
+        t.pricing.features.invoicesBudgets,
+        t.pricing.features.printA4,
+      ],
+      notIncluded: [
+        t.pricing.features.bulkMonthly,
+        t.pricing.features.unlimitedClients,
+        t.pricing.features.unlimitedDocuments,
+      ],
+      cta: t.common.createFreeAccount,
+      href: "/register",
+      highlighted: false,
+    },
+    {
+      name: "Pro",
+      price: "7,90 EUR",
+      cadence: t.pricing.proCadence,
+      description: t.pricing.proDescription,
+      features: [
+        t.pricing.features.unlimitedClients,
+        t.pricing.features.unlimitedDocuments,
+        t.pricing.features.bulkMonthly,
+        t.pricing.features.companyLogo,
+      ],
+      notIncluded: [],
+      cta: t.pricing.choosePro,
+      href: "/register",
+      highlighted: true,
+    },
+  ];
 
-const comparison = [
-  { label: "Clientes", free: "5", pro: "Ilimitados" },
-  { label: "Documentos al mes", free: "25", pro: "Ilimitados" },
-  { label: "Facturas y presupuestos", free: "Incluido", pro: "Incluido" },
-  { label: "Impresion A4", free: "Incluido", pro: "Incluido" },
-  { label: "Facturacion mensual masiva", free: "No incluido", pro: "Incluido" },
-  { label: "Datos de empresa", free: "Incluido", pro: "Incluido" },
-  { label: "Logo en facturas y presupuestos", free: "No incluido", pro: "Incluido" },
-];
-
-export default function PricingPage() {
   return (
     <main className="min-h-screen bg-zinc-50 text-zinc-950">
       <section className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
         <header className="flex items-center justify-between gap-4">
           <BrandLogo href="/" />
           <nav className="flex items-center gap-2">
+            <LanguageSwitcher locale={locale} labels={languageLabels} />
             <Link href="/login" className={buttonClass({ variant: "ghost", size: "sm" })}>
-              Entrar
+              {t.common.login}
             </Link>
             <Link href="/register" className={buttonClass({ variant: "primary", size: "sm" })}>
-              Crear cuenta
+              {t.common.register}
             </Link>
           </nav>
         </header>
 
         <section className="py-14">
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-blue-700">Planes</p>
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-blue-700">{t.pricing.eyebrow}</p>
           <h1 className="mt-4 max-w-2xl text-4xl font-semibold leading-tight text-zinc-950 sm:text-5xl">
-            Empieza gratis y pasa a Pro cuando factures cada mes.
+            {t.pricing.title}
           </h1>
-          <p className="mt-5 max-w-2xl text-base leading-7 text-zinc-600">
-            El plan Gratis sirve para probar la app. Pro esta pensado para autonomos con clientes recurrentes,
-            mas documentos y generacion mensual en bloque.
-          </p>
+          <p className="mt-5 max-w-2xl text-base leading-7 text-zinc-600">{t.pricing.description}</p>
         </section>
 
         <section className="grid gap-4 md:grid-cols-2">
@@ -85,7 +87,7 @@ export default function PricingPage() {
                 </div>
                 {plan.highlighted ? (
                   <span className="rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-800">
-                    Recomendado
+                    {t.common.recommended}
                   </span>
                 ) : null}
               </div>
@@ -107,7 +109,9 @@ export default function PricingPage() {
               {plan.notIncluded.length ? (
                 <ul className="mt-4 space-y-2 text-sm text-zinc-500">
                   {plan.notIncluded.map((feature) => (
-                    <li key={feature}>No incluye: {feature}</li>
+                    <li key={feature}>
+                      {t.pricing.notIncluded}: {feature}
+                    </li>
                   ))}
                 </ul>
               ) : null}
@@ -128,27 +132,24 @@ export default function PricingPage() {
 
         <section className="mt-10 overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm">
           <div className="border-b border-zinc-200 px-5 py-4">
-            <h2 className="font-semibold">Comparacion rapida</h2>
+            <h2 className="font-semibold">{t.pricing.comparison}</h2>
           </div>
           <div className="divide-y divide-zinc-100">
-            {comparison.map((row) => (
-              <div key={row.label} className="grid grid-cols-3 gap-3 px-5 py-4 text-sm">
-                <p className="font-medium text-zinc-950">{row.label}</p>
-                <p className="text-zinc-600">{row.free}</p>
-                <p className="font-medium text-zinc-900">{row.pro}</p>
+            {t.pricing.comparisonRows.map(([label, free, pro]) => (
+              <div key={label} className="grid grid-cols-3 gap-3 px-5 py-4 text-sm">
+                <p className="font-medium text-zinc-950">{label}</p>
+                <p className="text-zinc-600">{free}</p>
+                <p className="font-medium text-zinc-900">{pro}</p>
               </div>
             ))}
           </div>
         </section>
 
         <section className="mt-10 rounded-lg border border-blue-200 bg-blue-50 p-6">
-          <h2 className="text-lg font-semibold text-blue-950">Pro se activa con pago seguro</h2>
-          <p className="mt-2 text-sm leading-6 text-blue-900">
-            Crea tu cuenta, entra en Plan y facturacion y mejora a Pro. El pago se gestiona de forma segura y el
-            acceso se aplica a tu cuenta.
-          </p>
+          <h2 className="text-lg font-semibold text-blue-950">{t.pricing.securePaymentTitle}</h2>
+          <p className="mt-2 text-sm leading-6 text-blue-900">{t.pricing.securePayment}</p>
           <Link href="/register" className={buttonClass({ variant: "primary", className: "mt-4" })}>
-            Crear cuenta y elegir Pro
+            {t.pricing.choosePro}
           </Link>
         </section>
       </section>

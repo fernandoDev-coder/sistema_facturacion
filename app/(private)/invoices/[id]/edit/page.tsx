@@ -4,6 +4,7 @@ import { updateInvoiceAction } from "@/app/actions/invoices";
 import { buttonClass } from "@/components/button-styles";
 import { InvoiceForm } from "@/components/invoice-form";
 import { Message } from "@/components/message";
+import { getDictionary, getLocale } from "@/lib/i18n";
 import { fallbackInvoiceItems } from "@/lib/invoice-items";
 import { createClient, requireUser } from "@/lib/supabase/server";
 
@@ -17,6 +18,8 @@ export default async function EditInvoicePage({
   const user = await requireUser();
   const { id } = await params;
   const { message } = await searchParams;
+  const locale = await getLocale();
+  const t = getDictionary(locale);
   const supabase = await createClient();
   const [{ data: invoice }, { data: communities }, { data: items }] = await Promise.all([
     supabase.from("invoices").select("*").eq("id", id).eq("owner_id", user.id).eq("document_type", "invoice").single(),
@@ -30,9 +33,9 @@ export default async function EditInvoicePage({
     <div className="space-y-6">
       <div>
         <Link href="/invoices" className={buttonClass({ variant: "ghost", size: "sm" })}>
-          Volver
+          {t.common.back}
         </Link>
-        <h1 className="mt-2 text-2xl font-semibold">Editar factura</h1>
+        <h1 className="mt-2 text-2xl font-semibold">{t.pages.invoices.editTitle}</h1>
       </div>
       <Message text={message} />
       <section className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">
@@ -42,6 +45,9 @@ export default async function EditInvoicePage({
           documentType="invoice"
           invoice={invoice}
           items={items?.length ? items : fallbackInvoiceItems(invoice)}
+          labels={t.forms.document}
+          months={t.months}
+          statusLabels={t.statuses}
         />
       </section>
     </div>

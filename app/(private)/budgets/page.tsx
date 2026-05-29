@@ -4,7 +4,8 @@ import { buttonClass } from "@/components/button-styles";
 import { ConfirmForm } from "@/components/confirm-form";
 import { Message } from "@/components/message";
 import { StatusBadge } from "@/components/status-badge";
-import { money, monthNames } from "@/lib/format";
+import { money } from "@/lib/format";
+import { getDictionary, getLocale } from "@/lib/i18n";
 import { createClient, requireUser } from "@/lib/supabase/server";
 import { invoiceStatuses, type InvoiceStatus, type InvoiceWithCommunity } from "@/lib/types";
 
@@ -21,6 +22,8 @@ export default async function BudgetsPage({
 }) {
   const user = await requireUser();
   const filters = await searchParams;
+  const locale = await getLocale();
+  const t = getDictionary(locale);
   const supabase = await createClient();
 
   const { data: communities } = await supabase.from("communities").select("*").eq("owner_id", user.id).order("name");
@@ -45,24 +48,24 @@ export default async function BudgetsPage({
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">Presupuestos</h1>
-          <p className="mt-1 text-sm text-zinc-600">Listado y edicion de presupuestos imprimibles.</p>
+          <h1 className="text-2xl font-semibold">{t.pages.budgets.title}</h1>
+          <p className="mt-1 text-sm text-zinc-600">{t.pages.budgets.description}</p>
         </div>
         <div className="flex gap-2">
           <Link href="/budgets/new" className={buttonClass({ variant: "primary" })}>
-            Crear
+            {t.common.create}
           </Link>
         </div>
       </div>
       <Message text={filters.message ?? error?.message} />
 
       <form className="grid gap-3 rounded-md border border-zinc-200 bg-white p-4 md:grid-cols-5">
-        <FilterInput name="year" label="Anio" type="number" defaultValue={filters.year} />
+        <FilterInput name="year" label={t.common.year} type="number" defaultValue={filters.year} />
         <label>
-          <span className="text-sm font-medium text-zinc-800">Mes</span>
+          <span className="text-sm font-medium text-zinc-800">{t.common.month}</span>
           <select name="month" defaultValue={filters.month ?? ""} className="mt-1 h-10 w-full rounded-md border border-zinc-300 px-3 text-sm">
-            <option value="">Todos</option>
-            {monthNames.map((name, index) => (
+            <option value="">{t.common.all}</option>
+            {t.months.map((name, index) => (
               <option key={name} value={index + 1}>
                 {name}
               </option>
@@ -70,9 +73,9 @@ export default async function BudgetsPage({
           </select>
         </label>
         <label>
-          <span className="text-sm font-medium text-zinc-800">Cliente</span>
+          <span className="text-sm font-medium text-zinc-800">{t.common.client}</span>
           <select name="community" defaultValue={filters.community ?? ""} className="mt-1 h-10 w-full rounded-md border border-zinc-300 px-3 text-sm">
-            <option value="">Todas</option>
+            <option value="">{t.common.allFemale}</option>
             {communities?.map((community) => (
               <option key={community.id} value={community.id}>
                 {community.name}
@@ -81,18 +84,18 @@ export default async function BudgetsPage({
           </select>
         </label>
         <label>
-          <span className="text-sm font-medium text-zinc-800">Estado</span>
+          <span className="text-sm font-medium text-zinc-800">{t.common.status}</span>
           <select name="status" defaultValue={filters.status ?? ""} className="mt-1 h-10 w-full rounded-md border border-zinc-300 px-3 text-sm">
-            <option value="">Todos</option>
+            <option value="">{t.common.all}</option>
             {invoiceStatuses.map((status) => (
               <option key={status.value} value={status.value}>
-                {status.label}
+                {t.statuses[status.value]}
               </option>
             ))}
           </select>
         </label>
         <div className="flex items-end">
-          <button className={buttonClass({ variant: "secondary", size: "full" })}>Filtrar</button>
+          <button className={buttonClass({ variant: "secondary", size: "full" })}>{t.common.filter}</button>
         </div>
       </form>
 
@@ -100,12 +103,12 @@ export default async function BudgetsPage({
         <table className="min-w-full divide-y divide-zinc-200">
           <thead className="bg-zinc-50 text-left text-xs font-semibold uppercase tracking-wide text-zinc-500">
             <tr>
-              <th className="px-4 py-3">Numero</th>
-              <th className="px-4 py-3">Cliente</th>
-              <th className="px-4 py-3">Periodo</th>
-              <th className="px-4 py-3">Total</th>
-              <th className="px-4 py-3">Estado</th>
-              <th className="px-4 py-3 text-right">Acciones</th>
+              <th className="px-4 py-3">{t.common.number}</th>
+              <th className="px-4 py-3">{t.common.client}</th>
+              <th className="px-4 py-3">{t.common.period}</th>
+              <th className="px-4 py-3">{t.common.total}</th>
+              <th className="px-4 py-3">{t.common.status}</th>
+              <th className="px-4 py-3 text-right">{t.common.actions}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-100">
@@ -115,25 +118,25 @@ export default async function BudgetsPage({
                   <td className="px-4 py-3 font-medium">{budget.invoice_number}</td>
                   <td className="px-4 py-3 text-sm text-zinc-700">{budget.communities?.name ?? "-"}</td>
                   <td className="px-4 py-3 text-sm text-zinc-600">
-                    {monthNames[budget.month - 1]} {budget.year}
+                    {t.months[budget.month - 1]} {budget.year}
                   </td>
                   <td className="px-4 py-3 text-sm font-medium">{money(budget.total)}</td>
                   <td className="px-4 py-3">
-                    <StatusBadge status={budget.status} />
+                    <StatusBadge status={budget.status} labels={t.statuses} />
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex flex-wrap justify-end gap-2">
                       <Link href={`/budgets/${budget.id}/print`} className={buttonClass({ variant: "print", size: "sm" })}>
-                        Imprimir
+                        {t.common.print}
                       </Link>
                       <Link href={`/budgets/${budget.id}/edit`} className={buttonClass({ variant: "warning", size: "sm" })}>
-                        Editar
+                        {t.common.edit}
                       </Link>
                       <ConfirmForm
                         action={deleteInvoiceAction}
                         id={budget.id}
-                        label="Eliminar"
-                        message="Eliminar este presupuesto?"
+                        label={t.common.delete}
+                        message={t.pages.budgets.deleteConfirm}
                         fields={{ redirect_path: "/budgets" }}
                       />
                     </div>
@@ -143,7 +146,7 @@ export default async function BudgetsPage({
             ) : (
               <tr>
                 <td colSpan={6} className="px-4 py-10 text-center text-sm text-zinc-500">
-                  No hay presupuestos con estos filtros.
+                  {t.pages.budgets.empty}
                 </td>
               </tr>
             )}

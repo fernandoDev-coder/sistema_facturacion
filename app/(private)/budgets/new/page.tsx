@@ -4,6 +4,7 @@ import { buttonClass } from "@/components/button-styles";
 import { InvoiceForm } from "@/components/invoice-form";
 import { Message } from "@/components/message";
 import { currentMonthYear } from "@/lib/format";
+import { getDictionary, getLocale } from "@/lib/i18n";
 import { suggestDocumentNumber } from "@/lib/invoices";
 import { createClient, requireUser } from "@/lib/supabase/server";
 
@@ -14,6 +15,8 @@ export default async function NewBudgetPage({
 }) {
   const user = await requireUser();
   const { message } = await searchParams;
+  const locale = await getLocale();
+  const t = getDictionary(locale);
   const supabase = await createClient();
   const { year } = currentMonthYear();
   const [{ data: communities }, suggestedNumber] = await Promise.all([
@@ -25,9 +28,9 @@ export default async function NewBudgetPage({
     <div className="space-y-6">
       <div>
         <Link href="/budgets" className={buttonClass({ variant: "ghost", size: "sm" })}>
-          Volver
+          {t.common.back}
         </Link>
-        <h1 className="mt-2 text-2xl font-semibold">Nuevo presupuesto</h1>
+        <h1 className="mt-2 text-2xl font-semibold">{t.pages.budgets.newTitle}</h1>
       </div>
       <Message text={message} />
       {communities?.length ? (
@@ -37,13 +40,16 @@ export default async function NewBudgetPage({
             communities={communities}
             documentType="budget"
             suggestedNumber={suggestedNumber}
+            labels={t.forms.document}
+            months={t.months}
+            statusLabels={t.statuses}
           />
         </section>
       ) : (
         <div className="rounded-md border border-zinc-200 bg-white p-8 text-center">
-          <p className="text-sm text-zinc-600">Primero crea un cliente para poder preparar presupuestos.</p>
+          <p className="text-sm text-zinc-600">{t.pages.budgets.noClient}</p>
           <Link href="/clients/new" className={buttonClass({ variant: "primary", className: "mt-4" })}>
-            Nuevo cliente
+            {t.pages.budgets.newClient}
           </Link>
         </div>
       )}

@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { buttonClass, type ButtonVariant } from "@/components/button-styles";
-import { money, monthNames } from "@/lib/format";
+import { money } from "@/lib/format";
+import { getDictionary, getLocale } from "@/lib/i18n";
 import { getCompanySetupStatus } from "@/lib/onboarding";
 import {
   getClientCount,
@@ -16,6 +17,8 @@ import type { InvoiceWithCommunity } from "@/lib/types";
 export default async function DashboardPage() {
   const user = await requireUser();
   const profile = await getCurrentProfile();
+  const locale = await getLocale();
+  const t = getDictionary(locale);
 
   if (profile && !profile.onboarding_completed_at) {
     redirect("/welcome");
@@ -80,14 +83,12 @@ export default async function DashboardPage() {
     <div className="space-y-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-zinc-950">Panel principal</h1>
-          <p className="mt-1 text-sm text-zinc-600">
-            Lo importante de tu facturacion, sin ruido.
-          </p>
+          <h1 className="text-2xl font-semibold text-zinc-950">{t.pages.dashboard.title}</h1>
+          <p className="mt-1 text-sm text-zinc-600">{t.pages.dashboard.description}</p>
         </div>
         {!isPro ? (
           <Link href="/settings/billing" className={buttonClass({ variant: "primary" })}>
-            Mejorar a Pro
+            {t.common.upgradeToPro}
           </Link>
         ) : null}
       </div>
@@ -96,14 +97,14 @@ export default async function DashboardPage() {
         <section className="rounded-lg border border-amber-200 bg-amber-50 p-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h2 className="font-semibold text-amber-950">Completa los datos de tu empresa</h2>
+              <h2 className="font-semibold text-amber-950">{t.pages.dashboard.completeCompanyTitle}</h2>
               <p className="mt-1 text-sm leading-6 text-amber-900">
-                Faltan {companyStatus.missingFields.map((field) => field.label).join(", ")}. Estos datos salen en
-                tus facturas y presupuestos.
+                {t.pages.dashboard.completeCompanyPrefix} {companyStatus.missingFields.map((field) => field.label).join(", ")}.{" "}
+                {t.pages.dashboard.completeCompanySuffix}
               </p>
             </div>
             <Link href="/settings/company" className={buttonClass({ variant: "warning" })}>
-              Completar empresa
+              {t.pages.dashboard.completeCompanyCta}
             </Link>
           </div>
         </section>
@@ -111,47 +112,51 @@ export default async function DashboardPage() {
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <Metric
-          label="Clientes"
-          value={limits.clients === null ? String(clients) : `${clients} de ${limits.clients}`}
-          hint={limits.clients === null ? "Sin limite en Pro" : "Plan Gratis"}
+          label={t.common.clients}
+          value={limits.clients === null ? String(clients) : `${clients} / ${limits.clients}`}
+          hint={limits.clients === null ? t.common.noLimitPro : t.common.freePlan}
           warn={limits.clients !== null && clients >= limits.clients}
         />
         <Metric
-          label="Documentos este mes"
-          value={limits.documentsPerMonth === null ? String(documentsThisMonth) : `${documentsThisMonth} de ${limits.documentsPerMonth}`}
-          hint={limits.documentsPerMonth === null ? "Sin limite en Pro" : "Facturas y presupuestos"}
+          label={t.pages.dashboard.documentsThisMonth}
+          value={limits.documentsPerMonth === null ? String(documentsThisMonth) : `${documentsThisMonth} / ${limits.documentsPerMonth}`}
+          hint={limits.documentsPerMonth === null ? t.common.noLimitPro : t.pages.dashboard.invoicesBudgets}
           warn={limits.documentsPerMonth !== null && documentsThisMonth >= limits.documentsPerMonth}
         />
-        <Metric label="Facturas creadas" value={String(invoices ?? 0)} hint={`${pending ?? 0} pendientes`} />
-        <Metric label="Presupuestos creados" value={String(budgets ?? 0)} hint={isPro ? "Plan Pro activo" : "Plan Gratis"} />
+        <Metric label={t.pages.dashboard.invoicesCreated} value={String(invoices ?? 0)} hint={`${pending ?? 0} ${t.pages.dashboard.pending}`} />
+        <Metric label={t.pages.dashboard.budgetsCreated} value={String(budgets ?? 0)} hint={isPro ? t.pages.dashboard.proActive : t.common.freePlan} />
       </section>
 
       <section>
-        <h2 className="text-lg font-semibold">Accesos rapidos</h2>
+        <h2 className="text-lg font-semibold">{t.pages.dashboard.quickLinks}</h2>
         <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          <QuickLink href="/invoices/new" label="Crear factura" variant="primary" />
-          <QuickLink href="/budgets/new" label="Crear presupuesto" variant="warning" />
-          <QuickLink href="/clients/new" label="Crear cliente" variant="secondary" />
-          <QuickLink href="/invoices/create-month" label="Facturacion mensual" variant="success" />
-          <QuickLink href="/settings/company" label="Datos de empresa" variant="secondary" />
-          <QuickLink href="/settings/billing" label="Ver plan y limites" variant="secondary" />
+          <QuickLink href="/invoices/new" label={t.pages.dashboard.createInvoice} variant="primary" />
+          <QuickLink href="/budgets/new" label={t.pages.dashboard.createBudget} variant="warning" />
+          <QuickLink href="/clients/new" label={t.pages.dashboard.createClient} variant="secondary" />
+          <QuickLink href="/invoices/create-month" label={t.pages.dashboard.monthlyBilling} variant="success" />
+          <QuickLink href="/settings/company" label={t.pages.dashboard.companyDetails} variant="secondary" />
+          <QuickLink href="/settings/billing" label={t.pages.dashboard.viewPlanLimits} variant="secondary" />
         </div>
       </section>
 
       <section className="grid gap-4 lg:grid-cols-2">
         <RecentDocuments
-          title="Facturas recientes"
+          title={t.pages.dashboard.recentInvoices}
           documents={invoicesList}
-          emptyText="Todavia no has creado facturas."
+          emptyText={t.pages.dashboard.noInvoices}
           emptyHref="/invoices/new"
-          emptyCta="Crear primera factura"
+          emptyCta={t.pages.dashboard.firstInvoice}
+          months={t.months}
+          unnamedClient={t.common.unnamedClient}
         />
         <RecentDocuments
-          title="Presupuestos recientes"
+          title={t.pages.dashboard.recentBudgets}
           documents={budgetsList}
-          emptyText="Todavia no has creado presupuestos."
+          emptyText={t.pages.dashboard.noBudgets}
           emptyHref="/budgets/new"
-          emptyCta="Crear primer presupuesto"
+          emptyCta={t.pages.dashboard.firstBudget}
+          months={t.months}
+          unnamedClient={t.common.unnamedClient}
         />
       </section>
     </div>
@@ -200,12 +205,16 @@ function RecentDocuments({
   emptyText,
   emptyHref,
   emptyCta,
+  months,
+  unnamedClient,
 }: {
   title: string;
   documents: InvoiceWithCommunity[];
   emptyText: string;
   emptyHref: string;
   emptyCta: string;
+  months: readonly string[];
+  unnamedClient: string;
 }) {
   return (
     <section className="rounded-lg border border-zinc-200 bg-white shadow-sm">
@@ -224,9 +233,9 @@ function RecentDocuments({
                 <p className="font-medium text-zinc-950">{document.invoice_number}</p>
                 <p className="text-sm font-semibold text-zinc-900">{money(document.total)}</p>
               </div>
-              <p className="text-sm text-zinc-600">{document.communities?.name ?? "Cliente sin nombre"}</p>
+              <p className="text-sm text-zinc-600">{document.communities?.name ?? unnamedClient}</p>
               <p className="text-xs text-zinc-500">
-                {monthNames[document.month - 1]} {document.year}
+                {months[document.month - 1]} {document.year}
               </p>
             </Link>
           ))}

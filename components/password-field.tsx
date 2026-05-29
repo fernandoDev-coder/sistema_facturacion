@@ -7,6 +7,8 @@ type PasswordFieldProps = {
   name?: string;
   minLength?: number;
   autoComplete?: "current-password" | "new-password";
+  showLabel?: string;
+  hideLabel?: string;
 };
 
 export function PasswordField({
@@ -14,6 +16,8 @@ export function PasswordField({
   name = "password",
   minLength,
   autoComplete,
+  showLabel = "Mostrar",
+  hideLabel = "Ocultar",
 }: PasswordFieldProps) {
   const [visible, setVisible] = useState(false);
 
@@ -35,7 +39,7 @@ export function PasswordField({
           className="h-10 border-l border-zinc-300 px-3 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
           aria-pressed={visible}
         >
-          {visible ? "Ocultar" : "Mostrar"}
+          {visible ? hideLabel : showLabel}
         </button>
       </div>
     </label>

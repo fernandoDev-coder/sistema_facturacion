@@ -16,6 +16,23 @@ type CustomerSnapshot = {
   phone?: string | null;
 };
 
+const defaultLabels = {
+  back: "Volver",
+  print: "Imprimir",
+  configureCompany: "Configura los datos de tu empresa",
+  date: "Fecha",
+  client: "Cliente",
+  paymentDetails: "Datos de pago",
+  period: "Periodo",
+  concept: "Concepto",
+  base: "Base",
+  vat: "IVA",
+  total: "Total",
+  taxableBase: "Base imponible",
+  totalVat: "IVA total",
+  notes: "Observaciones",
+};
+
 export function DocumentPrint({
   document,
   items,
@@ -23,6 +40,7 @@ export function DocumentPrint({
   customer,
   title,
   backHref,
+  labels = defaultLabels,
   showCompanyLogo = false,
 }: {
   document: Invoice;
@@ -31,22 +49,23 @@ export function DocumentPrint({
   customer: CustomerSnapshot;
   title: string;
   backHref: string;
+  labels?: typeof defaultLabels;
   showCompanyLogo?: boolean;
 }) {
   return (
     <div className="space-y-4 print:space-y-0">
       <div className="flex items-center justify-between print:hidden">
         <Link href={backHref} className={buttonClass({ variant: "ghost", size: "sm" })}>
-          Volver
+          {labels.back}
         </Link>
-        <PrintButton />
+        <PrintButton label={labels.print} />
       </div>
 
       <article className="print-page mx-auto min-h-[297mm] max-w-[210mm] bg-white p-10 text-zinc-950 shadow-sm ring-1 ring-zinc-200 print:p-0 print:shadow-none print:ring-0">
         <header className="flex items-start justify-between gap-10 border-b border-zinc-300 pb-8">
           <div className="min-w-0 flex-1">
             <InvoiceLogo src={showCompanyLogo ? company?.logo_url : null} reserveSpace />
-            <h1 className="text-2xl font-semibold">{company?.fiscal_name ?? "Configura los datos de tu empresa"}</h1>
+            <h1 className="text-2xl font-semibold">{company?.fiscal_name ?? labels.configureCompany}</h1>
             <div className="mt-3 space-y-1 text-sm text-zinc-700">
               <p>{company?.tax_id}</p>
               <p>{company?.address}</p>
@@ -58,13 +77,15 @@ export function DocumentPrint({
           <div className="shrink-0 text-right">
             <p className="text-sm uppercase tracking-wide text-zinc-500">{title}</p>
             <p className="mt-1 text-xl font-semibold">{document.invoice_number}</p>
-            <p className="mt-2 text-sm text-zinc-700">Fecha: {formatLongDate(document.invoice_date)}</p>
+            <p className="mt-2 text-sm text-zinc-700">
+              {labels.date}: {formatLongDate(document.invoice_date)}
+            </p>
           </div>
         </header>
 
         <section className="mt-8 grid gap-8 md:grid-cols-2">
           <div>
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">Cliente</h2>
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">{labels.client}</h2>
             <div className="mt-3 space-y-1 text-sm">
               <p className="text-base font-semibold">{customer.name}</p>
               <p>{customer.taxId}</p>
@@ -75,11 +96,11 @@ export function DocumentPrint({
             </div>
           </div>
           <div>
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">Datos de pago</h2>
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">{labels.paymentDetails}</h2>
             <div className="mt-3 space-y-1 text-sm">
               <p>IBAN: {company?.iban ?? "-"}</p>
               <p>
-                Periodo: {String(document.month).padStart(2, "0")}/{document.year}
+                {labels.period}: {String(document.month).padStart(2, "0")}/{document.year}
               </p>
             </div>
           </div>
@@ -95,10 +116,10 @@ export function DocumentPrint({
             </colgroup>
             <thead>
               <tr className="border-b border-zinc-300 text-left">
-                <th className="py-3 pr-6 font-semibold">Concepto</th>
-                <th className="py-3 text-right font-semibold">Base</th>
-                <th className="py-3 text-right font-semibold">IVA</th>
-                <th className="py-3 text-right font-semibold">Total</th>
+                <th className="py-3 pr-6 font-semibold">{labels.concept}</th>
+                <th className="py-3 text-right font-semibold">{labels.base}</th>
+                <th className="py-3 text-right font-semibold">{labels.vat}</th>
+                <th className="py-3 text-right font-semibold">{labels.total}</th>
               </tr>
             </thead>
             <tbody>
@@ -118,10 +139,10 @@ export function DocumentPrint({
 
         <section className="mt-8 flex justify-end">
           <div className="w-full max-w-xs space-y-3 text-sm">
-            <SummaryRow label="Base imponible" value={money(document.amount)} />
-            <SummaryRow label="IVA total" value={money(document.vat_amount)} />
+            <SummaryRow label={labels.taxableBase} value={money(document.amount)} />
+            <SummaryRow label={labels.totalVat} value={money(document.vat_amount)} />
             <div className="flex justify-between border-t border-zinc-300 pt-3 text-lg font-semibold">
-              <span>Total</span>
+              <span>{labels.total}</span>
               <span>{money(document.total)}</span>
             </div>
           </div>
@@ -129,7 +150,7 @@ export function DocumentPrint({
 
         {document.notes ? (
           <section className="mt-10">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">Observaciones</h2>
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">{labels.notes}</h2>
             <p className="mt-2 whitespace-pre-line text-sm text-zinc-700">{document.notes}</p>
           </section>
         ) : null}

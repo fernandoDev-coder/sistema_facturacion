@@ -3,8 +3,32 @@
 import { useMemo, useState } from "react";
 import { buttonClass } from "@/components/button-styles";
 import { FormButton } from "@/components/form-button";
-import { documentLabel, money, monthNames } from "@/lib/format";
-import { invoiceStatuses, type Community, type DocumentType, type Invoice, type InvoiceItem } from "@/lib/types";
+import { money, monthNames as defaultMonthNames } from "@/lib/format";
+import { invoiceStatuses, type Community, type DocumentType, type Invoice, type InvoiceItem, type InvoiceStatus } from "@/lib/types";
+
+type DocumentFormLabels = {
+  invoice: string;
+  budget: string;
+  client: string;
+  numberOf: string;
+  dateOf: string;
+  month: string;
+  year: string;
+  status: string;
+  concepts: string;
+  conceptsHelp: string;
+  addConcept: string;
+  concept: string;
+  base: string;
+  vatPercent: string;
+  remove: string;
+  baseTotal: string;
+  vatCalculated: string;
+  total: string;
+  notes: string;
+  create: string;
+  save: string;
+};
 
 type InvoiceFormProps = {
   action: (formData: FormData) => Promise<void>;
@@ -13,12 +37,46 @@ type InvoiceFormProps = {
   invoice?: Invoice;
   items?: InvoiceItem[];
   suggestedNumber?: string;
+  labels?: Readonly<DocumentFormLabels>;
+  months?: readonly string[];
+  statusLabels?: Readonly<Record<InvoiceStatus, string>>;
 };
 
 type LineItem = {
   description: string;
   amount: string;
   vat_rate: string;
+};
+
+const defaultLabels: DocumentFormLabels = {
+  invoice: "factura",
+  budget: "presupuesto",
+  client: "Cliente",
+  numberOf: "Número de",
+  dateOf: "Fecha de",
+  month: "Mes",
+  year: "Año",
+  status: "Estado",
+  concepts: "Conceptos",
+  conceptsHelp: "Cada línea tiene su descripción, base e IVA.",
+  addConcept: "Añadir concepto",
+  concept: "Concepto",
+  base: "Base",
+  vatPercent: "IVA %",
+  remove: "Quitar",
+  baseTotal: "Base total",
+  vatCalculated: "IVA calculado",
+  total: "Total",
+  notes: "Observaciones",
+  create: "Crear",
+  save: "Guardar cambios",
+};
+
+const defaultStatusLabels: Record<InvoiceStatus, string> = {
+  draft: "Borrador",
+  pending: "Pendiente",
+  paid: "Pagada",
+  cancelled: "Cancelada",
 };
 
 export function InvoiceForm({
@@ -28,9 +86,12 @@ export function InvoiceForm({
   invoice,
   items = [],
   suggestedNumber,
+  labels = defaultLabels,
+  months = defaultMonthNames,
+  statusLabels = defaultStatusLabels,
 }: InvoiceFormProps) {
   const today = new Date().toISOString().slice(0, 10);
-  const label = documentLabel(documentType).toLowerCase();
+  const label = labels[documentType];
   const [communityId, setCommunityId] = useState(invoice?.community_id ?? communities[0]?.id ?? "");
   const [lineItems, setLineItems] = useState<LineItem[]>(() => {
     if (items.length) {
@@ -119,7 +180,7 @@ export function InvoiceForm({
 
       <div className="grid gap-4 md:grid-cols-2">
         <label className="block">
-          <span className="text-sm font-medium text-zinc-800">Cliente</span>
+          <span className="text-sm font-medium text-zinc-800">{labels.client}</span>
           <select
             name="community_id"
             required
@@ -136,36 +197,36 @@ export function InvoiceForm({
         </label>
 
         <Field
-          label={`Numero de ${label}`}
+          label={`${labels.numberOf} ${label}`}
           name="invoice_number"
           required
           defaultValue={invoice?.invoice_number ?? suggestedNumber}
         />
         <Field
-          label={`Fecha de ${label}`}
+          label={`${labels.dateOf} ${label}`}
           name="invoice_date"
           type="date"
           required
           defaultValue={invoice?.invoice_date ?? today}
         />
         <label className="block">
-          <span className="text-sm font-medium text-zinc-800">Mes</span>
+          <span className="text-sm font-medium text-zinc-800">{labels.month}</span>
           <select
             name="month"
             required
             defaultValue={invoice?.month ?? new Date().getMonth() + 1}
             className="mt-1 h-10 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
           >
-            {monthNames.map((name, index) => (
+            {months.map((name, index) => (
               <option key={name} value={index + 1}>
                 {name}
               </option>
             ))}
           </select>
         </label>
-        <Field label="Anio" name="year" type="number" required defaultValue={invoice?.year ?? new Date().getFullYear()} />
+        <Field label={labels.year} name="year" type="number" required defaultValue={invoice?.year ?? new Date().getFullYear()} />
         <label className="block">
-          <span className="text-sm font-medium text-zinc-800">Estado</span>
+          <span className="text-sm font-medium text-zinc-800">{labels.status}</span>
           <select
             name="status"
             defaultValue={invoice?.status ?? "draft"}
@@ -173,7 +234,7 @@ export function InvoiceForm({
           >
             {invoiceStatuses.map((status) => (
               <option key={status.value} value={status.value}>
-                {status.label}
+                {statusLabels[status.value]}
               </option>
             ))}
           </select>
@@ -183,11 +244,11 @@ export function InvoiceForm({
       <section className="rounded-lg border border-zinc-200 bg-zinc-50 p-4">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <h2 className="text-sm font-semibold text-zinc-900">Conceptos</h2>
-            <p className="mt-1 text-sm text-zinc-600">Cada linea tiene su descripcion, base e IVA.</p>
+            <h2 className="text-sm font-semibold text-zinc-900">{labels.concepts}</h2>
+            <p className="mt-1 text-sm text-zinc-600">{labels.conceptsHelp}</p>
           </div>
           <button type="button" onClick={addItem} className={buttonClass({ variant: "secondary", size: "sm" })}>
-            Anadir concepto
+            {labels.addConcept}
           </button>
         </div>
 
@@ -195,7 +256,7 @@ export function InvoiceForm({
           {lineItems.map((item, index) => (
             <div key={index} className="grid gap-3 rounded-md border border-zinc-200 bg-white p-3 md:grid-cols-[minmax(0,1fr)_140px_120px_88px]">
               <label className="block">
-                <span className="text-sm font-medium text-zinc-800">Concepto</span>
+                <span className="text-sm font-medium text-zinc-800">{labels.concept}</span>
                 <textarea
                   required
                   rows={3}
@@ -205,7 +266,7 @@ export function InvoiceForm({
                 />
               </label>
               <label className="block">
-                <span className="text-sm font-medium text-zinc-800">Base</span>
+                <span className="text-sm font-medium text-zinc-800">{labels.base}</span>
                 <input
                   type="number"
                   step="0.01"
@@ -216,7 +277,7 @@ export function InvoiceForm({
                 />
               </label>
               <label className="block">
-                <span className="text-sm font-medium text-zinc-800">IVA %</span>
+                <span className="text-sm font-medium text-zinc-800">{labels.vatPercent}</span>
                 <input
                   type="number"
                   step="0.01"
@@ -233,7 +294,7 @@ export function InvoiceForm({
                   disabled={lineItems.length === 1}
                   className={buttonClass({ variant: "danger", size: "sm", className: "w-full" })}
                 >
-                  Quitar
+                  {labels.remove}
                 </button>
               </div>
             </div>
@@ -242,22 +303,13 @@ export function InvoiceForm({
       </section>
 
       <div className="grid gap-4 md:grid-cols-3">
-        <div className="rounded-md border border-zinc-200 bg-zinc-50 p-4">
-          <p className="text-sm text-zinc-500">Base total</p>
-          <p className="mt-1 text-xl font-semibold">{money(totals.amount)}</p>
-        </div>
-        <div className="rounded-md border border-zinc-200 bg-zinc-50 p-4">
-          <p className="text-sm text-zinc-500">IVA calculado</p>
-          <p className="mt-1 text-xl font-semibold">{money(totals.vatAmount)}</p>
-        </div>
-        <div className="rounded-md border border-zinc-200 bg-zinc-50 p-4">
-          <p className="text-sm text-zinc-500">Total</p>
-          <p className="mt-1 text-xl font-semibold">{money(totals.total)}</p>
-        </div>
+        <Summary label={labels.baseTotal} value={totals.amount} />
+        <Summary label={labels.vatCalculated} value={totals.vatAmount} />
+        <Summary label={labels.total} value={totals.total} />
       </div>
 
       <label className="block">
-        <span className="text-sm font-medium text-zinc-800">Observaciones</span>
+        <span className="text-sm font-medium text-zinc-800">{labels.notes}</span>
         <textarea
           name="notes"
           defaultValue={invoice?.notes ?? ""}
@@ -266,8 +318,17 @@ export function InvoiceForm({
         />
       </label>
 
-      <FormButton>{invoice ? "Guardar cambios" : `Crear ${label}`}</FormButton>
+      <FormButton>{invoice ? labels.save : `${labels.create} ${label}`}</FormButton>
     </form>
+  );
+}
+
+function Summary({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-md border border-zinc-200 bg-zinc-50 p-4">
+      <p className="text-sm text-zinc-500">{label}</p>
+      <p className="mt-1 text-xl font-semibold">{money(value)}</p>
+    </div>
   );
 }
 
