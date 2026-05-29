@@ -17,6 +17,56 @@ body {
   color: var(--foreground);
 }
 
+.hero-slide-in-left,
+.hero-slide-in-right {
+  animation-duration: 720ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  animation-fill-mode: both;
+  will-change: transform, opacity;
+}
+
+.hero-slide-in-left {
+  animation-name: hero-slide-from-left;
+}
+
+.hero-slide-in-right {
+  animation-name: hero-slide-from-right;
+  animation-delay: 120ms;
+}
+
+@keyframes hero-slide-from-left {
+  from {
+    opacity: 0;
+    transform: translate3d(-56px, 0, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes hero-slide-from-right {
+  from {
+    opacity: 0;
+    transform: translate3d(56px, 0, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-slide-in-left,
+  .hero-slide-in-right {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
 @media print {
   @page {
     size: A4;

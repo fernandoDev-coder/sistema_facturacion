@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { BrandLogo } from "@/components/brand-logo";
 import { buttonClass } from "@/components/button-styles";
+import { LegalFooter } from "@/components/legal-footer";
 
 const plans = [
   {
@@ -38,7 +39,8 @@ const comparison = [
   { label: "Facturas y presupuestos", free: "Incluido", pro: "Incluido" },
   { label: "Impresion A4", free: "Incluido", pro: "Incluido" },
   { label: "Facturacion mensual masiva", free: "No incluido", pro: "Incluido" },
-  { label: "Logo y datos de empresa", free: "Basico", pro: "Completo" },
+  { label: "Datos de empresa", free: "Incluido", pro: "Incluido" },
+  { label: "Logo en facturas y presupuestos", free: "No incluido", pro: "Incluido" },
 ];
 
 export default function PricingPage() {
@@ -150,6 +152,7 @@ export default function PricingPage() {
           </Link>
         </section>
       </section>
+      <LegalFooter />
     </main>
   );
 }

@@ -46,7 +46,7 @@ export default async function BillingSettingsPage({
 
       <Message text={message} />
 
-      <section className="grid gap-4 lg:grid-cols-3">
+      <section className="grid gap-4 lg:grid-cols-4">
         <Metric
           label="Clientes"
           value={`${clients}${limits.clients === null ? "" : ` / ${limits.clients}`}`}
@@ -56,6 +56,7 @@ export default async function BillingSettingsPage({
           value={`${documentsThisMonth}${limits.documentsPerMonth === null ? "" : ` / ${limits.documentsPerMonth}`}`}
         />
         <Metric label="Facturacion mensual masiva" value={limits.monthlyBulkInvoices ? "Incluida" : "Pro"} />
+        <Metric label="Logo en documentos" value={limits.companyLogo ? "Incluido" : "Pro"} />
       </section>
 
       <section className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">

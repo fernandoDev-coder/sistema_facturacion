@@ -9,8 +9,9 @@ export const requiredCompanyFields = [
   { key: "logo_url", label: "Logo" },
 ] as const;
 
-export function getCompanySetupStatus(company?: Partial<CompanySettings> | null) {
-  const missingFields = requiredCompanyFields.filter(({ key }) => {
+export function getCompanySetupStatus(company?: Partial<CompanySettings> | null, { requireLogo = true } = {}) {
+  const fields = requireLogo ? requiredCompanyFields : requiredCompanyFields.filter(({ key }) => key !== "logo_url");
+  const missingFields = fields.filter(({ key }) => {
     const value = company?.[key];
     return typeof value !== "string" || value.trim() === "";
   });
@@ -18,7 +19,7 @@ export function getCompanySetupStatus(company?: Partial<CompanySettings> | null)
   return {
     completed: missingFields.length === 0,
     missingFields,
-    completedFields: requiredCompanyFields.length - missingFields.length,
-    totalFields: requiredCompanyFields.length,
+    completedFields: fields.length - missingFields.length,
+    totalFields: fields.length,
   };
 }

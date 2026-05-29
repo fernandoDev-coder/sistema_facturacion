@@ -1,11 +1,15 @@
 import { notFound } from "next/navigation";
 import { DocumentPrint } from "@/components/document-print";
 import { fallbackInvoiceItems } from "@/lib/invoice-items";
+import { getPlanLimits } from "@/lib/plan-limits";
+import { getCurrentProfile } from "@/lib/profiles";
 import { createClient, requireUser } from "@/lib/supabase/server";
 
 export default async function PrintInvoicePage({ params }: { params: Promise<{ id: string }> }) {
   const user = await requireUser();
   const { id } = await params;
+  const profile = await getCurrentProfile();
+  const limits = getPlanLimits(profile);
   const supabase = await createClient();
   const { data: invoice } = await supabase
     .from("invoices")
@@ -30,6 +34,7 @@ export default async function PrintInvoicePage({ params }: { params: Promise<{ i
       company={company}
       title="Factura"
       backHref="/invoices"
+      showCompanyLogo={limits.companyLogo}
       customer={{
         name: invoice.community_name ?? community?.name,
         taxId: invoice.community_tax_id ?? community?.tax_id,

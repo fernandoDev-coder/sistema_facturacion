@@ -1,6 +1,8 @@
 import Link from "next/link";
+import Image from "next/image";
 import { BrandLogo } from "@/components/brand-logo";
 import { buttonClass } from "@/components/button-styles";
+import { LegalFooter } from "@/components/legal-footer";
 
 const benefits = [
   "Crea facturas y presupuestos sin pelearte con un ERP.",
@@ -46,8 +48,8 @@ export default function HomePage() {
           </nav>
         </header>
 
-        <div className="grid flex-1 gap-10 py-12 lg:grid-cols-[1fr_0.95fr] lg:items-center">
-          <div>
+        <div className="grid flex-1 gap-10 overflow-hidden py-12 lg:grid-cols-[1fr_0.95fr] lg:items-center">
+          <div className="hero-slide-in-left">
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-blue-700">
               Facturacion simple para negocios recurrentes
             </p>
@@ -68,7 +70,9 @@ export default function HomePage() {
             </div>
           </div>
 
-          <InvoicePreview />
+          <div className="hero-slide-in-right">
+            <InvoicePreview />
+          </div>
         </div>
       </section>
 
@@ -137,6 +141,7 @@ export default function HomePage() {
           />
         </div>
       </section>
+      <LegalFooter />
     </main>
   );
 }
@@ -145,9 +150,20 @@ function InvoicePreview() {
   return (
     <div className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">
       <div className="flex items-start justify-between gap-4 border-b border-zinc-200 pb-5">
-        <div>
-          <p className="text-lg font-semibold">Factura mensual</p>
-          <p className="mt-1 text-sm text-zinc-500">Servicio mantenimiento - Mayo 2026</p>
+        <div className="flex min-w-0 items-start gap-3">
+          <Image
+            src="/brand/faktuflow-mark.svg"
+            alt=""
+            width={44}
+            height={36}
+            priority
+            className="h-10 w-12 shrink-0 object-contain"
+            aria-hidden="true"
+          />
+          <div>
+            <p className="text-lg font-semibold">Factura mensual</p>
+            <p className="mt-1 text-sm text-zinc-500">Ejemplo FaktuFlow - Mayo 2026</p>
+          </div>
         </div>
         <div className="rounded-md bg-blue-700 px-3 py-2 text-sm font-semibold text-white">A4</div>
       </div>

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { registerAction } from "@/app/actions/auth";
 import { BrandLogo } from "@/components/brand-logo";
 import { FormButton } from "@/components/form-button";
+import { LegalFooter } from "@/components/legal-footer";
 import { Message } from "@/components/message";
 import { PasswordField } from "@/components/password-field";
 import { RememberSessionField } from "@/components/remember-session-field";
@@ -14,8 +15,9 @@ export default async function RegisterPage({
   const { message } = await searchParams;
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-zinc-50 px-4">
-      <section className="w-full max-w-md rounded-lg border border-zinc-200 bg-white p-8 shadow-sm">
+    <main className="flex min-h-screen flex-col bg-zinc-50">
+      <section className="flex flex-1 items-center justify-center px-4 py-10">
+        <div className="w-full max-w-md rounded-lg border border-zinc-200 bg-white p-8 shadow-sm">
         <BrandLogo href="/" className="mb-6" />
         <h1 className="text-2xl font-semibold text-zinc-950">Crear cuenta</h1>
         <p className="mt-2 text-sm text-zinc-600">
@@ -54,7 +56,10 @@ export default async function RegisterPage({
           <Link href="/pricing" className="font-medium text-slate-900 hover:underline">
             Ver planes y precios
           </Link>
-        </p>      </section>
+        </p>
+        </div>
+      </section>
+      <LegalFooter />
     </main>
   );
 }

@@ -1,6 +1,8 @@
 import { saveCompanySettingsAction } from "@/app/actions/company";
 import { FormButton } from "@/components/form-button";
 import { Message } from "@/components/message";
+import { getPlanLimits } from "@/lib/plan-limits";
+import { getCurrentProfile } from "@/lib/profiles";
 import { createClient, requireUser } from "@/lib/supabase/server";
 
 export default async function CompanySettingsPage({
@@ -9,8 +11,10 @@ export default async function CompanySettingsPage({
   searchParams: Promise<{ message?: string }>;
 }) {
   const user = await requireUser();
+  const profile = await getCurrentProfile();
   const { message } = await searchParams;
   const supabase = await createClient();
+  const limits = getPlanLimits(profile);
   const { data: company } = await supabase
     .from("company_settings")
     .select("*")
@@ -73,26 +77,38 @@ export default async function CompanySettingsPage({
               title="Introduce un IBAN válido."
               className="md:col-span-2"
             />
-            <Field
-              label="URL del logo"
-              name="logo_url"
-              type="url"
-              defaultValue={company?.logo_url}
-              placeholder="https://tudominio.com/logo.png"
-              title="Pega la URL directa de la imagen. Si usas Bing, la app intentara extraer mediaurl o cdnurl."
-              className="md:col-span-2"
-            />
-            <label className="block md:col-span-2">
-              <span className="text-sm font-medium text-zinc-800">Subir logo desde el ordenador</span>
-              <input
-                name="logo_file"
-                type="file"
-                accept="image/png,image/jpeg,image/webp"
-                className="mt-1 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm file:mr-4 file:rounded-md file:border-0 file:bg-slate-900 file:px-3 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-slate-700"
-              />
-              <span className="mt-1 block text-xs text-zinc-500">PNG, JPG o WebP. Maximo 2 MB.</span>
-            </label>
-            {company?.logo_url ? (
+            {limits.companyLogo ? (
+              <>
+                <Field
+                  label="URL del logo"
+                  name="logo_url"
+                  type="url"
+                  defaultValue={company?.logo_url}
+                  placeholder="https://tudominio.com/logo.png"
+                  title="Pega la URL directa de la imagen. Si usas Bing, la app intentara extraer mediaurl o cdnurl."
+                  className="md:col-span-2"
+                />
+                <label className="block md:col-span-2">
+                  <span className="text-sm font-medium text-zinc-800">Subir logo desde el ordenador</span>
+                  <input
+                    name="logo_file"
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    className="mt-1 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm file:mr-4 file:rounded-md file:border-0 file:bg-slate-900 file:px-3 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-slate-700"
+                  />
+                  <span className="mt-1 block text-xs text-zinc-500">PNG, JPG o WebP. Maximo 2 MB.</span>
+                </label>
+              </>
+            ) : (
+              <div className="rounded-md border border-blue-200 bg-blue-50 p-4 text-sm text-blue-950 md:col-span-2">
+                <p className="font-semibold">Logo en documentos incluido en Pro</p>
+                <p className="mt-1 leading-6">
+                  En el plan Gratis puedes guardar los datos de empresa, pero el logo no se mostrara en facturas ni
+                  presupuestos.
+                </p>
+              </div>
+            )}
+            {limits.companyLogo && company?.logo_url ? (
               <div className="md:col-span-2">
                 <span className="text-sm font-medium text-zinc-800">Logo actual</span>
                 <div className="mt-2 flex h-24 w-48 items-center rounded-md border border-zinc-200 bg-zinc-50 p-3">

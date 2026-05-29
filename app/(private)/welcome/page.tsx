@@ -3,6 +3,7 @@ import { completeOnboardingAction } from "@/app/actions/auth";
 import { buttonClass } from "@/components/button-styles";
 import { FormButton } from "@/components/form-button";
 import { getCompanySetupStatus } from "@/lib/onboarding";
+import { getPlanLimits } from "@/lib/plan-limits";
 import { getCurrentProfile } from "@/lib/profiles";
 import { createClient, requireUser } from "@/lib/supabase/server";
 
@@ -29,7 +30,8 @@ export default async function WelcomePage() {
       .maybeSingle(),
   ]);
 
-  const companyStatus = getCompanySetupStatus(company);
+  const limits = getPlanLimits(profile);
+  const companyStatus = getCompanySetupStatus(company, { requireLogo: limits.companyLogo });
   const hasClient = (communities ?? 0) > 0;
   const hasInvoice = (invoices ?? 0) > 0;
 

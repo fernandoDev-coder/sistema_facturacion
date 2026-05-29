@@ -72,7 +72,7 @@ export default async function DashboardPage() {
     supabase.from("company_settings").select("*").eq("owner_id", user.id).maybeSingle(),
   ]);
 
-  const companyStatus = getCompanySetupStatus(company);
+  const companyStatus = getCompanySetupStatus(company, { requireLogo: limits.companyLogo });
   const invoicesList = (recentInvoices ?? []) as InvoiceWithCommunity[];
   const budgetsList = (recentBudgets ?? []) as InvoiceWithCommunity[];
 

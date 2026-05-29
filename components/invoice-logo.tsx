@@ -1,5 +1,7 @@
-export function InvoiceLogo({ src }: { src?: string | null }) {
-  if (!src) return null;
+export function InvoiceLogo({ src, reserveSpace = false }: { src?: string | null; reserveSpace?: boolean }) {
+  if (!src) {
+    return reserveSpace ? <div className="mb-5 h-20 max-w-56" aria-hidden="true" /> : null;
+  }
 
   return (
     // Plain img keeps this compatible with external company logos.

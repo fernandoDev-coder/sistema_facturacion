@@ -3,8 +3,17 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { nullableText } from "@/lib/format";
+import { getPlanLimits, getProfileForLimits } from "@/lib/plan-limits";
 import { createClient, requireUser } from "@/lib/supabase/server";
-import { assertValidFields, cleanIban, cleanLogoUrl, cleanPhone, cleanPostalCode, cleanTaxId } from "@/lib/validators";
+import {
+  assertValidFields,
+  cleanIban,
+  cleanLogoUrl,
+  cleanPhone,
+  cleanPostalCode,
+  cleanTaxId,
+  type ValidationResult,
+} from "@/lib/validators";
 
 const LOGO_BUCKET = "company-logos";
 const MAX_LOGO_BYTES = 2 * 1024 * 1024;
@@ -22,17 +31,32 @@ export async function saveCompanySettingsAction(formData: FormData) {
   const phone = cleanPhone(nullableText(formData.get("phone")));
   const iban = cleanIban(nullableText(formData.get("iban")));
   const logoUrl = cleanLogoUrl(nullableText(formData.get("logo_url")));
+  const logoFile = formData.get("logo_file");
+  const attemptedLogo = Boolean(logoUrl.value) || (logoFile instanceof File && logoFile.size > 0);
+  const [profile, { data: existingCompany }] = await Promise.all([
+    getProfileForLimits(supabase, user.id),
+    supabase.from("company_settings").select("logo_url").eq("owner_id", user.id).maybeSingle(),
+  ]);
+  const limits = getPlanLimits(profile);
   let uploadedLogoUrl: string | null = null;
 
   try {
-    assertValidFields([
+    const fields: Array<[string, ValidationResult]> = [
       ["tax_id", taxId],
       ["postal_code", postalCode],
       ["phone", phone],
       ["iban", iban],
-      ["logo_url", logoUrl],
-    ]);
-    uploadedLogoUrl = await uploadCompanyLogo(supabase, user.id, formData.get("logo_file"));
+    ];
+
+    if (limits.companyLogo) {
+      fields.push(["logo_url", logoUrl]);
+    }
+
+    assertValidFields(fields);
+
+    if (limits.companyLogo) {
+      uploadedLogoUrl = await uploadCompanyLogo(supabase, user.id, logoFile);
+    }
   } catch (error) {
     redirect(`/settings/company?message=${encodeURIComponent((error as Error).message)}`);
   }
@@ -48,7 +72,7 @@ export async function saveCompanySettingsAction(formData: FormData) {
     email: nullableText(formData.get("email")),
     phone: phone.value,
     iban: iban.value,
-    logo_url: uploadedLogoUrl ?? logoUrl.value,
+    logo_url: limits.companyLogo ? uploadedLogoUrl ?? logoUrl.value : existingCompany?.logo_url ?? null,
     invoice_footer: nullableText(formData.get("invoice_footer")),
     updated_at: new Date().toISOString(),
   };
@@ -63,7 +87,14 @@ export async function saveCompanySettingsAction(formData: FormData) {
 
   revalidatePath("/settings/company");
   revalidatePath("/invoices");
-  redirect("/settings/company?message=Configuración guardada.");
+  revalidatePath("/budgets");
+  redirect(
+    `/settings/company?message=${encodeURIComponent(
+      attemptedLogo && !limits.companyLogo
+        ? "Datos guardados. El logo en facturas y presupuestos esta incluido en el plan Pro."
+        : "Configuracion guardada.",
+    )}`,
+  );
 }
 
 async function uploadCompanyLogo(

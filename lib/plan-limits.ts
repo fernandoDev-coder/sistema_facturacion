@@ -7,6 +7,7 @@ export type PlanLimits = {
   clients: number | null;
   documentsPerMonth: number | null;
   monthlyBulkInvoices: boolean;
+  companyLogo: boolean;
 };
 
 export const planLimits: Record<"starter" | "pro", PlanLimits> = {
@@ -14,11 +15,13 @@ export const planLimits: Record<"starter" | "pro", PlanLimits> = {
     clients: 5,
     documentsPerMonth: 25,
     monthlyBulkInvoices: false,
+    companyLogo: false,
   },
   pro: {
     clients: null,
     documentsPerMonth: null,
     monthlyBulkInvoices: true,
+    companyLogo: true,
   },
 };
 

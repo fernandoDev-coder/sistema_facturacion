@@ -50,7 +50,8 @@ test("company logo URLs are normalized and protocol-validated before storing", (
   assert.match(validators, /\["http:", "https:"\]\.includes\(parsed\.protocol\)/);
   assert.match(validators, /"mediaurl", "imgurl", "cdnurl"/);
   assert.match(companyAction, /cleanLogoUrl\(nullableText\(formData\.get\("logo_url"\)\)\)/);
-  assert.match(companyAction, /logo_url: uploadedLogoUrl \?\? logoUrl\.value/);
+  assert.match(companyAction, /if \(limits\.companyLogo\) {\s+fields\.push\(\["logo_url", logoUrl\]\)/);
+  assert.match(companyAction, /logo_url: limits\.companyLogo \? uploadedLogoUrl \?\? logoUrl\.value : existingCompany\?\.logo_url \?\? null/);
 });
 
 test("company logo uploads are size-limited and stored in a user-scoped bucket", () => {
