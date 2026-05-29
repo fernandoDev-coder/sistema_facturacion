@@ -63,13 +63,13 @@ export default async function BillingSettingsPage({
           <div>
             <h2 className="text-lg font-semibold text-zinc-950">Plan Pro</h2>
             <p className="mt-2 text-sm text-zinc-600">
-              Clientes y documentos sin limite operativo, facturacion mensual masiva y acceso a mejoras premium.
+              7,90 EUR al mes + IVA. Para trabajar sin limites de clientes ni documentos.
             </p>
             <div className="mt-4 grid gap-2 text-sm text-zinc-700 sm:grid-cols-2">
               <p>Clientes ilimitados</p>
               <p>Documentos ilimitados</p>
               <p>Facturacion mensual masiva</p>
-              <p>Gestion desde portal Stripe</p>
+              <p>Logo y datos de empresa en documentos</p>
             </div>
           </div>
 

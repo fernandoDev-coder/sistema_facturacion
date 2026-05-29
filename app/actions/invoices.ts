@@ -305,7 +305,7 @@ export async function createMonthlyInvoicesAction(formData: FormData) {
 
   revalidatePath("/invoices");
   revalidatePath("/dashboard");
-  redirect("/invoices");
+  redirect(`/invoices?message=${encodeURIComponent(`Se han creado ${createdInvoices.length} facturas en borrador.`)}`);
 }
 
 async function createDocumentAction(formData: FormData, documentType: DocumentType) {

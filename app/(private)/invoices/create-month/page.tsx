@@ -3,6 +3,8 @@ import { buttonClass } from "@/components/button-styles";
 import { CreateMonthForm } from "@/components/create-month-form";
 import { Message } from "@/components/message";
 import { currentMonthYear } from "@/lib/format";
+import { getPlanLimits } from "@/lib/plan-limits";
+import { getCurrentProfile } from "@/lib/profiles";
 import { createClient, requireUser } from "@/lib/supabase/server";
 
 export default async function CreateMonthPage({
@@ -15,6 +17,8 @@ export default async function CreateMonthPage({
   const fallback = currentMonthYear();
   const month = Number(params.month ?? fallback.month);
   const year = Number(params.year ?? fallback.year);
+  const profile = await getCurrentProfile();
+  const limits = getPlanLimits(profile);
   const supabase = await createClient();
 
   const [{ data: communities }, { data: existingInvoices }] = await Promise.all([
@@ -32,7 +36,18 @@ export default async function CreateMonthPage({
         <p className="mt-1 text-sm text-zinc-600">Genera una factura en borrador por cada cliente seleccionado.</p>
       </div>
       <Message text={params.message} />
-      {communities?.length ? (
+      {!limits.monthlyBulkInvoices ? (
+        <section className="rounded-lg border border-blue-200 bg-blue-50 p-6">
+          <h2 className="font-semibold text-blue-950">La facturacion mensual esta incluida en Pro</h2>
+          <p className="mt-2 text-sm leading-6 text-blue-900">
+            En el plan Gratis puedes crear facturas una a una. Pro permite generar facturas mensuales en bloque
+            para clientes recurrentes.
+          </p>
+          <Link href="/settings/billing" className={buttonClass({ variant: "primary", className: "mt-4" })}>
+            Ver Plan Pro
+          </Link>
+        </section>
+      ) : communities?.length ? (
         <CreateMonthForm
           communities={communities}
           existingInvoices={existingInvoices ?? []}

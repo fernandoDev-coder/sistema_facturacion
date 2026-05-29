@@ -32,6 +32,8 @@ export function CreateMonthForm({
     () => new Set(existingInvoices.map((invoice) => `${invoice.community_id}-${invoice.year}-${invoice.month}`)),
     [existingInvoices],
   );
+  const selectedIds = Array.from(selected);
+  const duplicateCount = selectedIds.filter(hasDuplicate).length;
 
   function hasDuplicate(communityId: string) {
     return duplicateKeys.has(`${communityId}-${year}-${month}`);
@@ -41,8 +43,13 @@ export function CreateMonthForm({
     <form
       action={createMonthlyInvoicesAction}
       onSubmit={(event) => {
-        const selectedIds = Array.from(selected);
         const duplicates = selectedIds.filter(hasDuplicate);
+
+        if (selectedIds.length === 0) {
+          window.alert("Selecciona al menos un cliente.");
+          event.preventDefault();
+          return;
+        }
 
         if (duplicates.length > 0 && confirmDuplicates !== "yes") {
           const accepted = window.confirm(
@@ -58,10 +65,26 @@ export function CreateMonthForm({
           if (input) input.value = "yes";
           setConfirmDuplicates("yes");
         }
+
+        const accepted = window.confirm(
+          `Vas a crear ${selectedIds.length} facturas en borrador para ${monthNames[month - 1]} ${year}. Quieres continuar?`,
+        );
+
+        if (!accepted) {
+          event.preventDefault();
+        }
       }}
       className="space-y-6"
     >
       <input type="hidden" name="confirm_duplicates" value={confirmDuplicates} />
+      <section className="rounded-md border border-blue-200 bg-blue-50 p-4 text-sm text-blue-950">
+        <p className="font-semibold">Vista previa de generacion</p>
+        <p className="mt-1">
+          {selectedIds.length} clientes seleccionados para {monthNames[month - 1]} {year}.
+          {duplicateCount > 0 ? ` ${duplicateCount} ya tienen factura en ese mes.` : ""}
+        </p>
+      </section>
+
       <div className="grid gap-4 rounded-md border border-zinc-200 bg-white p-4 md:grid-cols-2">
         <label>
           <span className="text-sm font-medium text-zinc-800">Mes</span>
@@ -134,6 +157,7 @@ export function CreateMonthForm({
                 </td>
                 <td className="px-4 py-3 align-top">
                   <textarea
+                    key={`${community.id}-${month}-${year}`}
                     name={`subject_${community.id}`}
                     defaultValue={community.default_subject ?? `Servicio mensual ${monthNames[month - 1]} ${year}`}
                     rows={3}
@@ -165,7 +189,7 @@ export function CreateMonthForm({
       </div>
 
       <FormButton variant="success" pendingText="Creando...">
-        Crear facturas seleccionadas
+        Crear {selectedIds.length} facturas seleccionadas
       </FormButton>
     </form>
   );

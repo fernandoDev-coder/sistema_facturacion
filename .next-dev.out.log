@@ -1,0 +1,18 @@
+
+> sistema_facturacion@0.1.0 dev
+> next dev
+
+▲ Next.js 16.2.6 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.31.67:3000
+- Environments: .env.local
+✓ Ready in 804ms
+Creating turbopack project {
+  dir: 'C:\\Users\\fercu\\OneDrive\\Desktop\\sistema_facturacion',
+  testMode: true
+}
+- Experiments (use with caution):
+  · serverActions
+
+ GET /pricing 200 in 3.2s (next.js: 2.7s, application-code: 474ms)
+ GET / 200 in 3.2s (next.js: 3.1s, application-code: 157ms)
