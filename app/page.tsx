@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BrandLogo } from "@/components/brand-logo";
 import { buttonClass } from "@/components/button-styles";
 
 const benefits = [
@@ -31,9 +32,7 @@ export default function HomePage() {
     <main className="min-h-screen bg-zinc-50 text-zinc-950">
       <section className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 py-6 sm:px-6 lg:px-8">
         <header className="flex items-center justify-between gap-4">
-          <Link href="/" className="text-lg font-semibold">
-            CuotaClara
-          </Link>
+          <BrandLogo href="/" />
           <nav className="flex items-center gap-2">
             <Link href="/pricing" className={buttonClass({ variant: "ghost", size: "sm" })}>
               Precios

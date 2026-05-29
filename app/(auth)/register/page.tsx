@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { registerAction } from "@/app/actions/auth";
+import { BrandLogo } from "@/components/brand-logo";
 import { FormButton } from "@/components/form-button";
 import { Message } from "@/components/message";
 import { PasswordField } from "@/components/password-field";
@@ -15,6 +16,7 @@ export default async function RegisterPage({
   return (
     <main className="flex min-h-screen items-center justify-center bg-zinc-50 px-4">
       <section className="w-full max-w-md rounded-lg border border-zinc-200 bg-white p-8 shadow-sm">
+        <BrandLogo href="/" className="mb-6" />
         <h1 className="text-2xl font-semibold text-zinc-950">Crear cuenta</h1>
         <p className="mt-2 text-sm text-zinc-600">
           Registra un usuario para empezar a facturar. Si la verificación por email está activa, tendrás que confirmar

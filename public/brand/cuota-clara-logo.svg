@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 420" role="img" aria-label="CuotaClara - Factura facil, negocio en claro">
+  <defs>
+    <linearGradient id="cc-logo-blue" x1="370" y1="54" x2="606" y2="286" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2563eb"/>
+      <stop offset="1" stop-color="#0f46e8"/>
+    </linearGradient>
+  </defs>
+  <rect width="980" height="420" rx="28" fill="#ffffff"/>
+  <g transform="translate(385 42)">
+    <path
+      d="M34 12h82l49 52v85c0 13-10 23-23 23H34c-13 0-23-10-23-23V35c0-13 10-23 23-23z"
+      fill="#ffffff"
+      stroke="url(#cc-logo-blue)"
+      stroke-width="12"
+      stroke-linejoin="round"
+    />
+    <path d="M116 13v43c0 12 9 21 21 21h29" fill="#1557f0"/>
+    <path
+      d="M87 52c-9-8-32-8-43 11-10 20 2 44 29 44 10 0 19-4 25-10"
+      fill="none"
+      stroke="#071a3d"
+      stroke-width="12"
+      stroke-linecap="round"
+    />
+    <path d="M36 72h43M36 87h39" stroke="#071a3d" stroke-width="9" stroke-linecap="round"/>
+    <path d="M46 126h78M46 148h61" stroke="#071a3d" stroke-width="9" stroke-linecap="round"/>
+    <circle cx="154" cy="151" r="48" fill="url(#cc-logo-blue)" stroke="#ffffff" stroke-width="12"/>
+    <path d="M130 151l18 18 34-40" fill="none" stroke="#ffffff" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <text x="490" y="292" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="92" font-weight="800" letter-spacing="0">
+    <tspan fill="#071a3d">Cuota</tspan><tspan fill="#1557f0">Clara</tspan>
+  </text>
+  <text x="490" y="360" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="26" font-weight="700" letter-spacing="10" fill="#46556b">
+    FACTURA FACIL, NEGOCIO EN CLARO.
+  </text>
+</svg>
