@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CuotaClara",
+  title: "FaktuFlow",
   description: "Facturacion mensual sencilla para autonomos, oficios y pequenos negocios.",
 };
 

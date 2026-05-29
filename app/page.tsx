@@ -55,7 +55,7 @@ export default function HomePage() {
               Facturas mensuales claras sin montar un ERP.
             </h1>
             <p className="mt-5 max-w-xl text-base leading-7 text-zinc-600">
-              CuotaClara ayuda a autonomos y pequenos negocios a gestionar clientes, facturas y presupuestos
+              FaktuFlow ayuda a autonomos y pequenos negocios a gestionar clientes, facturas y presupuestos
               imprimibles desde una herramienta sencilla.
             </p>
             <div className="mt-7 flex flex-wrap gap-3">
@@ -78,7 +78,7 @@ export default function HomePage() {
             <h2 className="text-2xl font-semibold">El problema que resuelve</h2>
             <p className="mt-3 text-sm leading-6 text-zinc-600">
               Muchos pequenos negocios repiten las mismas facturas cada mes, guardan datos en hojas sueltas y
-              pierden tiempo preparando documentos basicos. CuotaClara concentra ese flujo en una app ligera.
+              pierden tiempo preparando documentos basicos. FaktuFlow concentra ese flujo en una app ligera.
             </p>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
@@ -121,7 +121,7 @@ export default function HomePage() {
           <PlanCard
             name="Gratis"
             price="0 EUR"
-            description="Para probar CuotaClara con poca actividad."
+            description="Para probar FaktuFlow con poca actividad."
             features={["5 clientes", "25 documentos al mes", "Facturas y presupuestos", "Impresion A4"]}
             cta="Crear cuenta gratis"
             href="/register"

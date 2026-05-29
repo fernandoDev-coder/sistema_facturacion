@@ -1,4 +1,4 @@
-# CuotaClara
+# FaktuFlow
 
 Aplicacion SaaS sencilla con Next.js App Router, TypeScript, Tailwind CSS y Supabase. Permite registrar usuarios, guardar clientes, crear facturas individuales o mensuales y abrir una plantilla A4 imprimible desde el navegador.
 

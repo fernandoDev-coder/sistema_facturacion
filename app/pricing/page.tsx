@@ -7,7 +7,7 @@ const plans = [
     name: "Gratis",
     price: "0 EUR",
     cadence: "para empezar",
-    description: "Para probar CuotaClara con pocos clientes y documentos.",
+    description: "Para probar FaktuFlow con pocos clientes y documentos.",
     features: ["5 clientes", "25 documentos al mes", "Facturas y presupuestos", "Impresion A4 desde navegador"],
     notIncluded: ["Facturacion mensual masiva", "Clientes ilimitados", "Documentos ilimitados"],
     cta: "Crear cuenta gratis",

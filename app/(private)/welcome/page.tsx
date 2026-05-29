@@ -70,7 +70,7 @@ export default async function WelcomePage() {
     <div className="mx-auto max-w-4xl space-y-8">
       <section className="rounded-lg border border-zinc-200 bg-white p-8 shadow-sm">
         <p className="text-sm font-medium uppercase tracking-[0.18em] text-zinc-500">Bienvenida inicial</p>
-        <h1 className="mt-3 text-3xl font-semibold text-zinc-950">Prepara CuotaClara en pocos minutos</h1>
+        <h1 className="mt-3 text-3xl font-semibold text-zinc-950">Prepara FaktuFlow en pocos minutos</h1>
         <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-600">
           {profile?.is_super_admin
             ? "Esta cuenta tiene acceso total y tambien vera el panel de usuarios registrados."
