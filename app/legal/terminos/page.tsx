@@ -12,13 +12,14 @@ export default function TermsPage() {
       <LegalSection title="Planes">
         <p>
           El plan Gratis incluye limites de uso. El plan Pro tiene un precio de 7,90 EUR al mes + IVA e incluye
-          clientes ilimitados, documentos ilimitados, facturacion mensual masiva y logo en documentos.
+          limites ampliados y logo de empresa en facturas y presupuestos. El plan Premium tiene un precio de 14,90
+          EUR al mes + IVA e incluye clientes ilimitados, documentos ilimitados y facturacion mensual masiva.
         </p>
       </LegalSection>
       <LegalSection title="Pagos y cancelacion">
         <p>
-          Los pagos del plan Pro se gestionan mediante Stripe. El usuario podra cancelar o gestionar su suscripcion
-          desde el area de plan cuando este disponible en su cuenta.
+          Los pagos de los planes Pro y Premium se gestionan mediante Stripe. El usuario podra cancelar o gestionar su
+          suscripcion desde el area de plan cuando este disponible en su cuenta.
         </p>
       </LegalSection>
       <LegalSection title="Uso correcto">

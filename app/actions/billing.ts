@@ -1,16 +1,17 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { hasPaidAccess } from "@/lib/plan-limits";
-import { getSiteUrl, getStripe, getStripeProPriceId } from "@/lib/stripe";
+import { getEffectivePlan } from "@/lib/plan-limits";
+import { getSiteUrl, getStripe, getStripePriceId } from "@/lib/stripe";
 import { createAdminClient, createClient, requireUser } from "@/lib/supabase/server";
 
 function billingRedirect(message: string): never {
   redirect(`/settings/billing?message=${encodeURIComponent(message)}`);
 }
 
-export async function createCheckoutSessionAction() {
+export async function createCheckoutSessionAction(formData?: FormData) {
   const user = await requireUser();
+  const selectedPlan = parseCheckoutPlan(formData);
   const supabase = await createClient();
   const { data: profile } = await supabase
     .from("profiles")
@@ -18,8 +19,10 @@ export async function createCheckoutSessionAction() {
     .eq("id", user.id)
     .maybeSingle();
 
-  if (hasPaidAccess(profile)) {
-    billingRedirect("Tu cuenta ya tiene acceso Pro.");
+  const currentPlan = getEffectivePlan(profile);
+
+  if (currentPlan === "enterprise" || currentPlan === "premium" || (currentPlan === "pro" && selectedPlan === "pro")) {
+    billingRedirect(`Tu cuenta ya tiene acceso ${getPlanName(currentPlan)}.`);
   }
 
   let checkoutUrl: string | null = null;
@@ -28,6 +31,15 @@ export async function createCheckoutSessionAction() {
     const stripe = getStripe();
     const admin = createAdminClient();
     let customerId = profile?.stripe_customer_id ?? null;
+
+    if (currentPlan === "pro" && selectedPlan === "premium" && customerId) {
+      const session = await stripe.billingPortal.sessions.create({
+        customer: customerId,
+        return_url: `${getSiteUrl()}/settings/billing`,
+      });
+
+      checkoutUrl = session.url;
+    }
 
     if (!customerId) {
       const customer = await stripe.customers.create({
@@ -41,27 +53,29 @@ export async function createCheckoutSessionAction() {
       await admin.from("profiles").update({ stripe_customer_id: customerId }).eq("id", user.id);
     }
 
-    const siteUrl = getSiteUrl();
-    const session = await stripe.checkout.sessions.create({
-      mode: "subscription",
-      customer: customerId,
-      client_reference_id: user.id,
-      line_items: [{ price: getStripeProPriceId(), quantity: 1 }],
-      success_url: `${siteUrl}/settings/billing?message=${encodeURIComponent("Pago completado. Activaremos tu plan en cuanto Stripe confirme la suscripcion.")}`,
-      cancel_url: `${siteUrl}/settings/billing?message=${encodeURIComponent("Pago cancelado. No se ha cambiado tu plan.")}`,
-      metadata: {
-        owner_id: user.id,
-        plan: "pro",
-      },
-      subscription_data: {
+    if (!checkoutUrl) {
+      const siteUrl = getSiteUrl();
+      const session = await stripe.checkout.sessions.create({
+        mode: "subscription",
+        customer: customerId,
+        client_reference_id: user.id,
+        line_items: [{ price: getStripePriceId(selectedPlan), quantity: 1 }],
+        success_url: `${siteUrl}/settings/billing?message=${encodeURIComponent("Pago completado. Activaremos tu plan en cuanto Stripe confirme la suscripcion.")}`,
+        cancel_url: `${siteUrl}/settings/billing?message=${encodeURIComponent("Pago cancelado. No se ha cambiado tu plan.")}`,
         metadata: {
           owner_id: user.id,
-          plan: "pro",
+          plan: selectedPlan,
         },
-      },
-    });
+        subscription_data: {
+          metadata: {
+            owner_id: user.id,
+            plan: selectedPlan,
+          },
+        },
+      });
 
-    checkoutUrl = session.url;
+      checkoutUrl = session.url;
+    }
   } catch (error) {
     billingRedirect((error as Error).message);
   }
@@ -71,6 +85,23 @@ export async function createCheckoutSessionAction() {
   }
 
   redirect(checkoutUrl);
+}
+
+function parseCheckoutPlan(formData?: FormData) {
+  const plan = formData?.get("plan");
+  return plan === "premium" ? "premium" : "pro";
+}
+
+function getPlanName(plan: ReturnType<typeof getEffectivePlan>) {
+  if (plan === "premium") {
+    return "Premium";
+  }
+
+  if (plan === "enterprise") {
+    return "Premium";
+  }
+
+  return "Pro";
 }
 
 export async function createCustomerPortalSessionAction() {

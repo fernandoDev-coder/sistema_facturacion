@@ -87,7 +87,7 @@ export default async function DashboardPage() {
           <p className="mt-1 text-sm text-zinc-600">{t.pages.dashboard.description}</p>
         </div>
         {!isPro ? (
-          <Link href="/settings/billing" className={buttonClass({ variant: "primary" })}>
+          <Link href="/settings/billing" className={buttonClass({ variant: "primary", size: "full", className: "sm:w-auto" })}>
             {t.common.upgradeToPro}
           </Link>
         ) : null}
@@ -103,7 +103,7 @@ export default async function DashboardPage() {
                 {t.pages.dashboard.completeCompanySuffix}
               </p>
             </div>
-            <Link href="/settings/company" className={buttonClass({ variant: "warning" })}>
+            <Link href="/settings/company" className={buttonClass({ variant: "warning", size: "full", className: "sm:w-auto" })}>
               {t.pages.dashboard.completeCompanyCta}
             </Link>
           </div>
@@ -193,7 +193,7 @@ function QuickLink({
   variant: ButtonVariant;
 }) {
   return (
-    <Link href={href} className={buttonClass({ variant, className: "justify-start shadow-sm" })}>
+    <Link href={href} className={buttonClass({ variant, size: "full", className: "justify-center shadow-sm sm:justify-start" })}>
       {label}
     </Link>
   );
@@ -229,9 +229,9 @@ function RecentDocuments({
               href={`/${document.document_type === "budget" ? "budgets" : "invoices"}/${document.id}/edit`}
               className="grid gap-1 px-5 py-4 hover:bg-zinc-50"
             >
-              <div className="flex items-center justify-between gap-3">
-                <p className="font-medium text-zinc-950">{document.invoice_number}</p>
-                <p className="text-sm font-semibold text-zinc-900">{money(document.total)}</p>
+              <div className="flex items-start justify-between gap-3">
+                <p className="min-w-0 break-words font-medium text-zinc-950">{document.invoice_number}</p>
+                <p className="shrink-0 text-sm font-semibold text-zinc-900">{money(document.total)}</p>
               </div>
               <p className="text-sm text-zinc-600">{document.communities?.name ?? unnamedClient}</p>
               <p className="text-xs text-zinc-500">
@@ -243,7 +243,7 @@ function RecentDocuments({
       ) : (
         <div className="px-5 py-8 text-center">
           <p className="text-sm text-zinc-600">{emptyText}</p>
-          <Link href={emptyHref} className={buttonClass({ variant: "primary", className: "mt-4" })}>
+          <Link href={emptyHref} className={buttonClass({ variant: "primary", size: "full", className: "mt-4 sm:w-auto" })}>
             {emptyCta}
           </Link>
         </div>

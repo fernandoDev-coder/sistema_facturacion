@@ -51,11 +51,11 @@ export default async function InvoicesPage({
           <h1 className="text-2xl font-semibold">{t.pages.invoices.title}</h1>
           <p className="mt-1 text-sm text-zinc-600">{t.pages.invoices.description}</p>
         </div>
-        <div className="flex gap-2">
-          <Link href="/invoices/create-month" className={buttonClass({ variant: "secondary" })}>
+        <div className="grid gap-2 sm:flex">
+          <Link href="/invoices/create-month" className={buttonClass({ variant: "secondary", size: "full", className: "sm:w-auto" })}>
             {t.pages.invoices.createMonth}
           </Link>
-          <Link href="/invoices/new" className={buttonClass({ variant: "primary" })}>
+          <Link href="/invoices/new" className={buttonClass({ variant: "primary", size: "full", className: "sm:w-auto" })}>
             {t.common.create}
           </Link>
         </div>
@@ -66,7 +66,7 @@ export default async function InvoicesPage({
         <FilterInput name="year" label={t.common.year} type="number" defaultValue={filters.year} />
         <label>
           <span className="text-sm font-medium text-zinc-800">{t.common.month}</span>
-          <select name="month" defaultValue={filters.month ?? ""} className="mt-1 h-10 w-full rounded-md border border-zinc-300 px-3 text-sm">
+          <select name="month" defaultValue={filters.month ?? ""} className="mt-1 min-h-11 w-full rounded-md border border-zinc-300 px-3 text-sm">
             <option value="">{t.common.all}</option>
             {t.months.map((name, index) => (
               <option key={name} value={index + 1}>
@@ -77,7 +77,7 @@ export default async function InvoicesPage({
         </label>
         <label>
           <span className="text-sm font-medium text-zinc-800">{t.common.client}</span>
-          <select name="community" defaultValue={filters.community ?? ""} className="mt-1 h-10 w-full rounded-md border border-zinc-300 px-3 text-sm">
+          <select name="community" defaultValue={filters.community ?? ""} className="mt-1 min-h-11 w-full rounded-md border border-zinc-300 px-3 text-sm">
             <option value="">{t.common.allFemale}</option>
             {communities?.map((community) => (
               <option key={community.id} value={community.id}>
@@ -88,7 +88,7 @@ export default async function InvoicesPage({
         </label>
         <label>
           <span className="text-sm font-medium text-zinc-800">{t.common.status}</span>
-          <select name="status" defaultValue={filters.status ?? ""} className="mt-1 h-10 w-full rounded-md border border-zinc-300 px-3 text-sm">
+          <select name="status" defaultValue={filters.status ?? ""} className="mt-1 min-h-11 w-full rounded-md border border-zinc-300 px-3 text-sm">
             <option value="">{t.common.all}</option>
             {invoiceStatuses.map((status) => (
               <option key={status.value} value={status.value}>
@@ -102,7 +102,57 @@ export default async function InvoicesPage({
         </div>
       </form>
 
-      <div className="overflow-hidden rounded-md border border-zinc-200 bg-white">
+      {invoices.length ? (
+        <div className="grid gap-3 sm:hidden">
+          {invoices.map((invoice) => (
+            <article key={invoice.id} className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <h2 className="break-words text-base font-semibold text-zinc-950">{invoice.invoice_number}</h2>
+                  <p className="mt-1 break-words text-sm text-zinc-700">{invoice.communities?.name ?? "-"}</p>
+                  <p className="mt-1 text-xs text-zinc-500">
+                    {t.months[invoice.month - 1]} {invoice.year}
+                  </p>
+                </div>
+                <div className="shrink-0 text-right">
+                  <p className="text-sm font-semibold text-zinc-950">{money(invoice.total)}</p>
+                  <div className="mt-2">
+                    <StatusBadge status={invoice.status} labels={t.statuses} />
+                  </div>
+                </div>
+              </div>
+              <div className="mt-4 grid grid-cols-2 gap-2">
+                <Link href={`/invoices/${invoice.id}/print`} className={buttonClass({ variant: "print", size: "full" })}>
+                  {t.common.print}
+                </Link>
+                <Link href={`/invoices/${invoice.id}/edit`} className={buttonClass({ variant: "warning", size: "full" })}>
+                  {t.common.edit}
+                </Link>
+                {invoice.status !== "paid" ? (
+                  <form action={markInvoicePaidAction}>
+                    <input type="hidden" name="id" value={invoice.id} />
+                    <button className={buttonClass({ variant: "success", size: "full" })}>{t.pages.invoices.paid}</button>
+                  </form>
+                ) : null}
+                <ConfirmForm
+                  action={deleteInvoiceAction}
+                  id={invoice.id}
+                  label={t.common.delete}
+                  message={t.pages.invoices.deleteConfirm}
+                  fields={{ redirect_path: "/invoices" }}
+                  className="w-full"
+                />
+              </div>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <div className="rounded-lg border border-zinc-200 bg-white px-4 py-10 text-center text-sm text-zinc-500 sm:hidden">
+          {t.pages.invoices.empty}
+        </div>
+      )}
+
+      <div className="hidden overflow-hidden rounded-md border border-zinc-200 bg-white sm:block">
         <table className="min-w-full divide-y divide-zinc-200">
           <thead className="bg-zinc-50 text-left text-xs font-semibold uppercase tracking-wide text-zinc-500">
             <tr>
@@ -188,7 +238,7 @@ function FilterInput({
         name={name}
         type={type}
         defaultValue={defaultValue ?? ""}
-        className="mt-1 h-10 w-full rounded-md border border-zinc-300 px-3 text-sm"
+        className="mt-1 min-h-11 w-full rounded-md border border-zinc-300 px-3 text-sm"
       />
     </label>
   );

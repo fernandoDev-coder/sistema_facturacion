@@ -5,14 +5,42 @@ import { createClient } from "@supabase/supabase-js";
 const env = loadEnvFile(".env.local");
 const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceRoleKey = env.SUPABASE_SERVICE_ROLE_KEY;
-const email = env.SEED_FREE_USER_EMAIL;
-const password = env.SEED_FREE_USER_PASSWORD;
+const seedKind = process.argv[2] ?? "free";
+const seedConfig = {
+  free: {
+    label: "gratis",
+    envPrefix: "SEED_FREE_USER",
+    plan: "starter",
+    hasLifetimeAccess: false,
+  },
+  pro: {
+    label: "pro",
+    envPrefix: "SEED_PRO_USER",
+    plan: "pro",
+    hasLifetimeAccess: false,
+  },
+  premium: {
+    label: "premium",
+    envPrefix: "SEED_PREMIUM_USER",
+    plan: "premium",
+    hasLifetimeAccess: false,
+  },
+}[seedKind];
+
+if (!seedConfig) {
+  throw new Error("Uso: node scripts/seed-free-user.mjs free|pro|premium");
+}
+
+const emailKey = `${seedConfig.envPrefix}_EMAIL`;
+const passwordKey = `${seedConfig.envPrefix}_PASSWORD`;
+const email = env[emailKey];
+const password = env[passwordKey];
 
 for (const [name, value] of Object.entries({
   NEXT_PUBLIC_SUPABASE_URL: supabaseUrl,
   SUPABASE_SERVICE_ROLE_KEY: serviceRoleKey,
-  SEED_FREE_USER_EMAIL: email,
-  SEED_FREE_USER_PASSWORD: password,
+  [emailKey]: email,
+  [passwordKey]: password,
 })) {
   if (!value) {
     throw new Error(`Falta ${name} en .env.local.`);
@@ -60,9 +88,9 @@ const { error: profileError } = await admin.from("profiles").upsert(
     id: user.id,
     email,
     role: "user",
-    plan: "starter",
+    plan: seedConfig.plan,
     is_super_admin: false,
-    has_lifetime_access: false,
+    has_lifetime_access: seedConfig.hasLifetimeAccess,
     stripe_customer_id: null,
     stripe_subscription_id: null,
     subscription_status: null,
@@ -84,8 +112,8 @@ await admin
   })
   .eq("owner_id", user.id);
 
-console.log(`Usuario gratis listo: ${email}`);
-console.log("Plan: starter");
+console.log(`Usuario ${seedConfig.label} listo: ${email}`);
+console.log(`Plan: ${seedConfig.plan}`);
 
 async function findUserByEmail(targetEmail) {
   const normalized = targetEmail.trim().toLowerCase();

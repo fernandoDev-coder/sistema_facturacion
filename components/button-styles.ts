@@ -10,7 +10,7 @@ export type ButtonVariant =
 export type ButtonSize = "sm" | "md" | "full";
 
 const base =
-  "inline-flex items-center justify-center rounded-md border text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60";
+  "inline-flex min-w-0 items-center justify-center rounded-md border text-center text-sm font-semibold leading-snug transition focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60";
 
 const variants: Record<ButtonVariant, string> = {
   primary: "border-blue-700 bg-blue-700 text-white hover:bg-blue-800 focus:ring-blue-500",
@@ -23,9 +23,9 @@ const variants: Record<ButtonVariant, string> = {
 };
 
 const sizes: Record<ButtonSize, string> = {
-  sm: "h-8 px-3",
-  md: "h-10 px-4",
-  full: "h-10 w-full px-4",
+  sm: "min-h-10 px-3 py-2",
+  md: "min-h-11 px-4 py-2.5",
+  full: "min-h-11 w-full px-4 py-2.5",
 };
 
 export function buttonClass({

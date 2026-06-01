@@ -186,7 +186,7 @@ export function InvoiceForm({
             required
             value={communityId}
             onChange={(event) => handleCommunityChange(event.target.value)}
-            className="mt-1 h-10 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
+            className="mt-1 min-h-11 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
           >
             {communities.map((community) => (
               <option key={community.id} value={community.id}>
@@ -215,7 +215,7 @@ export function InvoiceForm({
             name="month"
             required
             defaultValue={invoice?.month ?? new Date().getMonth() + 1}
-            className="mt-1 h-10 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
+            className="mt-1 min-h-11 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
           >
             {months.map((name, index) => (
               <option key={name} value={index + 1}>
@@ -230,7 +230,7 @@ export function InvoiceForm({
           <select
             name="status"
             defaultValue={invoice?.status ?? "draft"}
-            className="mt-1 h-10 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
+            className="mt-1 min-h-11 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
           >
             {invoiceStatuses.map((status) => (
               <option key={status.value} value={status.value}>
@@ -242,19 +242,19 @@ export function InvoiceForm({
       </div>
 
       <section className="rounded-lg border border-zinc-200 bg-zinc-50 p-4">
-        <div className="flex items-center justify-between gap-4">
+        <div className="grid gap-4 sm:flex sm:items-center sm:justify-between">
           <div>
             <h2 className="text-sm font-semibold text-zinc-900">{labels.concepts}</h2>
             <p className="mt-1 text-sm text-zinc-600">{labels.conceptsHelp}</p>
           </div>
-          <button type="button" onClick={addItem} className={buttonClass({ variant: "secondary", size: "sm" })}>
+          <button type="button" onClick={addItem} className={buttonClass({ variant: "secondary", size: "full", className: "sm:w-auto" })}>
             {labels.addConcept}
           </button>
         </div>
 
         <div className="mt-4 space-y-3">
           {lineItems.map((item, index) => (
-            <div key={index} className="grid gap-3 rounded-md border border-zinc-200 bg-white p-3 md:grid-cols-[minmax(0,1fr)_140px_120px_88px]">
+            <div key={index} className="grid gap-3 rounded-md border border-zinc-200 bg-white p-3 md:grid-cols-[minmax(0,1fr)_140px_120px_100px]">
               <label className="block">
                 <span className="text-sm font-medium text-zinc-800">{labels.concept}</span>
                 <textarea
@@ -273,7 +273,7 @@ export function InvoiceForm({
                   required
                   value={item.amount}
                   onChange={(event) => updateItem(index, { amount: event.target.value })}
-                  className="mt-1 h-10 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
+                  className="mt-1 min-h-11 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
                 />
               </label>
               <label className="block">
@@ -284,7 +284,7 @@ export function InvoiceForm({
                   required
                   value={item.vat_rate}
                   onChange={(event) => updateItem(index, { vat_rate: event.target.value })}
-                  className="mt-1 h-10 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
+                  className="mt-1 min-h-11 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
                 />
               </label>
               <div className="flex items-end">
@@ -318,7 +318,7 @@ export function InvoiceForm({
         />
       </label>
 
-      <FormButton>{invoice ? labels.save : `${labels.create} ${label}`}</FormButton>
+      <FormButton className="w-full sm:w-auto">{invoice ? labels.save : `${labels.create} ${label}`}</FormButton>
     </form>
   );
 }
@@ -348,7 +348,7 @@ function Field({
       <input
         name={name}
         defaultValue={defaultValue ?? ""}
-        className="mt-1 h-10 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
+        className="mt-1 min-h-11 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
         {...props}
       />
     </label>

@@ -141,7 +141,7 @@ export function CreateMonthForm({
               setMonth(Number(event.target.value));
               setConfirmDuplicates("no");
             }}
-            className="mt-1 h-10 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm"
+            className="mt-1 min-h-11 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm"
           >
             {months.map((name, index) => (
               <option key={name} value={index + 1}>
@@ -160,14 +160,14 @@ export function CreateMonthForm({
               setYear(Number(event.target.value));
               setConfirmDuplicates("no");
             }}
-            className="mt-1 h-10 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm"
+            className="mt-1 min-h-11 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm"
           />
         </label>
       </div>
 
-      <div className="overflow-hidden rounded-md border border-zinc-200 bg-white">
-        <table className="min-w-full divide-y divide-zinc-200">
-          <thead className="bg-zinc-50 text-left text-xs font-semibold uppercase tracking-wide text-zinc-500">
+      <div className="rounded-md border border-zinc-200 bg-white sm:overflow-hidden">
+        <table className="block min-w-full divide-y divide-zinc-200 sm:table">
+          <thead className="hidden bg-zinc-50 text-left text-xs font-semibold uppercase tracking-wide text-zinc-500 sm:table-header-group">
             <tr>
               <th className="w-14 px-4 py-3">{labels.include}</th>
               <th className="px-4 py-3">{labels.client}</th>
@@ -176,56 +176,62 @@ export function CreateMonthForm({
               <th className="w-28 px-4 py-3">{labels.vat}</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-zinc-100">
+          <tbody className="block divide-y divide-zinc-100 sm:table-row-group">
             {communities.map((community) => (
-              <tr key={community.id} className={hasDuplicate(community.id) ? "bg-amber-50/60" : ""}>
-                <td className="px-4 py-3 align-top">
-                  <input
-                    type="checkbox"
-                    name="include"
-                    value={community.id}
-                    checked={selected.has(community.id)}
-                    onChange={(event) => {
-                      const next = new Set(selected);
-                      if (event.target.checked) next.add(community.id);
-                      else next.delete(community.id);
-                      setSelected(next);
-                      setConfirmDuplicates("no");
-                    }}
-                    className="h-4 w-4 rounded border-zinc-300"
-                  />
+              <tr key={community.id} className={`block p-4 sm:table-row sm:p-0 ${hasDuplicate(community.id) ? "bg-amber-50/60" : ""}`}>
+                <td className="block align-top sm:w-14 sm:px-4 sm:py-3">
+                  <label className="flex items-start gap-3 sm:block">
+                    <input
+                      type="checkbox"
+                      name="include"
+                      value={community.id}
+                      checked={selected.has(community.id)}
+                      onChange={(event) => {
+                        const next = new Set(selected);
+                        if (event.target.checked) next.add(community.id);
+                        else next.delete(community.id);
+                        setSelected(next);
+                        setConfirmDuplicates("no");
+                      }}
+                      className="mt-1 h-5 w-5 rounded border-zinc-300 sm:mt-0 sm:h-4 sm:w-4"
+                    />
+                    <span className="text-sm font-medium text-zinc-800 sm:hidden">{labels.include}</span>
+                  </label>
                 </td>
-                <td className="px-4 py-3 align-top">
-                  <p className="font-medium text-zinc-900">{community.name}</p>
+                <td className="mt-3 block align-top sm:mt-0 sm:px-4 sm:py-3">
+                  <p className="break-words font-medium text-zinc-900">{community.name}</p>
                   {hasDuplicate(community.id) ? (
                     <p className="mt-1 text-xs text-amber-700">{labels.duplicate}</p>
                   ) : null}
                 </td>
-                <td className="px-4 py-3 align-top">
+                <td className="mt-3 block align-top sm:mt-0 sm:px-4 sm:py-3">
+                  <span className="mb-1 block text-sm font-medium text-zinc-800 sm:hidden">{labels.concept}</span>
                   <textarea
                     key={`${community.id}-${month}-${year}`}
                     name={`subject_${community.id}`}
                     defaultValue={community.default_subject ?? `${labels.monthlyService} ${months[month - 1]} ${year}`}
                     rows={3}
-                    className="w-full min-w-[28rem] rounded-md border border-zinc-300 px-3 py-2 text-sm leading-6"
+                    className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm leading-6"
                   />
                 </td>
-                <td className="px-4 py-3 align-top">
+                <td className="mt-3 block align-top sm:mt-0 sm:w-36 sm:px-4 sm:py-3">
+                  <span className="mb-1 block text-sm font-medium text-zinc-800 sm:hidden">{labels.base}</span>
                   <input
                     name={`amount_${community.id}`}
                     type="number"
                     step="0.01"
                     defaultValue="0"
-                    className="h-10 w-full rounded-md border border-zinc-300 px-3 text-sm"
+                    className="min-h-11 w-full rounded-md border border-zinc-300 px-3 text-sm"
                   />
                 </td>
-                <td className="px-4 py-3 align-top">
+                <td className="mt-3 block align-top sm:mt-0 sm:w-28 sm:px-4 sm:py-3">
+                  <span className="mb-1 block text-sm font-medium text-zinc-800 sm:hidden">{labels.vat}</span>
                   <input
                     name={`vat_${community.id}`}
                     type="number"
                     step="0.01"
                     defaultValue={community.default_vat ?? 21}
-                    className="h-10 w-full rounded-md border border-zinc-300 px-3 text-sm"
+                    className="min-h-11 w-full rounded-md border border-zinc-300 px-3 text-sm"
                   />
                 </td>
               </tr>

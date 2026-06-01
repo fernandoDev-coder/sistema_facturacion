@@ -94,7 +94,8 @@ async function syncSubscription(subscription: Stripe.Subscription, fallbackOwner
     : null;
   const priceId = firstItem?.price.id ?? null;
   const status = subscription.status;
-  const paidPlan = isActiveSubscription(status) ? "pro" : "starter";
+  const subscriptionPlan = getSubscriptionPlan(subscription);
+  const paidPlan = isActiveSubscription(status) ? subscriptionPlan : "starter";
 
   await admin.from("subscriptions").upsert(
     {
@@ -102,7 +103,7 @@ async function syncSubscription(subscription: Stripe.Subscription, fallbackOwner
       stripe_customer_id: customerId,
       stripe_subscription_id: subscription.id,
       stripe_price_id: priceId,
-      plan: "pro",
+      plan: subscriptionPlan,
       status,
       current_period_end: currentPeriodEnd,
       cancel_at_period_end: subscription.cancel_at_period_end,
@@ -148,4 +149,8 @@ function getCustomerId(customer: string | Stripe.Customer | Stripe.DeletedCustom
 
 function isActiveSubscription(status: string) {
   return status === "active" || status === "trialing";
+}
+
+function getSubscriptionPlan(subscription: Stripe.Subscription): Exclude<ProfilePlan, "starter"> {
+  return subscription.metadata.plan === "premium" ? "premium" : "pro";
 }

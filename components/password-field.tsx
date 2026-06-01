@@ -31,12 +31,12 @@ export function PasswordField({
           minLength={minLength}
           autoComplete={autoComplete}
           required
-          className="h-10 min-w-0 flex-1 rounded-l-md px-3 text-sm outline-none"
+          className="min-h-11 min-w-0 flex-1 rounded-l-md px-3 text-sm outline-none"
         />
         <button
           type="button"
           onClick={() => setVisible((current) => !current)}
-          className="h-10 border-l border-zinc-300 px-3 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+          className="min-h-11 shrink-0 border-l border-zinc-300 px-3 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
           aria-pressed={visible}
         >
           {visible ? hideLabel : showLabel}

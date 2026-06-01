@@ -34,7 +34,7 @@ export default async function NewInvoicePage({
       </div>
       <Message text={message} />
       {communities?.length ? (
-        <section className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">
+        <section className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm sm:p-6">
           <InvoiceForm
             action={createInvoiceAction}
             communities={communities}
@@ -46,9 +46,9 @@ export default async function NewInvoicePage({
           />
         </section>
       ) : (
-        <div className="rounded-md border border-zinc-200 bg-white p-8 text-center">
+        <div className="rounded-md border border-zinc-200 bg-white p-5 text-center sm:p-8">
           <p className="text-sm text-zinc-600">{t.pages.invoices.noClient}</p>
-          <Link href="/clients/new" className={buttonClass({ variant: "primary", className: "mt-4" })}>
+          <Link href="/clients/new" className={buttonClass({ variant: "primary", size: "full", className: "mt-4 sm:w-auto" })}>
             {t.pages.invoices.newClient}
           </Link>
         </div>

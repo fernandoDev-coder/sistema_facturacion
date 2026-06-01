@@ -26,13 +26,15 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 SUPER_ADMIN_EMAILS=tu-email@ejemplo.com
 STRIPE_SECRET_KEY=sk_test_xxx
 STRIPE_PRO_PRICE_ID=price_xxx
+STRIPE_PREMIUM_PRICE_ID=price_xxx
 STRIPE_WEBHOOK_SECRET=whsec_xxx
 ```
 
 `SUPABASE_SERVICE_ROLE_KEY` solo se usa en servidor para el webhook de Stripe y para actualizar campos sensibles de billing.
 `SUPER_ADMIN_EMAILS` es opcional y permite dar acceso total a una o varias cuentas separando los correos por comas.
-`NEXT_PUBLIC_SITE_URL` debe coincidir con la URL publica de la app. En local usa `http://localhost:3000`; en produccion usa la URL de Vercel o tu dominio.
+`NEXT_PUBLIC_SITE_URL` debe coincidir con la URL publica de la app. En local usa `http://localhost:3000`; en produccion usa la URL de Vercel o tu dominio, por ejemplo `https://faktuflow-drab.vercel.app`.
 `STRIPE_PRO_PRICE_ID` debe ser el Price recurrente del plan Pro creado en Stripe.
+`STRIPE_PREMIUM_PRICE_ID` debe ser el Price recurrente del plan Premium creado en Stripe.
 
 ## Crear proyecto Supabase
 
@@ -58,10 +60,11 @@ Tambien crea el bucket publico `company-logos` en Supabase Storage para que cada
 
 ## Monetizacion con Stripe
 
-1. Crea un producto `Pro` en Stripe con un precio recurrente.
-2. Copia el Price ID en `STRIPE_PRO_PRICE_ID`.
-3. Copia la secret key en `STRIPE_SECRET_KEY`.
-4. Crea un webhook apuntando a:
+1. Crea productos o precios recurrentes para `Pro` y `Premium` en Stripe.
+2. Copia el Price ID de Pro en `STRIPE_PRO_PRICE_ID`.
+3. Copia el Price ID de Premium en `STRIPE_PREMIUM_PRICE_ID`.
+4. Copia la secret key en `STRIPE_SECRET_KEY`.
+5. Crea un webhook apuntando a:
 
 ```bash
 https://tu-dominio.com/api/stripe/webhook
@@ -74,9 +77,9 @@ Eventos recomendados:
 - `customer.subscription.updated`
 - `customer.subscription.deleted`
 
-5. Copia el signing secret del webhook en `STRIPE_WEBHOOK_SECRET`.
+6. Copia el signing secret del webhook en `STRIPE_WEBHOOK_SECRET`.
 
-El plan gratis permite 5 clientes, 25 documentos creados al mes y no permite la facturacion mensual masiva. El plan Pro elimina esos limites.
+El plan Gratis permite 5 clientes, 25 documentos creados al mes y no permite logo ni facturacion mensual masiva. El plan Pro permite 15 clientes, 50 documentos al mes y logo de empresa en facturas y presupuestos. El plan Premium elimina esos limites y permite facturacion mensual masiva.
 
 ## Desarrollo local
 
@@ -102,9 +105,23 @@ SECURITY_TEST_USER_A_EMAIL=
 SECURITY_TEST_USER_A_PASSWORD=
 SECURITY_TEST_USER_B_EMAIL=
 SECURITY_TEST_USER_B_PASSWORD=
+SEED_FREE_USER_EMAIL=test-gratis@faktuflow.local
+SEED_FREE_USER_PASSWORD=TestGratis2026!
+SEED_PRO_USER_EMAIL=
+SEED_PRO_USER_PASSWORD=
+SEED_PREMIUM_USER_EMAIL=
+SEED_PREMIUM_USER_PASSWORD=
 ```
 
 Las dos cuentas deben existir en el proyecto Supabase configurado en `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+
+Para crear o resetear los usuarios de prueba en el Supabase configurado en `.env.local`:
+
+```bash
+npm run seed:free-user
+npm run seed:pro-user
+npm run seed:premium-user
+```
 
 ## Flujo de uso
 
@@ -128,6 +145,7 @@ Las dos cuentas deben existir en el proyecto Supabase configurado en `NEXT_PUBLI
    - `NEXT_PUBLIC_SITE_URL`
    - `STRIPE_SECRET_KEY`
    - `STRIPE_PRO_PRICE_ID`
+   - `STRIPE_PREMIUM_PRICE_ID`
    - `STRIPE_WEBHOOK_SECRET`
 4. Despliega.
 

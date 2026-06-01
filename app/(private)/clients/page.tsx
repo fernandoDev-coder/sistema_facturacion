@@ -27,22 +27,55 @@ export default async function ClientsPage({
           <h1 className="text-2xl font-semibold">{t.pages.clients.title}</h1>
           <p className="mt-1 text-sm text-zinc-600">{t.pages.clients.description}</p>
         </div>
-        <Link href="/clients/new" className={buttonClass({ variant: "primary" })}>
+        <Link href="/clients/new" className={buttonClass({ variant: "primary", size: "full", className: "sm:w-auto" })}>
           {t.common.create}
         </Link>
       </div>
       <Message text={message ?? errorMessage} />
-      <form className="flex max-w-xl gap-2">
+      <form className="grid max-w-xl gap-2 sm:flex">
         <input
           name="q"
           defaultValue={q ?? ""}
           placeholder={t.pages.clients.searchPlaceholder}
-          className="h-10 flex-1 rounded-md border border-zinc-300 bg-white px-3 text-sm"
+          className="min-h-11 flex-1 rounded-md border border-zinc-300 bg-white px-3 text-sm"
         />
-        <button className={buttonClass({ variant: "secondary" })}>{t.common.search}</button>
+        <button className={buttonClass({ variant: "secondary", size: "full", className: "sm:w-auto" })}>{t.common.search}</button>
       </form>
 
-      <div className="overflow-hidden rounded-md border border-zinc-200 bg-white">
+      {clients?.length ? (
+        <div className="grid gap-3 sm:hidden">
+          {clients.map((client) => (
+            <article key={client.id} className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
+              <div className="min-w-0">
+                <h2 className="break-words text-base font-semibold text-zinc-950">{client.name}</h2>
+                <dl className="mt-3 grid gap-2 text-sm">
+                  <InfoRow label={t.pages.clients.taxId} value={client.tax_id ?? "-"} />
+                  <InfoRow label={t.pages.clients.city} value={client.city ?? "-"} />
+                  <InfoRow label={t.pages.clients.contact} value={client.email ?? client.phone ?? "-"} />
+                </dl>
+              </div>
+              <div className="mt-4 grid grid-cols-2 gap-2">
+                <Link href={`/clients/${client.id}/edit`} className={buttonClass({ variant: "warning", size: "full" })}>
+                  {t.common.edit}
+                </Link>
+                <ConfirmForm
+                  action={deleteClientAction}
+                  id={client.id}
+                  label={t.common.delete}
+                  message={t.pages.clients.deleteConfirm}
+                  className="w-full"
+                />
+              </div>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <div className="rounded-lg border border-zinc-200 bg-white px-4 py-10 text-center text-sm text-zinc-500 sm:hidden">
+          {t.pages.clients.empty}
+        </div>
+      )}
+
+      <div className="hidden overflow-hidden rounded-md border border-zinc-200 bg-white sm:block">
         <table className="min-w-full divide-y divide-zinc-200">
           <thead className="bg-zinc-50 text-left text-xs font-semibold uppercase tracking-wide text-zinc-500">
             <tr>
@@ -86,6 +119,15 @@ export default async function ClientsPage({
           </tbody>
         </table>
       </div>
+    </div>
+  );
+}
+
+function InfoRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="grid gap-1">
+      <dt className="text-xs font-medium uppercase tracking-wide text-zinc-500">{label}</dt>
+      <dd className="break-words text-zinc-800">{value}</dd>
     </div>
   );
 }

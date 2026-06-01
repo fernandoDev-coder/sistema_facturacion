@@ -73,18 +73,18 @@ export default async function WelcomePage() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-8">
-      <section className="rounded-lg border border-zinc-200 bg-white p-8 shadow-sm">
+      <section className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm sm:p-8">
         <p className="text-sm font-medium uppercase tracking-[0.18em] text-zinc-500">{t.pages.welcome.eyebrow}</p>
-        <h1 className="mt-3 text-3xl font-semibold text-zinc-950">{t.pages.welcome.title}</h1>
+        <h1 className="mt-3 text-2xl font-semibold text-zinc-950 sm:text-3xl">{t.pages.welcome.title}</h1>
         <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-600">
           {profile?.is_super_admin ? t.pages.welcome.adminDescription : t.pages.welcome.description}
         </p>
-        <div className="mt-6 flex flex-wrap gap-3">
-          <Link href="/dashboard" className={buttonClass({ variant: "secondary" })}>
+        <div className="mt-6 grid gap-3 sm:flex sm:flex-wrap">
+          <Link href="/dashboard" className={buttonClass({ variant: "secondary", size: "full", className: "sm:w-auto" })}>
             {t.pages.welcome.dashboard}
           </Link>
-          <form action={completeOnboardingAction}>
-            <FormButton pendingText={t.common.saving} variant="primary">
+          <form action={completeOnboardingAction} className="sm:inline">
+            <FormButton pendingText={t.common.saving} variant="primary" className="w-full sm:w-auto">
               {t.pages.welcome.complete}
             </FormButton>
           </form>
@@ -93,7 +93,7 @@ export default async function WelcomePage() {
 
       <section className="grid gap-4 md:grid-cols-2">
         {checklist.map((item) => (
-          <article key={item.title} className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">
+          <article key={item.title} className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm sm:p-6">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
               {item.done ? t.pages.welcome.done : t.pages.welcome.pending}
             </p>

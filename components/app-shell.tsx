@@ -61,21 +61,21 @@ export function AppShell({
       </aside>
 
       <header className="sticky top-0 z-20 border-b border-zinc-200 bg-white/95 px-4 py-3 backdrop-blur lg:hidden print:hidden">
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <BrandLogo href="/dashboard" markClassName="h-7 w-7" textClassName="text-base" />
-          <div className="flex items-center gap-2">
+          <div className="flex min-w-0 items-center gap-2">
             <LanguageSwitcher locale={locale} labels={languageLabels} />
             <form action={logoutAction}>
               <button className={buttonClass({ variant: "secondary", size: "sm" })}>{t.nav.logoutShort}</button>
             </form>
           </div>
         </div>
-        <nav className="mt-3 flex gap-2 overflow-x-auto">
+        <nav className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
           {visibleNavItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className="whitespace-nowrap rounded-md border border-zinc-200 px-3 py-1.5 text-sm text-zinc-700"
+              className="flex min-h-10 items-center justify-center rounded-md border border-zinc-200 bg-white px-2 py-2 text-center text-xs font-medium leading-tight text-zinc-700 hover:bg-zinc-50 sm:text-sm"
             >
               {t.nav[item.key]}
             </Link>
@@ -84,7 +84,7 @@ export function AppShell({
       </header>
 
       <main className="lg:pl-64 print:p-0">
-        <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 print:max-w-none print:p-0">{children}</div>
+        <div className="mx-auto max-w-6xl px-4 py-5 sm:px-6 sm:py-8 lg:px-8 print:max-w-none print:p-0">{children}</div>
       </main>
     </div>
   );

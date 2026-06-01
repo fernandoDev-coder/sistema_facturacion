@@ -13,10 +13,10 @@ export default async function HomePage() {
 
   return (
     <main className="min-h-screen bg-zinc-50 text-zinc-950">
-      <section className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 py-6 sm:px-6 lg:px-8">
-        <header className="flex items-center justify-between gap-4">
+      <section className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
+        <header className="flex flex-wrap items-center justify-between gap-3">
           <BrandLogo href="/" />
-          <nav className="flex items-center gap-2">
+          <nav className="flex min-w-0 flex-wrap items-center justify-end gap-2">
             <LanguageSwitcher locale={locale} labels={languageLabels} />
             <Link href="/pricing" className={buttonClass({ variant: "ghost", size: "sm" })}>
               {t.common.pricing}
@@ -30,22 +30,22 @@ export default async function HomePage() {
           </nav>
         </header>
 
-        <div className="grid flex-1 gap-10 overflow-hidden py-12 lg:grid-cols-[1fr_0.95fr] lg:items-center">
+        <div className="grid flex-1 gap-8 overflow-hidden py-8 sm:py-12 lg:grid-cols-[1fr_0.95fr] lg:items-center">
           <div className="hero-slide-in-left">
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-blue-700">
               {t.home.eyebrow}
             </p>
-            <h1 className="mt-4 max-w-2xl text-4xl font-semibold leading-tight text-zinc-950 sm:text-5xl">
+            <h1 className="mt-4 max-w-2xl text-3xl font-semibold leading-tight text-zinc-950 sm:text-5xl">
               {t.home.title}
             </h1>
             <p className="mt-5 max-w-xl text-base leading-7 text-zinc-600">
               {t.home.description}
             </p>
-            <div className="mt-7 flex flex-wrap gap-3">
-              <Link href="/register" className={buttonClass({ variant: "primary" })}>
+            <div className="mt-7 grid gap-3 sm:flex sm:flex-wrap">
+              <Link href="/register" className={buttonClass({ variant: "primary", size: "full", className: "sm:w-auto" })}>
                 {t.common.createFreeAccount}
               </Link>
-              <Link href="/pricing" className={buttonClass({ variant: "secondary" })}>
+              <Link href="/pricing" className={buttonClass({ variant: "secondary", size: "full", className: "sm:w-auto" })}>
                 {t.common.viewPlans}
               </Link>
             </div>
@@ -58,7 +58,7 @@ export default async function HomePage() {
       </section>
 
       <section className="border-y border-zinc-200 bg-white">
-        <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:px-6 lg:grid-cols-[0.8fr_1.2fr] lg:px-8">
+        <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:px-6 sm:py-12 lg:grid-cols-[0.8fr_1.2fr] lg:px-8">
           <div>
             <h2 className="text-2xl font-semibold">{t.home.problemTitle}</h2>
             <p className="mt-3 text-sm leading-6 text-zinc-600">{t.home.problem}</p>
@@ -73,7 +73,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
+      <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-12 lg:px-8">
         <div className="grid gap-10 lg:grid-cols-2">
           <div>
             <h2 className="text-2xl font-semibold">{t.home.featuresTitle}</h2>
@@ -99,7 +99,7 @@ export default async function HomePage() {
       </section>
 
       <section className="border-t border-zinc-200 bg-white">
-        <div className="mx-auto grid max-w-6xl gap-4 px-4 py-12 sm:px-6 md:grid-cols-2 lg:px-8">
+        <div className="mx-auto grid max-w-6xl gap-4 px-4 py-10 sm:px-6 sm:py-12 lg:grid-cols-3 lg:px-8">
           <PlanCard
             name="Gratis"
             price="0 EUR"
@@ -118,15 +118,27 @@ export default async function HomePage() {
             price="7,90 EUR/mes + IVA"
             description={t.pricing.proDescription}
             features={[
-              t.pricing.features.unlimitedClients,
-              t.pricing.features.unlimitedDocuments,
-              t.pricing.features.bulkMonthly,
+              t.pricing.features.fifteenClients,
+              t.pricing.features.fiftyDocuments,
               t.pricing.features.companyLogo,
             ]}
             cta={t.pricing.choosePro}
             href="/pricing"
             highlighted
             recommendedLabel={t.common.recommended}
+          />
+          <PlanCard
+            name="Premium"
+            price="14,90 EUR/mes + IVA"
+            description={t.pricing.premiumDescription}
+            features={[
+              t.pricing.features.unlimitedClients,
+              t.pricing.features.unlimitedDocuments,
+              t.pricing.features.companyLogo,
+              t.pricing.features.bulkMonthly,
+            ]}
+            cta={t.pricing.choosePremium}
+            href="/pricing"
           />
         </div>
       </section>
@@ -137,7 +149,7 @@ export default async function HomePage() {
 
 function InvoicePreview({ copy }: { copy: ReturnType<typeof getDictionary>["home"] }) {
   return (
-    <div className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">
+    <div className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm sm:p-6">
       <div className="flex items-start justify-between gap-4 border-b border-zinc-200 pb-5">
         <div className="flex min-w-0 items-start gap-3">
           <Image
@@ -199,7 +211,7 @@ function PlanCard({
   recommendedLabel?: string;
 }) {
   return (
-    <article className={`rounded-lg border bg-white p-6 shadow-sm ${highlighted ? "border-blue-300" : "border-zinc-200"}`}>
+    <article className={`rounded-lg border bg-white p-5 shadow-sm sm:p-6 ${highlighted ? "border-blue-300" : "border-zinc-200"}`}>
       <div className="flex items-start justify-between gap-4">
         <div>
           <h3 className="text-xl font-semibold">{name}</h3>
@@ -211,7 +223,7 @@ function PlanCard({
           </span>
         ) : null}
       </div>
-      <p className="mt-6 text-3xl font-semibold">{price}</p>
+      <p className="mt-6 text-2xl font-semibold sm:text-3xl">{price}</p>
       <ul className="mt-6 space-y-3 text-sm text-zinc-700">
         {features.map((feature) => (
           <li key={feature} className="flex gap-2">

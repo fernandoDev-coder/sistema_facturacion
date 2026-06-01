@@ -21,7 +21,7 @@ export function LegalPage({
             Volver
           </Link>
         </header>
-        <article className="mt-10 rounded-lg border border-zinc-200 bg-white p-6 shadow-sm sm:p-8">
+        <article className="mt-10 rounded-lg border border-zinc-200 bg-white p-5 shadow-sm sm:p-8">
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-blue-700">Legal</p>
           <h1 className="mt-3 text-3xl font-semibold">{title}</h1>
           <p className="mt-2 text-sm text-zinc-500">Ultima actualizacion: {updatedAt}</p>

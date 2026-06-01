@@ -23,7 +23,7 @@ export default async function NewClientPage({
         <h1 className="mt-2 text-2xl font-semibold">{t.pages.clients.newTitle}</h1>
       </div>
       <Message text={message} />
-      <section className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">
+      <section className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm sm:p-6">
         <CommunityForm action={createClientAction} labels={t.forms.client} />
       </section>
     </div>

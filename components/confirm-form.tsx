@@ -20,7 +20,7 @@ export function ConfirmForm({ action, id, label, message, className = "", fields
           event.preventDefault();
         }
       }}
-      className="inline"
+      className={className.includes("w-full") ? "block w-full" : "inline"}
     >
       <input type="hidden" name="id" value={id} />
       {fields

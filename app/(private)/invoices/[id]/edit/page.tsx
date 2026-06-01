@@ -38,7 +38,7 @@ export default async function EditInvoicePage({
         <h1 className="mt-2 text-2xl font-semibold">{t.pages.invoices.editTitle}</h1>
       </div>
       <Message text={message} />
-      <section className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">
+      <section className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm sm:p-6">
         <InvoiceForm
           action={updateInvoiceAction}
           communities={communities ?? []}

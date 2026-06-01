@@ -40,12 +40,12 @@ export default async function CreateMonthPage({
       </div>
       <Message text={params.message} />
       {!limits.monthlyBulkInvoices ? (
-        <section className="rounded-lg border border-blue-200 bg-blue-50 p-6">
+        <section className="rounded-lg border border-blue-200 bg-blue-50 p-4 sm:p-6">
           <h2 className="font-semibold text-blue-950">{t.pages.monthly.proTitle}</h2>
           <p className="mt-2 text-sm leading-6 text-blue-900">
             {t.pages.monthly.proDescription}
           </p>
-          <Link href="/settings/billing" className={buttonClass({ variant: "primary", className: "mt-4" })}>
+          <Link href="/settings/billing" className={buttonClass({ variant: "primary", size: "full", className: "mt-4 sm:w-auto" })}>
             {t.pages.monthly.viewPro}
           </Link>
         </section>
@@ -61,9 +61,9 @@ export default async function CreateMonthPage({
           yearLabel={t.common.year}
         />
       ) : (
-        <div className="rounded-md border border-zinc-200 bg-white p-8 text-center">
+        <div className="rounded-md border border-zinc-200 bg-white p-5 text-center sm:p-8">
           <p className="text-sm text-zinc-600">{t.pages.monthly.noClients}</p>
-          <Link href="/clients/new" className={buttonClass({ variant: "primary", className: "mt-4" })}>
+          <Link href="/clients/new" className={buttonClass({ variant: "primary", size: "full", className: "mt-4 sm:w-auto" })}>
             {t.pages.monthly.newClient}
           </Link>
         </div>
