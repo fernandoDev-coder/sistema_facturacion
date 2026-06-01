@@ -71,7 +71,7 @@ const es = {
     logoutShort: "Salir",
   },
   legalFooter: {
-    rights: "© 2026 FaktuFlow. Todos los derechos reservados.",
+    rights: "© 2026 FaktuDash. Todos los derechos reservados.",
     legalNotice: "Aviso legal",
     privacy: "Privacidad",
     cookies: "Cookies",
@@ -99,16 +99,16 @@ const es = {
   },
   home: {
     eyebrow: "Facturación simple para negocios recurrentes",
-    title: "Facturas mensuales claras sin montar un ERP.",
+    title: "Facturas, presupuestos y clientes en un solo panel.",
     description:
-      "FaktuFlow ayuda a autónomos y pequeños negocios a gestionar clientes, facturas y presupuestos imprimibles desde una herramienta sencilla.",
+      "Gestiona documentos, clientes, planes y facturación mensual desde un dashboard sencillo para autónomos y pequeños negocios.",
     problemTitle: "El problema que resuelve",
     problem:
-      "Muchos pequeños negocios repiten las mismas facturas cada mes, guardan datos en hojas sueltas y pierden tiempo preparando documentos básicos. FaktuFlow concentra ese flujo en una app ligera.",
+      "Muchos pequeños negocios repiten las mismas facturas cada mes, guardan datos en hojas sueltas y pierden tiempo preparando documentos básicos. FaktuDash concentra ese flujo en una app ligera.",
     featuresTitle: "Funcionalidades principales",
     idealTitle: "Ideal para",
     invoicePreviewTitle: "Factura mensual",
-    invoicePreviewSubtitle: "Ejemplo FaktuFlow - Mayo 2026",
+    invoicePreviewSubtitle: "Ejemplo FaktuDash - Mayo 2026",
     customer: "Cliente",
     concept: "Concepto",
     base: "Base",
@@ -395,7 +395,7 @@ const es = {
     },
     welcome: {
       eyebrow: "Bienvenida inicial",
-      title: "Prepara FaktuFlow en pocos minutos",
+      title: "Prepara FaktuDash en pocos minutos",
       adminDescription: "Esta cuenta tiene acceso total y también verá el panel de usuarios registrados.",
       description: "Sigue estos pasos para crear documentos completos desde el primer día y evitar pantallas vacías.",
       dashboard: "Ir al dashboard",
@@ -480,7 +480,7 @@ const en = {
     logoutShort: "Exit",
   },
   legalFooter: {
-    rights: "© 2026 FaktuFlow. All rights reserved.",
+    rights: "© 2026 FaktuDash. All rights reserved.",
     legalNotice: "Legal notice",
     privacy: "Privacy",
     cookies: "Cookies",
@@ -508,16 +508,16 @@ const en = {
   },
   home: {
     eyebrow: "Simple invoicing for recurring businesses",
-    title: "Clear monthly invoices without building an ERP.",
+    title: "Invoices, quotes and clients in one dashboard.",
     description:
-      "FaktuFlow helps freelancers and small businesses manage clients, invoices and printable quotes from one simple tool.",
+      "Manage documents, clients, plans and monthly invoicing from a simple dashboard for freelancers and small businesses.",
     problemTitle: "The problem it solves",
     problem:
-      "Many small businesses repeat the same invoices every month, keep client data in scattered files and lose time preparing basic documents. FaktuFlow keeps that flow in one lightweight app.",
+      "Many small businesses repeat the same invoices every month, keep client data in scattered files and lose time preparing basic documents. FaktuDash keeps that flow in one lightweight app.",
     featuresTitle: "Main features",
     idealTitle: "Ideal for",
     invoicePreviewTitle: "Monthly invoice",
-    invoicePreviewSubtitle: "FaktuFlow example - May 2026",
+    invoicePreviewSubtitle: "FaktuDash example - May 2026",
     customer: "Client",
     concept: "Concept",
     base: "Subtotal",
@@ -804,7 +804,7 @@ const en = {
     },
     welcome: {
       eyebrow: "Initial welcome",
-      title: "Set up FaktuFlow in a few minutes",
+      title: "Set up FaktuDash in a few minutes",
       adminDescription: "This account has full access and will also see the registered users panel.",
       description: "Follow these steps to create complete documents from day one and avoid empty screens.",
       dashboard: "Go to dashboard",

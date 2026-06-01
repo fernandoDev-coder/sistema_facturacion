@@ -5,7 +5,7 @@ export default function CookiesPage() {
     <LegalPage title="Politica de cookies" updatedAt="Mayo 2026">
       <LegalSection title="Uso de cookies">
         <p>
-          FaktuFlow puede usar cookies o tecnologias similares necesarias para iniciar sesion, mantener la seguridad y
+          FaktuDash puede usar cookies o tecnologias similares necesarias para iniciar sesion, mantener la seguridad y
           recordar preferencias basicas del servicio.
         </p>
       </LegalSection>

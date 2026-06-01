@@ -19,7 +19,7 @@ export function BrandLogo({
   const content = (
     <>
       <Image
-        src="/brand/faktuflow-mark.svg"
+        src="/brand/faktudash-mark.svg"
         alt=""
         width={36}
         height={36}
@@ -30,11 +30,11 @@ export function BrandLogo({
       <span className="min-w-0">
         <span className={`block text-lg font-extrabold tracking-normal ${textClassName}`}>
           <span className="text-[#071a3d]">Faktu</span>
-          <span className="text-blue-700">Flow</span>
+          <span className="text-blue-700">Dash</span>
         </span>
         {showTagline ? (
           <span className="block text-[10px] font-bold uppercase tracking-[0.24em] text-zinc-500">
-            Factura. Cobra.
+            Factura. Crece.
           </span>
         ) : null}
       </span>
@@ -45,14 +45,14 @@ export function BrandLogo({
 
   if (href) {
     return (
-      <Link href={href} className={classes} aria-label="FaktuFlow">
+      <Link href={href} className={classes} aria-label="FaktuDash">
         {content}
       </Link>
     );
   }
 
   return (
-    <div className={classes} aria-label="FaktuFlow">
+    <div className={classes} aria-label="FaktuDash">
       {content}
     </div>
   );

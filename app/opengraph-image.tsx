@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-export const alt = "FaktuFlow";
+export const alt = "FaktuDash";
 export const size = {
   width: 1200,
   height: 630,
@@ -100,10 +100,10 @@ export default function Image() {
           <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
             <div style={{ display: "flex", fontSize: 88, fontWeight: 900, letterSpacing: 0 }}>
               <span>Faktu</span>
-              <span style={{ color: "#1557f0" }}>Flow</span>
+              <span style={{ color: "#1557f0" }}>Dash</span>
             </div>
             <div style={{ color: "#334155", display: "flex", fontSize: 36, lineHeight: 1.25, maxWidth: 720 }}>
-              Facturacion mensual sencilla para autonomos, oficios y pequenos negocios.
+              Facturas, presupuestos y clientes en un solo panel.
             </div>
             <div
               style={{
@@ -116,7 +116,7 @@ export default function Image() {
                 textTransform: "uppercase",
               }}
             >
-              Factura. Organiza. Cobra. Avanza.
+              Factura. Organiza. Cobra. Crece.
             </div>
           </div>
         </div>

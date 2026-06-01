@@ -15,28 +15,27 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
-  title: "FaktuFlow",
-  description: "Facturacion mensual sencilla para autonomos, oficios y pequenos negocios.",
-  applicationName: "FaktuFlow",
+  title: "FaktuDash",
+  description: "Facturas, presupuestos y clientes en un solo panel.",
+  applicationName: "FaktuDash",
   icons: {
     icon: [
       { url: "/icon.svg", type: "image/svg+xml" },
       { url: "/favicon.ico", sizes: "any" },
     ],
-    shortcut: "/favicon.ico",
     apple: "/icon.svg",
   },
   openGraph: {
-    title: "FaktuFlow",
-    description: "Facturacion mensual sencilla para autonomos, oficios y pequenos negocios.",
+    title: "FaktuDash",
+    description: "Facturas, presupuestos y clientes en un solo panel.",
     url: "/",
-    siteName: "FaktuFlow",
+    siteName: "FaktuDash",
     images: [
       {
         url: "/opengraph-image",
         width: 1200,
         height: 630,
-        alt: "FaktuFlow",
+        alt: "FaktuDash",
       },
     ],
     locale: "es_ES",
@@ -44,8 +43,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "FaktuFlow",
-    description: "Facturacion mensual sencilla para autonomos, oficios y pequenos negocios.",
+    title: "FaktuDash",
+    description: "Facturas, presupuestos y clientes en un solo panel.",
     images: ["/opengraph-image"],
   },
 };

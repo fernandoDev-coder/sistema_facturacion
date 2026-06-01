@@ -5,7 +5,7 @@ export default function PrivacyPage() {
     <LegalPage title="Politica de privacidad" updatedAt="Mayo 2026">
       <LegalSection title="Responsable">
         <p>
-          Responsable pendiente de completar con los datos reales del titular de FaktuFlow y un email de contacto para
+          Responsable pendiente de completar con los datos reales del titular de FaktuDash y un email de contacto para
           privacidad.
         </p>
       </LegalSection>

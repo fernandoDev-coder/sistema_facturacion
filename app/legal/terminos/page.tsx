@@ -5,7 +5,7 @@ export default function TermsPage() {
     <LegalPage title="Terminos y condiciones" updatedAt="Mayo 2026">
       <LegalSection title="Servicio">
         <p>
-          FaktuFlow permite gestionar clientes, facturas, presupuestos, datos de empresa y planes de uso desde una
+          FaktuDash permite gestionar clientes, facturas, presupuestos, datos de empresa y planes de uso desde una
           aplicacion web.
         </p>
       </LegalSection>

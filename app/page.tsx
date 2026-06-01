@@ -153,7 +153,7 @@ function InvoicePreview({ copy }: { copy: ReturnType<typeof getDictionary>["home
       <div className="flex items-start justify-between gap-4 border-b border-zinc-200 pb-5">
         <div className="flex min-w-0 items-start gap-3">
           <Image
-            src="/brand/faktuflow-mark.svg"
+            src="/brand/faktudash-mark.svg"
             alt=""
             width={44}
             height={36}

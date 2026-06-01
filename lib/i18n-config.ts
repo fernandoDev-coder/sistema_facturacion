@@ -1,7 +1,7 @@
 export const locales = ["es", "en"] as const;
 export type Locale = (typeof locales)[number];
 
-export const localeCookieName = "faktuflow_locale";
+export const localeCookieName = "faktudash_locale";
 
 export function isLocale(value: unknown): value is Locale {
   return locales.includes(value as Locale);

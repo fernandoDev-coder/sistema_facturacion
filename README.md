@@ -1,4 +1,4 @@
-# FaktuFlow
+# FaktuDash
 
 Aplicacion SaaS sencilla con Next.js App Router, TypeScript, Tailwind CSS y Supabase. Permite registrar usuarios, guardar clientes, crear facturas individuales o mensuales y abrir una plantilla A4 imprimible desde el navegador.
 
@@ -32,7 +32,7 @@ STRIPE_WEBHOOK_SECRET=whsec_xxx
 
 `SUPABASE_SERVICE_ROLE_KEY` solo se usa en servidor para el webhook de Stripe y para actualizar campos sensibles de billing.
 `SUPER_ADMIN_EMAILS` es opcional y permite dar acceso total a una o varias cuentas separando los correos por comas.
-`NEXT_PUBLIC_SITE_URL` debe coincidir con la URL publica de la app. En local usa `http://localhost:3000`; en produccion usa la URL de Vercel o tu dominio, por ejemplo `https://faktuflow-drab.vercel.app`.
+`NEXT_PUBLIC_SITE_URL` debe coincidir con la URL publica de la app. En local usa `http://localhost:3000`; en produccion usa la URL de Vercel o tu dominio, por ejemplo `https://faktudash-drab.vercel.app`.
 `STRIPE_PRO_PRICE_ID` debe ser el Price recurrente del plan Pro creado en Stripe.
 `STRIPE_PREMIUM_PRICE_ID` debe ser el Price recurrente del plan Premium creado en Stripe.
 
@@ -105,7 +105,7 @@ SECURITY_TEST_USER_A_EMAIL=
 SECURITY_TEST_USER_A_PASSWORD=
 SECURITY_TEST_USER_B_EMAIL=
 SECURITY_TEST_USER_B_PASSWORD=
-SEED_FREE_USER_EMAIL=test-gratis@faktuflow.local
+SEED_FREE_USER_EMAIL=test-gratis@faktudash.local
 SEED_FREE_USER_PASSWORD=TestGratis2026!
 SEED_PRO_USER_EMAIL=
 SEED_PRO_USER_PASSWORD=
