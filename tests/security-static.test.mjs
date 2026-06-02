@@ -100,11 +100,14 @@ test("public SEO files expose only crawlable marketing pages", () => {
   const layout = readProjectFile("app/layout.tsx");
   const robots = readProjectFile("app/robots.ts");
   const sitemap = readProjectFile("app/sitemap.ts");
+  const siteUrl = readProjectFile("lib/site-url.ts");
   const privateLayout = readProjectFile("app/(private)/layout.tsx");
   const authLayout = readProjectFile("app/(auth)/layout.tsx");
 
   assert.match(layout, /metadataBase: getSiteUrl\(\)/);
   assert.match(layout, /Facturacion online/);
+  assert.match(siteUrl, /const defaultSiteUrl = "https:\/\/www\.faktudash\.com"/);
+  assert.match(siteUrl, /configuredUrl\.includes\("localhost"\)/);
   assert.match(robots, /disallow: \[/);
   assert.match(robots, /"\/admin\/"/);
   assert.match(robots, /getAbsoluteUrl\("\/sitemap\.xml"\)/);
