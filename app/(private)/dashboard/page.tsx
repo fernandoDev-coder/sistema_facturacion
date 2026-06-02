@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { buttonClass, type ButtonVariant } from "@/components/button-styles";
+import { UpgradeBanner } from "@/components/upgrade-banner";
+import { UsageLimitIndicator } from "@/components/usage-limit-indicator";
 import { money } from "@/lib/format";
 import { getDictionary, getLocale } from "@/lib/i18n";
 import { getCompanySetupStatus } from "@/lib/onboarding";
@@ -8,7 +10,10 @@ import {
   getClientCount,
   getCurrentMonthDocumentCount,
   getPlanLimits,
+  getRemainingClientMessage,
+  getRemainingDocumentMessage,
   hasPaidAccess,
+  isNearLimit,
 } from "@/lib/plan-limits";
 import { getCurrentProfile } from "@/lib/profiles";
 import { createClient, requireUser } from "@/lib/supabase/server";
@@ -78,6 +83,15 @@ export default async function DashboardPage() {
   const companyStatus = getCompanySetupStatus(company, { requireLogo: limits.companyLogo });
   const invoicesList = (recentInvoices ?? []) as InvoiceWithCommunity[];
   const budgetsList = (recentBudgets ?? []) as InvoiceWithCommunity[];
+  const showClientWarning = limits.clients !== null && (clients >= limits.clients || isNearLimit(clients, limits.clients));
+  const showDocumentWarning =
+    limits.documentsPerMonth !== null &&
+    (documentsThisMonth >= limits.documentsPerMonth || isNearLimit(documentsThisMonth, limits.documentsPerMonth));
+  const clientWarning = showClientWarning ? getRemainingClientMessage(profile, clients) : null;
+  const documentWarning = showDocumentWarning ? getRemainingDocumentMessage(profile, documentsThisMonth) : null;
+  const reachedUsageLimit =
+    (limits.clients !== null && clients >= limits.clients) ||
+    (limits.documentsPerMonth !== null && documentsThisMonth >= limits.documentsPerMonth);
 
   return (
     <div className="space-y-8">
@@ -110,18 +124,27 @@ export default async function DashboardPage() {
         </section>
       ) : null}
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <Metric
-          label={t.common.clients}
-          value={limits.clients === null ? String(clients) : `${clients} / ${limits.clients}`}
-          hint={limits.clients === null ? t.common.noLimitPro : t.common.freePlan}
-          warn={limits.clients !== null && clients >= limits.clients}
+      {reachedUsageLimit ? (
+        <UpgradeBanner
+          message={clientWarning ?? documentWarning ?? "Has alcanzado un límite de uso de tu plan."}
+          cta={t.common.upgradeToPro}
         />
-        <Metric
+      ) : null}
+
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <UsageLimitIndicator
+          label={t.common.clients}
+          used={clients}
+          limit={limits.clients}
+          unlimitedLabel={t.common.noLimitPro}
+          warning={clientWarning}
+        />
+        <UsageLimitIndicator
           label={t.pages.dashboard.documentsThisMonth}
-          value={limits.documentsPerMonth === null ? String(documentsThisMonth) : `${documentsThisMonth} / ${limits.documentsPerMonth}`}
-          hint={limits.documentsPerMonth === null ? t.common.noLimitPro : t.pages.dashboard.invoicesBudgets}
-          warn={limits.documentsPerMonth !== null && documentsThisMonth >= limits.documentsPerMonth}
+          used={documentsThisMonth}
+          limit={limits.documentsPerMonth}
+          unlimitedLabel={t.common.noLimitPro}
+          warning={documentWarning}
         />
         <Metric label={t.pages.dashboard.invoicesCreated} value={String(invoices ?? 0)} hint={`${pending ?? 0} ${t.pages.dashboard.pending}`} />
         <Metric label={t.pages.dashboard.budgetsCreated} value={String(budgets ?? 0)} hint={isPro ? t.pages.dashboard.proActive : t.common.freePlan} />

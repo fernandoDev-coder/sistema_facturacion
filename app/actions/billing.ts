@@ -1,6 +1,12 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import {
+  arePaymentsEnabled,
+  getPaymentUnavailableMessage,
+  isBetaMode,
+  isStripeLiveEnabled,
+} from "@/lib/beta-config";
 import { getEffectivePlan } from "@/lib/plan-limits";
 import { getSiteUrl, getStripe, getStripePriceId } from "@/lib/stripe";
 import { createAdminClient, createClient, requireUser } from "@/lib/supabase/server";
@@ -10,6 +16,10 @@ function billingRedirect(message: string): never {
 }
 
 export async function createCheckoutSessionAction(formData?: FormData) {
+  if (isBetaMode() || !arePaymentsEnabled()) {
+    billingRedirect(getPaymentUnavailableMessage());
+  }
+
   const user = await requireUser();
   const selectedPlan = parseCheckoutPlan(formData);
   const supabase = await createClient();
@@ -28,6 +38,11 @@ export async function createCheckoutSessionAction(formData?: FormData) {
   let checkoutUrl: string | null = null;
 
   try {
+    const secretKey = process.env.STRIPE_SECRET_KEY ?? "";
+    if (!isStripeLiveEnabled() && secretKey.startsWith("sk_live_")) {
+      billingRedirect(getPaymentUnavailableMessage());
+    }
+
     const stripe = getStripe();
     const admin = createAdminClient();
     let customerId = profile?.stripe_customer_id ?? null;
@@ -105,6 +120,10 @@ function getPlanName(plan: ReturnType<typeof getEffectivePlan>) {
 }
 
 export async function createCustomerPortalSessionAction() {
+  if (isBetaMode() || !arePaymentsEnabled()) {
+    billingRedirect(getPaymentUnavailableMessage());
+  }
+
   const user = await requireUser();
   const supabase = await createClient();
   const { data: profile } = await supabase

@@ -11,6 +11,7 @@ const navItems = [
   { href: "/clients", key: "clients" },
   { href: "/invoices", key: "invoices" },
   { href: "/budgets", key: "budgets" },
+  { href: "/expenses", key: "expenses" },
   { href: "/settings/company", key: "company" },
   { href: "/settings/billing", key: "plan" },
   { href: "/settings/account", key: "account" },

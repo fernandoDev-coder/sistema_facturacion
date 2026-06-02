@@ -8,34 +8,40 @@ export type PlanLimits = {
   documentsPerMonth: number | null;
   monthlyBulkInvoices: boolean;
   companyLogo: boolean;
+  csvExport: boolean;
 };
 
-type LimitPlan = "starter" | "pro" | "premium" | "enterprise";
+export type LimitPlan = "starter" | "pro" | "premium" | "enterprise";
+type PlanSource = LimitPlan | Pick<Profile, "plan" | "has_lifetime_access" | "is_super_admin"> | null | undefined;
 
 export const planLimits: Record<LimitPlan, PlanLimits> = {
   starter: {
     clients: 5,
-    documentsPerMonth: 25,
+    documentsPerMonth: 20,
     monthlyBulkInvoices: false,
     companyLogo: false,
+    csvExport: false,
   },
   pro: {
-    clients: 15,
-    documentsPerMonth: 50,
+    clients: 30,
+    documentsPerMonth: 100,
     monthlyBulkInvoices: false,
     companyLogo: true,
+    csvExport: true,
   },
   premium: {
     clients: null,
     documentsPerMonth: null,
     monthlyBulkInvoices: true,
     companyLogo: true,
+    csvExport: true,
   },
   enterprise: {
     clients: null,
     documentsPerMonth: null,
     monthlyBulkInvoices: true,
     companyLogo: true,
+    csvExport: true,
   },
 };
 
@@ -49,8 +55,8 @@ export function hasPaidAccess(profile?: Pick<Profile, "plan" | "has_lifetime_acc
   );
 }
 
-export function getPlanLimits(profile?: Pick<Profile, "plan" | "has_lifetime_access" | "is_super_admin"> | null) {
-  return planLimits[getEffectivePlan(profile)];
+export function getPlanLimits(plan?: PlanSource) {
+  return planLimits[resolvePlan(plan)];
 }
 
 export function getEffectivePlan(
@@ -69,6 +75,92 @@ export function getEffectivePlan(
   }
 
   return "starter";
+}
+
+export function isPremium(plan?: PlanSource) {
+  const effectivePlan = resolvePlan(plan);
+  return effectivePlan === "premium" || effectivePlan === "enterprise";
+}
+
+export function canExportInvoices(plan?: PlanSource) {
+  return getPlanLimits(plan).csvExport;
+}
+
+export function canCreateClient(plan: PlanSource, currentClients: number) {
+  const limits = getPlanLimits(plan);
+  return limits.clients === null || currentClients < limits.clients;
+}
+
+export function canCreateDocument(plan: PlanSource, documentsThisMonth: number, quantity = 1) {
+  const limits = getPlanLimits(plan);
+  return limits.documentsPerMonth === null || documentsThisMonth + quantity <= limits.documentsPerMonth;
+}
+
+export function getPlanDisplayName(plan?: PlanSource) {
+  const effectivePlan = resolvePlan(plan);
+
+  if (effectivePlan === "starter") {
+    return "Gratis";
+  }
+
+  if (effectivePlan === "enterprise") {
+    return "Premium";
+  }
+
+  return effectivePlan === "pro" ? "Pro" : "Premium";
+}
+
+export function getRemainingClientMessage(plan: PlanSource, currentClients: number) {
+  const effectivePlan = resolvePlan(plan);
+  const limits = getPlanLimits(effectivePlan);
+
+  if (limits.clients === null) {
+    return null;
+  }
+
+  const remaining = limits.clients - currentClients;
+  const planName = getPlanDisplayName(effectivePlan);
+
+  if (remaining <= 0) {
+    return `Has alcanzado el limite de clientes de tu plan ${planName}. Actualiza a Premium para trabajar sin limites y generar facturas mensuales en lote.`;
+  }
+
+  return `Te quedan ${remaining} clientes disponibles en tu plan ${planName}.`;
+}
+
+export function getRemainingDocumentMessage(plan: PlanSource, documentsThisMonth: number) {
+  const effectivePlan = resolvePlan(plan);
+  const limits = getPlanLimits(effectivePlan);
+
+  if (limits.documentsPerMonth === null) {
+    return null;
+  }
+
+  const remaining = limits.documentsPerMonth - documentsThisMonth;
+  const planName = getPlanDisplayName(effectivePlan);
+
+  if (remaining <= 0) {
+    return `Has alcanzado el limite mensual de documentos de tu plan ${planName}. Actualiza tu plan para seguir creando documentos.`;
+  }
+
+  return `Te quedan ${remaining} documentos disponibles este mes en tu plan ${planName}.`;
+}
+
+export function isNearLimit(used: number, limit: number | null) {
+  if (limit === null) {
+    return false;
+  }
+
+  const remaining = limit - used;
+  return remaining > 0 && remaining <= Math.max(2, Math.ceil(limit * 0.1));
+}
+
+function resolvePlan(plan?: PlanSource): LimitPlan {
+  if (typeof plan === "string") {
+    return plan;
+  }
+
+  return getEffectivePlan(plan);
 }
 
 export async function getProfileForLimits(supabase: SupabaseClient, ownerId: string) {
@@ -107,17 +199,10 @@ export async function getClientCount(supabase: SupabaseClient, ownerId: string) 
 
 export async function assertCanCreateClient(supabase: SupabaseClient, ownerId: string) {
   const profile = await getProfileForLimits(supabase, ownerId);
-  const limits = getPlanLimits(profile);
-  const effectivePlan = getEffectivePlan(profile);
-
-  if (limits.clients === null) {
-    return null;
-  }
-
   const currentCount = await getClientCount(supabase, ownerId);
 
-  if (currentCount >= limits.clients) {
-    return `Tu plan ${getPlanLabel(effectivePlan)} permite hasta ${limits.clients} clientes. Mejora a ${getUpgradePlanLabel(effectivePlan)} para crear mas.`;
+  if (!canCreateClient(profile, currentCount)) {
+    return getRemainingClientMessage(profile, currentCount);
   }
 
   return null;
@@ -125,17 +210,10 @@ export async function assertCanCreateClient(supabase: SupabaseClient, ownerId: s
 
 export async function assertCanCreateDocuments(supabase: SupabaseClient, ownerId: string, quantity = 1) {
   const profile = await getProfileForLimits(supabase, ownerId);
-  const limits = getPlanLimits(profile);
-  const effectivePlan = getEffectivePlan(profile);
-
-  if (limits.documentsPerMonth === null) {
-    return null;
-  }
-
   const currentCount = await getCurrentMonthDocumentCount(supabase, ownerId);
 
-  if (currentCount + quantity > limits.documentsPerMonth) {
-    return `Tu plan ${getPlanLabel(effectivePlan)} permite ${limits.documentsPerMonth} documentos al mes. Mejora a ${getUpgradePlanLabel(effectivePlan)} para crear mas.`;
+  if (!canCreateDocument(profile, currentCount, quantity)) {
+    return getRemainingDocumentMessage(profile, currentCount);
   }
 
   return null;
@@ -143,19 +221,10 @@ export async function assertCanCreateDocuments(supabase: SupabaseClient, ownerId
 
 export async function assertCanUseMonthlyBulkInvoices(supabase: SupabaseClient, ownerId: string) {
   const profile = await getProfileForLimits(supabase, ownerId);
-  const limits = getPlanLimits(profile);
 
-  if (!limits.monthlyBulkInvoices) {
+  if (!isPremium(profile)) {
     return "La facturacion mensual masiva esta incluida en el plan Premium.";
   }
 
   return null;
-}
-
-function getPlanLabel(plan: LimitPlan) {
-  return plan === "pro" ? "Pro" : "gratis";
-}
-
-function getUpgradePlanLabel(plan: LimitPlan) {
-  return plan === "pro" ? "Premium" : "Pro";
 }

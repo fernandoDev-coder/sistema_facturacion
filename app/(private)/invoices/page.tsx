@@ -6,6 +6,7 @@ import { Message } from "@/components/message";
 import { StatusBadge } from "@/components/status-badge";
 import { money } from "@/lib/format";
 import { getDictionary, getLocale } from "@/lib/i18n";
+import { canExportInvoices, getProfileForLimits } from "@/lib/plan-limits";
 import { createClient, requireUser } from "@/lib/supabase/server";
 import { invoiceStatuses, type InvoiceStatus, type InvoiceWithCommunity } from "@/lib/types";
 
@@ -25,6 +26,9 @@ export default async function InvoicesPage({
   const locale = await getLocale();
   const t = getDictionary(locale);
   const supabase = await createClient();
+  const profile = await getProfileForLimits(supabase, user.id);
+  const canExportCsv = canExportInvoices(profile);
+  const defaultExportRange = currentMonthRange();
 
   const { data: communities } = await supabase.from("communities").select("*").eq("owner_id", user.id).order("name");
 
@@ -101,6 +105,54 @@ export default async function InvoicesPage({
           <button className={buttonClass({ variant: "secondary", size: "full" })}>{t.common.filter}</button>
         </div>
       </form>
+
+      <section className="rounded-md border border-zinc-200 bg-white p-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h2 className="font-semibold text-zinc-950">{t.pages.invoices.exportTitle}</h2>
+            <p className="mt-1 text-sm leading-6 text-zinc-600">
+              {canExportCsv ? t.pages.invoices.exportDescription : t.pages.invoices.exportUnavailable}
+            </p>
+          </div>
+          {!canExportCsv ? (
+            <Link href="/settings/billing" className={buttonClass({ variant: "warning", size: "full", className: "sm:w-auto" })}>
+              {t.common.viewPlans}
+            </Link>
+          ) : null}
+        </div>
+
+        {canExportCsv ? (
+          <form action="/api/export/invoices.csv" method="get" className="mt-4 grid gap-3 md:grid-cols-5">
+            <FilterInput name="from" label={t.pages.invoices.exportFrom} type="date" defaultValue={defaultExportRange.from} />
+            <FilterInput name="to" label={t.pages.invoices.exportTo} type="date" defaultValue={defaultExportRange.to} />
+            <label>
+              <span className="text-sm font-medium text-zinc-800">{t.common.status}</span>
+              <select name="status" defaultValue="" className="mt-1 min-h-11 w-full rounded-md border border-zinc-300 px-3 text-sm">
+                <option value="">{t.common.all}</option>
+                {invoiceStatuses.map((status) => (
+                  <option key={status.value} value={status.value}>
+                    {t.statuses[status.value]}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              <span className="text-sm font-medium text-zinc-800">{t.common.client}</span>
+              <select name="clientId" defaultValue="" className="mt-1 min-h-11 w-full rounded-md border border-zinc-300 px-3 text-sm">
+                <option value="">{t.common.allFemale}</option>
+                {communities?.map((community) => (
+                  <option key={community.id} value={community.id}>
+                    {community.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <div className="flex items-end">
+              <button className={buttonClass({ variant: "primary", size: "full" })}>{t.pages.invoices.exportCsv}</button>
+            </div>
+          </form>
+        ) : null}
+      </section>
 
       {invoices.length ? (
         <div className="grid gap-3 sm:hidden">
@@ -214,6 +266,17 @@ export default async function InvoicesPage({
       </div>
     </div>
   );
+}
+
+function currentMonthRange() {
+  const now = new Date();
+  const from = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+  const to = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0));
+
+  return {
+    from: from.toISOString().slice(0, 10),
+    to: to.toISOString().slice(0, 10),
+  };
 }
 
 function isInvoiceStatus(value?: string): value is InvoiceStatus {

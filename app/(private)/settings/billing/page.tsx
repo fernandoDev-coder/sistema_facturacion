@@ -1,11 +1,13 @@
+import Link from "next/link";
 import { createCheckoutSessionAction, createCustomerPortalSessionAction } from "@/app/actions/billing";
 import { buttonClass } from "@/components/button-styles";
 import { Message } from "@/components/message";
+import { arePaymentsEnabled, betaAccessHref, isBetaMode } from "@/lib/beta-config";
 import { getDictionary, getLocale } from "@/lib/i18n";
 import {
-  getEffectivePlan,
   getClientCount,
   getCurrentMonthDocumentCount,
+  getEffectivePlan,
   getPlanLimits,
 } from "@/lib/plan-limits";
 import { getCurrentProfile } from "@/lib/profiles";
@@ -25,6 +27,7 @@ export default async function BillingSettingsPage({
   const limits = getPlanLimits(profile);
   const effectivePlan = getEffectivePlan(profile);
   const hasPaidPlan = effectivePlan !== "starter";
+  const paymentsAvailable = arePaymentsEnabled() && !isBetaMode();
 
   const [{ data: subscription }, clients, documentsThisMonth] = await Promise.all([
     supabase
@@ -50,11 +53,15 @@ export default async function BillingSettingsPage({
 
       <Message text={message} />
 
+      {!paymentsAvailable ? (
+        <section className="rounded-lg border border-blue-200 bg-blue-50 p-5 text-sm leading-6 text-blue-950">
+          <p className="font-semibold">{t.pages.billing.betaMode}</p>
+          <p className="mt-1">{t.pages.billing.betaPaymentNotice}</p>
+        </section>
+      ) : null}
+
       <section className="grid gap-4 lg:grid-cols-4">
-        <Metric
-          label={t.common.clients}
-          value={`${clients}${limits.clients === null ? "" : ` / ${limits.clients}`}`}
-        />
+        <Metric label={t.common.clients} value={`${clients}${limits.clients === null ? "" : ` / ${limits.clients}`}`} />
         <Metric
           label={t.pages.billing.documentsThisMonth}
           value={`${documentsThisMonth}${limits.documentsPerMonth === null ? "" : ` / ${limits.documentsPerMonth}`}`}
@@ -70,13 +77,18 @@ export default async function BillingSettingsPage({
             price="7,90 EUR/mes + IVA"
             description={t.pricing.proDescription}
             features={[
-              t.pricing.features.fifteenClients,
-              t.pricing.features.fiftyDocuments,
+              t.pricing.features.thirtyClients,
+              t.pricing.features.oneHundredDocuments,
               t.pricing.features.companyLogo,
+              t.pricing.features.savedCompanyData,
+              t.pricing.features.duplicateDocuments,
+              t.pricing.features.basicTemplates,
+              t.pricing.features.basicCsvExport,
             ]}
             plan="pro"
             disabled={effectivePlan === "pro" || effectivePlan === "premium" || effectivePlan === "enterprise"}
             cta={effectivePlan === "pro" ? t.pages.billing.currentPlan : t.pages.billing.choosePro}
+            paymentsAvailable={paymentsAvailable}
           />
           <PaidPlanCard
             name="Premium"
@@ -87,10 +99,14 @@ export default async function BillingSettingsPage({
               t.pricing.features.unlimitedDocuments,
               t.pricing.features.companyLogo,
               t.pricing.features.bulkMonthly,
+              t.pricing.features.recurringPlans,
+              t.pricing.features.advancedExports,
+              t.pricing.features.prioritySupport,
             ]}
             plan="premium"
             disabled={effectivePlan === "premium" || effectivePlan === "enterprise"}
             cta={effectivePlan === "premium" || effectivePlan === "enterprise" ? t.pages.billing.currentPlan : t.pages.billing.choosePremium}
+            paymentsAvailable={paymentsAvailable}
             highlighted
           />
         </div>
@@ -110,11 +126,13 @@ export default async function BillingSettingsPage({
           ) : null}
           <div className="mt-4">
             {hasPaidPlan && profile?.stripe_customer_id ? (
-              <form action={createCustomerPortalSessionAction}>
-                <button className={buttonClass({ variant: "primary", size: "full" })}>
-                  {t.pages.billing.manageSubscription}
-                </button>
-              </form>
+              paymentsAvailable ? (
+                <form action={createCustomerPortalSessionAction}>
+                  <button className={buttonClass({ variant: "primary", size: "full" })}>{t.pages.billing.manageSubscription}</button>
+                </form>
+              ) : (
+                <p className="text-sm text-zinc-500">{t.pages.billing.betaPaymentNotice}</p>
+              )
             ) : (
               <p className="text-sm text-zinc-500">{t.pages.billing.choosePlanHint}</p>
             )}
@@ -142,6 +160,7 @@ function PaidPlanCard({
   plan,
   cta,
   disabled,
+  paymentsAvailable,
   highlighted = false,
 }: {
   name: string;
@@ -151,6 +170,7 @@ function PaidPlanCard({
   plan: "pro" | "premium";
   cta: string;
   disabled: boolean;
+  paymentsAvailable: boolean;
   highlighted?: boolean;
 }) {
   return (
@@ -161,17 +181,23 @@ function PaidPlanCard({
       <ul className="mt-4 space-y-2 text-sm text-zinc-700">
         {features.map((feature) => (
           <li key={feature} className="flex gap-2">
-            <span className="text-emerald-600">✓</span>
+            <span className="text-emerald-600">Incluido</span>
             <span>{feature}</span>
           </li>
         ))}
       </ul>
-      <form action={createCheckoutSessionAction} className="mt-5">
-        <input type="hidden" name="plan" value={plan} />
-        <button className={buttonClass({ variant: highlighted ? "primary" : "secondary", size: "full" })} disabled={disabled}>
+      {paymentsAvailable ? (
+        <form action={createCheckoutSessionAction} className="mt-5">
+          <input type="hidden" name="plan" value={plan} />
+          <button className={buttonClass({ variant: highlighted ? "primary" : "secondary", size: "full" })} disabled={disabled}>
+            {cta}
+          </button>
+        </form>
+      ) : (
+        <Link href={betaAccessHref} className={buttonClass({ variant: highlighted ? "primary" : "secondary", size: "full", className: "mt-5" })}>
           {cta}
-        </button>
-      </form>
+        </Link>
+      )}
     </article>
   );
 }

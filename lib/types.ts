@@ -1,6 +1,7 @@
 export type DocumentType = "invoice" | "budget";
 
 export type InvoiceStatus = "draft" | "pending" | "paid" | "cancelled";
+export type ExpenseDocumentStatus = "pending" | "paid" | "archived";
 
 export const invoiceStatuses: Array<{ value: InvoiceStatus; label: string }> = [
   { value: "draft", label: "Borrador" },
@@ -92,6 +93,38 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      recurring_plans: {
+        Row: RecurringPlan;
+        Insert: Partial<RecurringPlan> & {
+          owner_id: string;
+          community_id: string;
+          name: string;
+          concept: string;
+          base_amount: number;
+        };
+        Update: Partial<Omit<RecurringPlan, "id" | "owner_id" | "created_at">>;
+        Relationships: [
+          {
+            foreignKeyName: "recurring_plans_community_id_fkey";
+            columns: ["community_id"];
+            isOneToOne: false;
+            referencedRelation: "communities";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      expense_documents: {
+        Row: ExpenseDocument;
+        Insert: Partial<ExpenseDocument> & {
+          owner_id: string;
+          supplier_name: string;
+          issue_date: string;
+          total_amount: number;
+          file_url: string;
+        };
+        Update: Partial<Omit<ExpenseDocument, "id" | "owner_id" | "created_at">>;
+        Relationships: [];
       };
       invoice_items: {
         Row: InvoiceItem;
@@ -191,6 +224,7 @@ export type Invoice = {
   id: string;
   owner_id: string;
   community_id: string;
+  recurring_plan_id: string | null;
   document_type: DocumentType;
   community_name: string | null;
   community_tax_id: string | null;
@@ -225,6 +259,35 @@ export type InvoiceItem = {
   vat_amount: number;
   total: number;
   sort_order: number;
+  created_at: string;
+};
+
+export type RecurringPlan = {
+  id: string;
+  owner_id: string;
+  community_id: string;
+  name: string;
+  concept: string;
+  base_amount: number;
+  tax_rate: number;
+  frequency: "monthly";
+  billing_day: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ExpenseDocument = {
+  id: string;
+  owner_id: string;
+  supplier_name: string;
+  invoice_number: string | null;
+  issue_date: string;
+  total_amount: number;
+  tax_amount: number | null;
+  category: string | null;
+  file_url: string;
+  status: ExpenseDocumentStatus;
   created_at: string;
 };
 

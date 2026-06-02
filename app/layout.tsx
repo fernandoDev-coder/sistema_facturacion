@@ -17,16 +17,16 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: getSiteUrl(),
   title: {
-    default: "FaktuDash | Facturacion online para autonomos y pequenos negocios",
+    default: "FaktuDash | Facturación mensual para autónomos",
     template: "%s | FaktuDash",
   },
   description:
-    "Crea facturas, presupuestos y gestiona clientes desde un panel online sencillo para autonomos y pequenos negocios.",
+    "Gestiona clientes, facturas, presupuestos y facturación mensual recurrente desde un dashboard sencillo para autónomos y pequeños negocios.",
   applicationName: "FaktuDash",
   keywords: [
-    "facturacion online",
-    "programa de facturacion",
-    "facturas para autonomos",
+    "facturación mensual",
+    "programa de facturación",
+    "facturas para autónomos",
     "presupuestos online",
     "gestion de clientes",
     "FaktuDash",
@@ -46,10 +46,10 @@ export const metadata: Metadata = {
     apple: "/icon.svg",
   },
   openGraph: {
-    title: "FaktuDash | Facturacion online",
+    title: "FaktuDash | Facturación mensual para autónomos",
     description:
-      "Crea facturas, presupuestos y gestiona clientes desde un panel online sencillo para autonomos y pequenos negocios.",
-    url: "/",
+      "Crea facturas, presupuestos y facturación mensual recurrente desde un dashboard sencillo.",
+    url: "https://www.faktudash.com",
     siteName: "FaktuDash",
     images: [
       {
@@ -64,9 +64,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "FaktuDash | Facturacion online",
+    title: "FaktuDash | Facturación mensual para autónomos",
     description:
-      "Crea facturas, presupuestos y gestiona clientes desde un panel online sencillo para autonomos y pequenos negocios.",
+      "Crea facturas, presupuestos y facturación mensual recurrente desde un dashboard sencillo.",
     images: ["/opengraph-image"],
   },
 };

@@ -109,6 +109,43 @@ create table if not exists public.invoices (
 
 alter table public.invoices add column if not exists document_type text not null default 'invoice';
 
+create table if not exists public.recurring_plans (
+  id uuid primary key default gen_random_uuid(),
+  owner_id uuid not null references auth.users(id) on delete cascade,
+  community_id uuid not null references public.communities(id) on delete cascade,
+  name text not null,
+  concept text not null,
+  base_amount numeric not null default 0,
+  tax_rate numeric not null default 21,
+  frequency text not null default 'monthly',
+  billing_day int not null default 1,
+  is_active boolean not null default true,
+  created_at timestamp with time zone not null default now(),
+  updated_at timestamp with time zone not null default now(),
+  constraint recurring_plans_frequency_check check (frequency = 'monthly'),
+  constraint recurring_plans_billing_day_check check (billing_day between 1 and 28),
+  constraint recurring_plans_tax_rate_check check (tax_rate >= 0 and tax_rate <= 100)
+);
+
+alter table public.invoices add column if not exists recurring_plan_id uuid references public.recurring_plans(id) on delete set null;
+
+create table if not exists public.expense_documents (
+  id uuid primary key default gen_random_uuid(),
+  owner_id uuid not null references auth.users(id) on delete cascade,
+  supplier_name text not null,
+  invoice_number text,
+  issue_date date not null,
+  total_amount numeric not null default 0,
+  tax_amount numeric,
+  category text,
+  file_url text not null,
+  status text not null default 'pending',
+  created_at timestamp with time zone not null default now(),
+  constraint expense_documents_status_check check (status in ('pending', 'paid', 'archived')),
+  constraint expense_documents_amount_check check (total_amount >= 0),
+  constraint expense_documents_tax_amount_check check (tax_amount is null or tax_amount >= 0)
+);
+
 create table if not exists public.invoice_items (
   id uuid primary key default gen_random_uuid(),
   owner_id uuid not null references auth.users(id) on delete cascade,
@@ -164,6 +201,19 @@ set public = excluded.public,
     file_size_limit = excluded.file_size_limit,
     allowed_mime_types = excluded.allowed_mime_types;
 
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'expense-documents',
+  'expense-documents',
+  false,
+  5242880,
+  array['application/pdf', 'image/jpeg', 'image/png']
+)
+on conflict (id) do update
+set public = excluded.public,
+    file_size_limit = excluded.file_size_limit,
+    allowed_mime_types = excluded.allowed_mime_types;
+
 alter table public.profiles add column if not exists role text not null default 'user';
 alter table public.profiles add column if not exists full_name text;
 alter table public.profiles add column if not exists plan text not null default 'starter';
@@ -184,7 +234,12 @@ create index if not exists communities_owner_id_name_idx on public.communities(o
 create index if not exists invoices_owner_id_idx on public.invoices(owner_id);
 create index if not exists invoices_owner_year_month_idx on public.invoices(owner_id, year, month);
 create index if not exists invoices_owner_document_year_idx on public.invoices(owner_id, document_type, year);
+create index if not exists invoices_owner_recurring_period_idx on public.invoices(owner_id, recurring_plan_id, year, month) where recurring_plan_id is not null;
 create index if not exists invoices_community_id_idx on public.invoices(community_id);
+create index if not exists recurring_plans_owner_id_idx on public.recurring_plans(owner_id);
+create index if not exists recurring_plans_owner_active_idx on public.recurring_plans(owner_id, is_active);
+create index if not exists expense_documents_owner_issue_date_idx on public.expense_documents(owner_id, issue_date);
+create index if not exists expense_documents_owner_status_idx on public.expense_documents(owner_id, status);
 create index if not exists invoice_items_owner_id_idx on public.invoice_items(owner_id);
 create index if not exists invoice_items_invoice_id_idx on public.invoice_items(invoice_id);
 create index if not exists subscriptions_owner_id_idx on public.subscriptions(owner_id);
@@ -262,6 +317,16 @@ alter table public.invoices add constraint invoices_document_type_check check (
   document_type in ('invoice', 'budget')
 );
 
+alter table public.recurring_plans drop constraint if exists recurring_plans_frequency_check;
+alter table public.recurring_plans add constraint recurring_plans_frequency_check check (
+  frequency = 'monthly'
+);
+
+alter table public.expense_documents drop constraint if exists expense_documents_status_check;
+alter table public.expense_documents add constraint expense_documents_status_check check (
+  status in ('pending', 'paid', 'archived')
+);
+
 create or replace function public.set_updated_at()
 returns trigger
 language plpgsql
@@ -285,6 +350,11 @@ for each row execute function public.set_updated_at();
 drop trigger if exists set_invoices_updated_at on public.invoices;
 create trigger set_invoices_updated_at
 before update on public.invoices
+for each row execute function public.set_updated_at();
+
+drop trigger if exists set_recurring_plans_updated_at on public.recurring_plans;
+create trigger set_recurring_plans_updated_at
+before update on public.recurring_plans
 for each row execute function public.set_updated_at();
 
 drop trigger if exists set_subscriptions_updated_at on public.subscriptions;
@@ -332,6 +402,8 @@ alter table public.profiles enable row level security;
 alter table public.company_settings enable row level security;
 alter table public.communities enable row level security;
 alter table public.invoices enable row level security;
+alter table public.recurring_plans enable row level security;
+alter table public.expense_documents enable row level security;
 alter table public.invoice_items enable row level security;
 alter table public.subscriptions enable row level security;
 alter table public.billing_events enable row level security;
@@ -343,6 +415,8 @@ on public.profiles,
    public.company_settings,
    public.communities,
    public.invoices,
+   public.recurring_plans,
+   public.expense_documents,
    public.invoice_items,
    public.subscriptions
 to authenticated;
@@ -355,6 +429,8 @@ on public.profiles,
    public.company_settings,
    public.communities,
    public.invoices,
+   public.recurring_plans,
+   public.expense_documents,
    public.invoice_items,
    public.subscriptions,
    public.billing_events
@@ -445,6 +521,46 @@ using (
   and (storage.foldername(name))[1] = auth.uid()::text
 );
 
+drop policy if exists "expense_documents_select_own_files" on storage.objects;
+create policy "expense_documents_select_own_files"
+on storage.objects for select
+to authenticated
+using (
+  bucket_id = 'expense-documents'
+  and (storage.foldername(name))[1] = auth.uid()::text
+);
+
+drop policy if exists "expense_documents_insert_own_files" on storage.objects;
+create policy "expense_documents_insert_own_files"
+on storage.objects for insert
+to authenticated
+with check (
+  bucket_id = 'expense-documents'
+  and (storage.foldername(name))[1] = auth.uid()::text
+);
+
+drop policy if exists "expense_documents_update_own_files" on storage.objects;
+create policy "expense_documents_update_own_files"
+on storage.objects for update
+to authenticated
+using (
+  bucket_id = 'expense-documents'
+  and (storage.foldername(name))[1] = auth.uid()::text
+)
+with check (
+  bucket_id = 'expense-documents'
+  and (storage.foldername(name))[1] = auth.uid()::text
+);
+
+drop policy if exists "expense_documents_delete_own_files" on storage.objects;
+create policy "expense_documents_delete_own_files"
+on storage.objects for delete
+to authenticated
+using (
+  bucket_id = 'expense-documents'
+  and (storage.foldername(name))[1] = auth.uid()::text
+);
+
 drop policy if exists "communities_select_own" on public.communities;
 create policy "communities_select_own"
 on public.communities for select
@@ -501,6 +617,64 @@ with check (
 drop policy if exists "invoices_delete_own" on public.invoices;
 create policy "invoices_delete_own"
 on public.invoices for delete
+using (auth.uid() = owner_id);
+
+drop policy if exists "recurring_plans_select_own" on public.recurring_plans;
+create policy "recurring_plans_select_own"
+on public.recurring_plans for select
+using (auth.uid() = owner_id);
+
+drop policy if exists "recurring_plans_insert_own" on public.recurring_plans;
+create policy "recurring_plans_insert_own"
+on public.recurring_plans for insert
+with check (
+  auth.uid() = owner_id
+  and exists (
+    select 1
+    from public.communities
+    where communities.id = recurring_plans.community_id
+      and communities.owner_id = auth.uid()
+  )
+);
+
+drop policy if exists "recurring_plans_update_own" on public.recurring_plans;
+create policy "recurring_plans_update_own"
+on public.recurring_plans for update
+using (auth.uid() = owner_id)
+with check (
+  auth.uid() = owner_id
+  and exists (
+    select 1
+    from public.communities
+    where communities.id = recurring_plans.community_id
+      and communities.owner_id = auth.uid()
+  )
+);
+
+drop policy if exists "recurring_plans_delete_own" on public.recurring_plans;
+create policy "recurring_plans_delete_own"
+on public.recurring_plans for delete
+using (auth.uid() = owner_id);
+
+drop policy if exists "expense_documents_select_own" on public.expense_documents;
+create policy "expense_documents_select_own"
+on public.expense_documents for select
+using (auth.uid() = owner_id);
+
+drop policy if exists "expense_documents_insert_own" on public.expense_documents;
+create policy "expense_documents_insert_own"
+on public.expense_documents for insert
+with check (auth.uid() = owner_id);
+
+drop policy if exists "expense_documents_update_own" on public.expense_documents;
+create policy "expense_documents_update_own"
+on public.expense_documents for update
+using (auth.uid() = owner_id)
+with check (auth.uid() = owner_id);
+
+drop policy if exists "expense_documents_delete_own" on public.expense_documents;
+create policy "expense_documents_delete_own"
+on public.expense_documents for delete
 using (auth.uid() = owner_id);
 
 drop policy if exists "invoice_items_select_own" on public.invoice_items;

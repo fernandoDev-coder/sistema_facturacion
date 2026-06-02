@@ -105,7 +105,7 @@ test("public SEO files expose only crawlable marketing pages", () => {
   const authLayout = readProjectFile("app/(auth)/layout.tsx");
 
   assert.match(layout, /metadataBase: getSiteUrl\(\)/);
-  assert.match(layout, /Facturacion online/);
+  assert.match(layout, /Facturación mensual para autónomos/);
   assert.match(siteUrl, /const defaultSiteUrl = "https:\/\/www\.faktudash\.com"/);
   assert.match(siteUrl, /configuredUrl\.includes\("localhost"\)/);
   assert.match(robots, /disallow: \[/);
@@ -158,4 +158,65 @@ test("company logo uploads are size-limited and stored in a user-scoped bucket",
   assert.match(schema, /insert into storage\.buckets \(id, name, public, file_size_limit, allowed_mime_types\)/);
   assert.match(schema, /\(storage\.foldername\(name\)\)\[1\] = auth\.uid\(\)::text/);
   assert.match(nextConfig, /bodySizeLimit: "3mb"/);
+});
+
+test("invoice CSV export is plan-gated and owner-scoped", () => {
+  const exportRoute = readProjectFile("app/api/export/invoices.csv/route.ts");
+  const invoicesPage = readProjectFile("app/(private)/invoices/page.tsx");
+  const planLimits = readProjectFile("lib/plan-limits.ts");
+
+  assert.match(planLimits, /csvExport: false/);
+  assert.match(planLimits, /export function canExportInvoices/);
+  assert.match(exportRoute, /supabase\.auth\.getUser\(\)/);
+  assert.match(exportRoute, /canExportInvoices\(profile\)/);
+  assert.match(exportRoute, /\.eq\("owner_id", user\.id\)/);
+  assert.match(exportRoute, /daysBetween\(from, to\) > maxExportRangeDays/);
+  assert.match(exportRoute, /\^\[=\+\\-@\\t\]/);
+  assert.match(exportRoute, /Content-Type": "text\/csv; charset=utf-8"/);
+  assert.match(exportRoute, /Content-Disposition/);
+  assert.match(invoicesPage, /action="\/api\/export\/invoices\.csv"/);
+  assert.match(invoicesPage, /t\.pages\.invoices\.exportUnavailable/);
+});
+
+test("private beta disables real payments and removes legal placeholders", () => {
+  const betaConfig = readProjectFile("lib/beta-config.ts");
+  const billingActions = readProjectFile("app/actions/billing.ts");
+  const billingPage = readProjectFile("app/(private)/settings/billing/page.tsx");
+  const pricingPage = readProjectFile("app/pricing/page.tsx");
+  const homePage = readProjectFile("app/page.tsx");
+  const footer = readProjectFile("components/legal-footer.tsx");
+  const envExample = readProjectFile(".env.example");
+  const legalPages = [
+    "app/legal/aviso-legal/page.tsx",
+    "app/legal/privacidad/page.tsx",
+    "app/legal/cookies/page.tsx",
+    "app/legal/terminos/page.tsx",
+  ]
+    .map(readProjectFile)
+    .join("\n");
+  const packageJson = readProjectFile("package.json");
+  const layout = readProjectFile("app/layout.tsx");
+
+  assert.match(betaConfig, /BETA_MODE/);
+  assert.match(betaConfig, /PAYMENTS_ENABLED/);
+  assert.match(betaConfig, /STRIPE_LIVE_ENABLED/);
+  assert.match(envExample, /BETA_MODE=true/);
+  assert.match(envExample, /PAYMENTS_ENABLED=false/);
+  assert.match(envExample, /STRIPE_LIVE_ENABLED=false/);
+  assert.match(billingActions, /isBetaMode\(\) \|\| !arePaymentsEnabled\(\)/);
+  assert.match(billingActions, /secretKey\.startsWith\("sk_live_"\)/);
+  assert.match(billingPage, /paymentsAvailable \? \(/);
+  assert.match(billingPage, /betaAccessHref/);
+  assert.match(pricingPage, /betaAccessHref/);
+  assert.match(homePage, /t\.home\.betaNotice/);
+  assert.match(betaConfig, /legal: "faktudash@gmail\.com"/);
+  assert.match(betaConfig, /privacy: "faktudash@gmail\.com"/);
+  assert.match(betaConfig, /support: "faktudash@gmail\.com"/);
+  assert.match(footer, /contactEmails\.legal/);
+  assert.match(footer, /contactEmails\.privacy/);
+  assert.match(footer, /contactEmails\.support/);
+  assert.doesNotMatch(legalPages, /pendiente de completar|sustituye este texto|\[tu nombre\]|\[NIF\]|\[CIF\]|\[direccion\]|\[dirección\]/i);
+  assert.match(legalPages, /no utiliza cookies de analisis/);
+  assert.doesNotMatch(packageJson, /@vercel\/analytics|@vercel\/speed-insights|posthog|hotjar|clarity/i);
+  assert.doesNotMatch(layout + homePage, /GoogleAnalytics|gtag|fbq|posthog|hotjar|clarity/i);
 });

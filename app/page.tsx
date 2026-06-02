@@ -2,8 +2,12 @@ import Link from "next/link";
 import Image from "next/image";
 import { BrandLogo } from "@/components/brand-logo";
 import { buttonClass } from "@/components/button-styles";
+import { FAQItem } from "@/components/faq-item";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { LegalFooter } from "@/components/legal-footer";
+import { PricingCard } from "@/components/pricing-card";
+import { UseCaseCard } from "@/components/use-case-card";
+import { betaAccessHref } from "@/lib/beta-config";
 import { getDictionary, getLocale } from "@/lib/i18n";
 
 export default async function HomePage() {
@@ -13,7 +17,7 @@ export default async function HomePage() {
 
   return (
     <main className="min-h-screen bg-zinc-50 text-zinc-950">
-      <section className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
+      <section className="mx-auto flex min-h-[92vh] w-full max-w-6xl flex-col px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
         <header className="flex flex-wrap items-center justify-between gap-3">
           <BrandLogo href="/" />
           <nav className="flex min-w-0 flex-wrap items-center justify-end gap-2">
@@ -40,6 +44,9 @@ export default async function HomePage() {
             </h1>
             <p className="mt-5 max-w-xl text-base leading-7 text-zinc-600">
               {t.home.description}
+            </p>
+            <p className="mt-4 max-w-xl rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm leading-6 text-blue-950">
+              {t.home.betaNotice}
             </p>
             <div className="mt-7 grid gap-3 sm:flex sm:flex-wrap">
               <Link href="/register" className={buttonClass({ variant: "primary", size: "full", className: "sm:w-auto" })}>
@@ -100,34 +107,38 @@ export default async function HomePage() {
 
       <section className="border-t border-zinc-200 bg-white">
         <div className="mx-auto grid max-w-6xl gap-4 px-4 py-10 sm:px-6 sm:py-12 lg:grid-cols-3 lg:px-8">
-          <PlanCard
+          <PricingCard
             name="Gratis"
             price="0 EUR"
             description={t.pricing.freeDescription}
             features={[
               t.pricing.features.fiveClients,
-              t.pricing.features.twentyFiveDocuments,
+              t.pricing.features.twentyDocuments,
               t.pricing.features.invoicesBudgets,
               t.pricing.features.printA4,
             ]}
             cta={t.common.createFreeAccount}
             href="/register"
           />
-          <PlanCard
+          <PricingCard
             name="Pro"
             price="7,90 EUR/mes + IVA"
             description={t.pricing.proDescription}
             features={[
-              t.pricing.features.fifteenClients,
-              t.pricing.features.fiftyDocuments,
+              t.pricing.features.thirtyClients,
+              t.pricing.features.oneHundredDocuments,
               t.pricing.features.companyLogo,
+              t.pricing.features.savedCompanyData,
+              t.pricing.features.duplicateDocuments,
+              t.pricing.features.basicTemplates,
+              t.pricing.features.basicCsvExport,
             ]}
             cta={t.pricing.choosePro}
-            href="/pricing"
+            href={betaAccessHref}
             highlighted
             recommendedLabel={t.common.recommended}
           />
-          <PlanCard
+          <PricingCard
             name="Premium"
             price="14,90 EUR/mes + IVA"
             description={t.pricing.premiumDescription}
@@ -136,10 +147,44 @@ export default async function HomePage() {
               t.pricing.features.unlimitedDocuments,
               t.pricing.features.companyLogo,
               t.pricing.features.bulkMonthly,
+              t.pricing.features.recurringPlans,
+              t.pricing.features.advancedExports,
+              t.pricing.features.prioritySupport,
             ]}
             cta={t.pricing.choosePremium}
-            href="/pricing"
+            href={betaAccessHref}
           />
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-12 lg:px-8">
+        <h2 className="text-2xl font-semibold text-zinc-950">{t.home.useCasesTitle}</h2>
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {t.home.useCases.map((useCase) => (
+            <UseCaseCard key={useCase.title} title={useCase.title} description={useCase.description} />
+          ))}
+        </div>
+      </section>
+
+      <section className="border-y border-zinc-200 bg-white">
+        <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-12 lg:px-8">
+          <h2 className="text-2xl font-semibold text-zinc-950">{t.home.trustTitle}</h2>
+          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            {t.home.trustPoints.map((point) => (
+              <div key={point} className="rounded-lg border border-zinc-200 bg-zinc-50 p-4 text-sm leading-6 text-zinc-700">
+                {point}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-12 lg:px-8">
+        <h2 className="text-2xl font-semibold text-zinc-950">{t.home.faqTitle}</h2>
+        <div className="mt-5 grid gap-3 lg:grid-cols-2">
+          {t.home.faqs.map((faq) => (
+            <FAQItem key={faq.question} question={faq.question} answer={faq.answer} />
+          ))}
         </div>
       </section>
       <LegalFooter />
@@ -191,50 +236,3 @@ function PreviewRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-function PlanCard({
-  name,
-  price,
-  description,
-  features,
-  cta,
-  href,
-  highlighted = false,
-  recommendedLabel = "Recomendado",
-}: {
-  name: string;
-  price: string;
-  description: string;
-  features: string[];
-  cta: string;
-  href: string;
-  highlighted?: boolean;
-  recommendedLabel?: string;
-}) {
-  return (
-    <article className={`rounded-lg border bg-white p-5 shadow-sm sm:p-6 ${highlighted ? "border-blue-300" : "border-zinc-200"}`}>
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h3 className="text-xl font-semibold">{name}</h3>
-          <p className="mt-2 text-sm text-zinc-600">{description}</p>
-        </div>
-        {highlighted ? (
-          <span className="rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-800">
-            {recommendedLabel}
-          </span>
-        ) : null}
-      </div>
-      <p className="mt-6 text-2xl font-semibold sm:text-3xl">{price}</p>
-      <ul className="mt-6 space-y-3 text-sm text-zinc-700">
-        {features.map((feature) => (
-          <li key={feature} className="flex gap-2">
-            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-700" />
-            <span>{feature}</span>
-          </li>
-        ))}
-      </ul>
-      <Link href={href} className={buttonClass({ variant: highlighted ? "primary" : "secondary", size: "full", className: "mt-6" })}>
-        {cta}
-      </Link>
-    </article>
-  );
-}

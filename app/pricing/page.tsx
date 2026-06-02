@@ -3,6 +3,8 @@ import { BrandLogo } from "@/components/brand-logo";
 import { buttonClass } from "@/components/button-styles";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { LegalFooter } from "@/components/legal-footer";
+import { PricingCard } from "@/components/pricing-card";
+import { betaAccessHref } from "@/lib/beta-config";
 import { getDictionary, getLocale } from "@/lib/i18n";
 
 export default async function PricingPage() {
@@ -17,7 +19,7 @@ export default async function PricingPage() {
       description: t.pricing.freeDescription,
       features: [
         t.pricing.features.fiveClients,
-        t.pricing.features.twentyFiveDocuments,
+        t.pricing.features.twentyDocuments,
         t.pricing.features.invoicesBudgets,
         t.pricing.features.printA4,
       ],
@@ -35,14 +37,18 @@ export default async function PricingPage() {
       cadence: t.pricing.proCadence,
       description: t.pricing.proDescription,
       features: [
-        t.pricing.features.fifteenClients,
-        t.pricing.features.fiftyDocuments,
+        t.pricing.features.thirtyClients,
+        t.pricing.features.oneHundredDocuments,
         t.pricing.features.companyLogo,
+        t.pricing.features.savedCompanyData,
+        t.pricing.features.duplicateDocuments,
+        t.pricing.features.basicTemplates,
+        t.pricing.features.basicCsvExport,
         t.pricing.features.invoicesBudgets,
       ],
       notIncluded: [t.pricing.features.bulkMonthly, t.pricing.features.unlimitedClients],
       cta: t.pricing.choosePro,
-      href: "/register",
+      href: betaAccessHref,
       highlighted: true,
     },
     {
@@ -55,10 +61,14 @@ export default async function PricingPage() {
         t.pricing.features.unlimitedDocuments,
         t.pricing.features.companyLogo,
         t.pricing.features.bulkMonthly,
+        t.pricing.features.recurringPlans,
+        t.pricing.features.advancedExports,
+        t.pricing.features.prioritySupport,
+        t.pricing.features.futureAutomations,
       ],
       notIncluded: [],
       cta: t.pricing.choosePremium,
-      href: "/register",
+      href: betaAccessHref,
       highlighted: false,
     },
   ];
@@ -85,63 +95,28 @@ export default async function PricingPage() {
             {t.pricing.title}
           </h1>
           <p className="mt-5 max-w-2xl text-base leading-7 text-zinc-600">{t.pricing.description}</p>
+          <div className="mt-5 max-w-2xl rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm leading-6 text-blue-950">
+            <p>{t.pricing.betaNotice}</p>
+            <p className="mt-1 font-semibold">{t.pricing.betaNoCharges}</p>
+          </div>
         </section>
 
         <section className="grid gap-4 lg:grid-cols-3">
           {plans.map((plan) => (
-            <article
+            <PricingCard
               key={plan.name}
-              className={`rounded-lg border bg-white p-6 shadow-sm ${
-                plan.highlighted ? "border-blue-300 ring-2 ring-blue-100" : "border-zinc-200"
-              }`}
-            >
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <h2 className="text-xl font-semibold">{plan.name}</h2>
-                </div>
-                {plan.highlighted ? (
-                  <span className="rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-800">
-                    {t.common.recommended}
-                  </span>
-                ) : null}
-              </div>
-
-              <div className="mt-6">
-                <p className="text-2xl font-semibold sm:text-3xl">{plan.price}</p>
-                <p className="mt-1 text-sm text-zinc-500">{plan.cadence}</p>
-                <p className="mt-3 text-sm leading-6 text-zinc-600">{plan.description}</p>
-              </div>
-
-              <ul className="mt-6 space-y-3 text-sm text-zinc-700">
-                {plan.features.map((feature) => (
-                  <li key={feature} className="flex gap-2">
-                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-700" />
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-
-              {plan.notIncluded.length ? (
-                <ul className="mt-4 space-y-2 text-sm text-zinc-500">
-                  {plan.notIncluded.map((feature) => (
-                    <li key={feature}>
-                      {t.pricing.notIncluded}: {feature}
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
-
-              <Link
-                href={plan.href}
-                className={buttonClass({
-                  variant: plan.highlighted ? "primary" : "secondary",
-                  size: "full",
-                  className: "mt-6",
-                })}
-              >
-                {plan.cta}
-              </Link>
-            </article>
+              name={plan.name}
+              price={plan.price}
+              cadence={plan.cadence}
+              description={plan.description}
+              features={plan.features}
+              notIncluded={plan.notIncluded}
+              notIncludedLabel={t.pricing.notIncluded}
+              cta={plan.cta}
+              href={plan.href}
+              highlighted={plan.highlighted}
+              recommendedLabel={t.common.recommended}
+            />
           ))}
         </section>
 
@@ -184,7 +159,7 @@ export default async function PricingPage() {
         <section className="mt-10 rounded-lg border border-blue-200 bg-blue-50 p-6">
           <h2 className="text-lg font-semibold text-blue-950">{t.pricing.securePaymentTitle}</h2>
           <p className="mt-2 text-sm leading-6 text-blue-900">{t.pricing.securePayment}</p>
-          <Link href="/register" className={buttonClass({ variant: "primary", size: "full", className: "mt-4 sm:w-auto" })}>
+          <Link href={betaAccessHref} className={buttonClass({ variant: "primary", size: "full", className: "mt-4 sm:w-auto" })}>
             {t.pricing.choosePro}
           </Link>
         </section>
@@ -204,8 +179,8 @@ function MobilePlanValue({ plan, value }: { plan: string; value: string }) {
 }
 
 function PlanValue({ value, strong = false }: { value: string; strong?: boolean }) {
-  const included = value.startsWith("✅");
-  const excluded = value.startsWith("❌");
+  const included = value === "Incluido" || value === "Included";
+  const excluded = value === "No incluido" || value === "Not included";
 
   return (
     <p
