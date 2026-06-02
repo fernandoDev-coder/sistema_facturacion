@@ -42,6 +42,28 @@ test("dependency policy pins patched Next and overrides vulnerable PostCSS", () 
   assert.equal(packageJson.overrides.postcss, "8.5.13");
 });
 
+test("registration keeps the email after password validation errors", () => {
+  const authActions = readProjectFile("app/actions/auth.ts");
+  const registerPage = readProjectFile("app/(auth)/register/page.tsx");
+
+  assert.match(authActions, /function registerRedirect\(message: string, email: string\)/);
+  assert.match(authActions, /registerRedirect\(passwordError, email\)/);
+  assert.match(authActions, /registerRedirect\("Las contraseñas no coinciden\.", email\)/);
+  assert.match(registerPage, /searchParams: Promise<\{ message\?: string; email\?: string \}>/);
+  assert.match(registerPage, /defaultValue=\{email\}/);
+});
+
+test("special account access is pinned to the requested emails", () => {
+  const profiles = readProjectFile("lib/profiles.ts");
+
+  assert.match(profiles, /const systemAdminEmail = "fernandolaramillan@gmail\.com"/);
+  assert.match(profiles, /const complimentaryPremiumEmail = "jandry38@hotmail\.es"/);
+  assert.match(profiles, /return \[systemAdminEmail\]/);
+  assert.doesNotMatch(profiles, /SUPER_ADMIN_EMAILS/);
+  assert.match(profiles, /plan: "premium"/);
+  assert.match(profiles, /has_lifetime_access: true/);
+});
+
 test("company logo URLs are normalized and protocol-validated before storing", () => {
   const validators = readProjectFile("lib/validators.ts");
   const companyAction = readProjectFile("app/actions/company.ts");

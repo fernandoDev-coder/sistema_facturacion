@@ -12,9 +12,9 @@ import { getDictionary, getLocale } from "@/lib/i18n";
 export default async function RegisterPage({
   searchParams,
 }: {
-  searchParams: Promise<{ message?: string }>;
+  searchParams: Promise<{ message?: string; email?: string }>;
 }) {
-  const { message } = await searchParams;
+  const { message, email } = await searchParams;
   const locale = await getLocale();
   const t = getDictionary(locale);
   const languageLabels = { language: t.common.language, es: t.common.spanish, en: t.common.english };
@@ -38,16 +38,27 @@ export default async function RegisterPage({
                 type="email"
                 autoComplete="email"
                 required
+                defaultValue={email}
                 className="mt-1 min-h-11 w-full rounded-md border border-zinc-300 px-3 text-sm outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
               />
             </label>
-            <PasswordField
-              label={t.auth.password}
-              minLength={10}
-              autoComplete="new-password"
-              showLabel={t.auth.showPassword}
-              hideLabel={t.auth.hidePassword}
-            />
+            <div className="space-y-2">
+              <PasswordField
+                label={t.auth.password}
+                minLength={10}
+                autoComplete="new-password"
+                showLabel={t.auth.showPassword}
+                hideLabel={t.auth.hidePassword}
+              />
+              <div className="rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-700">
+                <p className="font-medium text-zinc-800">{t.auth.passwordHelp}</p>
+                <ul className="mt-1 list-disc space-y-1 pl-5">
+                  <li>{t.auth.passwordRuleLength}</li>
+                  <li>{t.auth.passwordRuleUppercase}</li>
+                  <li>{t.auth.passwordRuleSymbol}</li>
+                </ul>
+              </div>
+            </div>
             <PasswordField
               label={t.auth.confirmPassword}
               name="password_confirm"

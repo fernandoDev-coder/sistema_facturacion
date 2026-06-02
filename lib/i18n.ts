@@ -194,6 +194,10 @@ const es = {
     alreadyAccount: "¿Ya tienes cuenta?",
     signIn: "Inicia sesión",
     confirmPassword: "Confirmar contraseña",
+    passwordHelp: "La contraseña debe cumplir:",
+    passwordRuleLength: "Mínimo 10 caracteres.",
+    passwordRuleUppercase: "Al menos una mayúscula.",
+    passwordRuleSymbol: "Al menos un símbolo o carácter especial.",
   },
   forms: {
     client: {
@@ -603,6 +607,10 @@ const en = {
     alreadyAccount: "Already have an account?",
     signIn: "Log in",
     confirmPassword: "Confirm password",
+    passwordHelp: "The password must include:",
+    passwordRuleLength: "At least 10 characters.",
+    passwordRuleUppercase: "At least one uppercase letter.",
+    passwordRuleSymbol: "At least one symbol or special character.",
   },
   forms: {
     client: {

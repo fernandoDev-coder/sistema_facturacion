@@ -23,15 +23,14 @@ NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
-SUPER_ADMIN_EMAILS=tu-email@ejemplo.com
 STRIPE_SECRET_KEY=sk_test_xxx
 STRIPE_PRO_PRICE_ID=price_xxx
 STRIPE_PREMIUM_PRICE_ID=price_xxx
 STRIPE_WEBHOOK_SECRET=whsec_xxx
 ```
 
-`SUPABASE_SERVICE_ROLE_KEY` solo se usa en servidor para el webhook de Stripe y para actualizar campos sensibles de billing.
-`SUPER_ADMIN_EMAILS` es opcional y permite dar acceso total a una o varias cuentas separando los correos por comas.
+`SUPABASE_SERVICE_ROLE_KEY` solo se usa en servidor para el webhook de Stripe y para actualizar campos sensibles de billing, roles y accesos especiales.
+La cuenta `fernandolaramillan@gmail.com` se sincroniza como administradora del sistema. La cuenta `jandry38@hotmail.es` se sincroniza con acceso Premium vitalicio sin pago.
 `NEXT_PUBLIC_SITE_URL` debe coincidir con la URL publica de la app. En local usa `http://localhost:3000`; en produccion usa la URL de Vercel o tu dominio, por ejemplo `https://faktudash-drab.vercel.app`.
 `STRIPE_PRO_PRICE_ID` debe ser el Price recurrente del plan Pro creado en Stripe.
 `STRIPE_PREMIUM_PRICE_ID` debe ser el Price recurrente del plan Premium creado en Stripe.

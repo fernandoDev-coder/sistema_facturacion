@@ -5,8 +5,20 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { syncCurrentUserAccess } from "@/lib/profiles";
 
-function authRedirect(path: string, message: string): never {
-  redirect(`${path}?message=${encodeURIComponent(message)}`);
+function authRedirect(path: string, message: string, params?: Record<string, string | null | undefined>): never {
+  const searchParams = new URLSearchParams({ message });
+
+  for (const [key, value] of Object.entries(params ?? {})) {
+    if (value) {
+      searchParams.set(key, value);
+    }
+  }
+
+  redirect(`${path}?${searchParams.toString()}`);
+}
+
+function registerRedirect(message: string, email: string): never {
+  authRedirect("/register", message, { email });
 }
 
 function validatePassword(password: string) {
@@ -14,8 +26,8 @@ function validatePassword(password: string) {
     return "La contraseña debe tener al menos 10 caracteres.";
   }
 
-  if (!/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
-    return "La contraseña debe incluir mayúsculas, minúsculas y números.";
+  if (!/[A-Z]/.test(password)) {
+    return "La contraseña debe incluir al menos una mayúscula.";
   }
 
   if (!/[^A-Za-z0-9]/.test(password)) {
@@ -102,16 +114,16 @@ export async function registerAction(formData: FormData) {
   const remember = formData.get("remember") === "on";
 
   if (!email) {
-    authRedirect("/register", "Introduce un email válido.");
+    registerRedirect("Introduce un email válido.", email);
   }
 
   const passwordError = validatePassword(password);
   if (passwordError) {
-    authRedirect("/register", passwordError);
+    registerRedirect(passwordError, email);
   }
 
   if (password !== passwordConfirm) {
-    authRedirect("/register", "Las contraseñas no coinciden.");
+    registerRedirect("Las contraseñas no coinciden.", email);
   }
 
   const supabase = await createClient({ persistSession: remember });
@@ -124,7 +136,7 @@ export async function registerAction(formData: FormData) {
   });
 
   if (error) {
-    authRedirect("/register", translateAuthError(error.message));
+    registerRedirect(translateAuthError(error.message), email);
   }
 
   if (data.user && data.session) {
