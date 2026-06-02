@@ -82,7 +82,7 @@ test("self-service account deletion requires confirmation and blocks admins", ()
   assert.match(types, /full_name: string \| null/);
   assert.match(accountPage, /name="full_name"/);
   assert.match(accountPage, /name="confirm_email"/);
-  assert.match(accountPage, /Borrar mi cuenta definitivamente/);
+  assert.match(accountPage, /account\.deleteAccount/);
 });
 
 test("company logo URLs are normalized and protocol-validated before storing", () => {

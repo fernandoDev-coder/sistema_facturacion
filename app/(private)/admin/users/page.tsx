@@ -1,7 +1,23 @@
 import { redirect } from "next/navigation";
 import { getCurrentProfile } from "@/lib/profiles";
-import { createAdminClient, requireUser } from "@/lib/supabase/server";
+import { createClient, requireUser } from "@/lib/supabase/server";
 import type { ProfilePlan } from "@/lib/types";
+
+type AdminUser = {
+  id: string;
+  email: string | null;
+  full_name?: string | null;
+  role: "user" | "admin" | "super_admin";
+  plan: ProfilePlan;
+  is_super_admin: boolean;
+  has_lifetime_access: boolean;
+  stripe_customer_id: string | null;
+  stripe_subscription_id: string | null;
+  subscription_status: string | null;
+  subscription_current_period_end: string | null;
+  onboarding_completed_at: string | null;
+  created_at: string;
+};
 
 export default async function AdminUsersPage() {
   await requireUser();
@@ -11,31 +27,15 @@ export default async function AdminUsersPage() {
     redirect("/dashboard");
   }
 
-  const admin = createAdminClient();
-  const [
-    { data: profiles },
-    { count: clientCount },
-    { count: documentCount },
-    { count: subscriptionCount },
-    { data: latestBillingEvents },
-  ] = await Promise.all([
-    admin
-      .from("profiles")
-      .select(
-        "id,email,full_name,role,plan,is_super_admin,has_lifetime_access,stripe_customer_id,stripe_subscription_id,subscription_status,subscription_current_period_end,onboarding_completed_at,created_at",
-      )
-      .order("created_at", { ascending: false }),
-    admin.from("communities").select("id", { count: "exact", head: true }),
-    admin.from("invoices").select("id", { count: "exact", head: true }),
-    admin.from("subscriptions").select("id", { count: "exact", head: true }),
-    admin
-      .from("billing_events")
-      .select("event_id,type,processed_at,processing_error,created_at")
-      .order("created_at", { ascending: false })
-      .limit(5),
+  const supabase = await createClient();
+  const [profiles, { count: clientCount }, { count: documentCount }, { count: subscriptionCount }] = await Promise.all([
+    getAdminUsers(supabase),
+    supabase.from("communities").select("id", { count: "exact", head: true }),
+    supabase.from("invoices").select("id", { count: "exact", head: true }),
+    supabase.from("subscriptions").select("id", { count: "exact", head: true }),
   ]);
 
-  const users = profiles ?? [];
+  const users = profiles;
   const planCounts = getPlanCounts(users);
   const onboardingPending = users.filter((user) => !user.onboarding_completed_at).length;
   const lifetimeAccess = users.filter((user) => user.has_lifetime_access).length;
@@ -166,45 +166,34 @@ export default async function AdminUsersPage() {
         </div>
       </section>
 
-      <section className="rounded-lg border border-zinc-200 bg-white shadow-sm">
-        <div className="border-b border-zinc-200 px-5 py-4">
-          <h2 className="text-lg font-semibold text-zinc-950">Eventos recientes de billing</h2>
-          <p className="mt-1 text-sm text-zinc-500">Ultimos webhooks recibidos desde Stripe.</p>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-[760px] divide-y divide-zinc-200 text-sm">
-            <thead className="bg-zinc-50">
-              <tr className="text-left text-zinc-600">
-                <th className="px-4 py-3 font-medium">Tipo</th>
-                <th className="px-4 py-3 font-medium">Evento</th>
-                <th className="px-4 py-3 font-medium">Procesado</th>
-                <th className="px-4 py-3 font-medium">Error</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-100">
-              {(latestBillingEvents ?? []).map((event) => (
-                <tr key={event.event_id}>
-                  <td className="px-4 py-3 text-zinc-900">{event.type}</td>
-                  <td className="px-4 py-3 font-mono text-xs text-zinc-500">{event.event_id}</td>
-                  <td className="px-4 py-3 text-zinc-700">
-                    {event.processed_at ? formatDate(event.processed_at) : "Pendiente"}
-                  </td>
-                  <td className="px-4 py-3 text-zinc-700">{event.processing_error ?? "No"}</td>
-                </tr>
-              ))}
-              {(latestBillingEvents ?? []).length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="px-4 py-6 text-center text-zinc-500">
-                    No hay eventos de billing.
-                  </td>
-                </tr>
-              ) : null}
-            </tbody>
-          </table>
-        </div>
-      </section>
+      <p className="text-xs text-zinc-500">
+        Los eventos de billing se consultan desde el servidor con service role; este panel evita depender de esa clave
+        para no bloquear el acceso de administracion.
+      </p>
     </div>
   );
+}
+
+async function getAdminUsers(supabase: Awaited<ReturnType<typeof createClient>>): Promise<AdminUser[]> {
+  const withName = await supabase
+    .from("profiles")
+    .select(
+      "id,email,full_name,role,plan,is_super_admin,has_lifetime_access,stripe_customer_id,stripe_subscription_id,subscription_status,subscription_current_period_end,onboarding_completed_at,created_at",
+    )
+    .order("created_at", { ascending: false });
+
+  if (!withName.error) {
+    return withName.data ?? [];
+  }
+
+  const withoutName = await supabase
+    .from("profiles")
+    .select(
+      "id,email,role,plan,is_super_admin,has_lifetime_access,stripe_customer_id,stripe_subscription_id,subscription_status,subscription_current_period_end,onboarding_completed_at,created_at",
+    )
+    .order("created_at", { ascending: false });
+
+  return (withoutName.data ?? []).map((user) => ({ ...user, full_name: null }));
 }
 
 function Metric({ label, value, hint }: { label: string; value: string; hint: string }) {

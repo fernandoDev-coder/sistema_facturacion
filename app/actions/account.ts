@@ -21,7 +21,7 @@ export async function saveAccountProfileAction(formData: FormData) {
     accountRedirect("El nombre no puede superar 120 caracteres.");
   }
 
-  const { error } = await createAdminClient()
+  const { error } = await (await createClient())
     .from("profiles")
     .update({ full_name: fullName || null, email: user.email ?? null })
     .eq("id", user.id);
