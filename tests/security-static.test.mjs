@@ -85,6 +85,17 @@ test("self-service account deletion requires confirmation and blocks admins", ()
   assert.match(accountPage, /account\.deleteAccount/);
 });
 
+test("admin panel uses localized dictionary labels", () => {
+  const adminPage = readProjectFile("app/(private)/admin/users/page.tsx");
+  const i18n = readProjectFile("lib/i18n.ts");
+
+  assert.match(adminPage, /getDictionary\(locale\)\.pages\.admin/);
+  assert.match(adminPage, /t\.description/);
+  assert.match(adminPage, /t\.serviceRoleNote/);
+  assert.doesNotMatch(adminPage, /Panel del sistema|Ultimos usuarios|No hay usuarios registrados/);
+  assert.match(i18n, /title: "System panel"/);
+});
+
 test("company logo URLs are normalized and protocol-validated before storing", () => {
   const validators = readProjectFile("lib/validators.ts");
   const companyAction = readProjectFile("app/actions/company.ts");
