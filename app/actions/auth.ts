@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { syncCurrentUserAccess } from "@/lib/profiles";
+import { validatePassword } from "@/lib/password";
 
 function authRedirect(path: string, message: string, params?: Record<string, string | null | undefined>): never {
   const searchParams = new URLSearchParams({ message });
@@ -19,22 +20,6 @@ function authRedirect(path: string, message: string, params?: Record<string, str
 
 function registerRedirect(message: string, email: string): never {
   authRedirect("/register", message, { email });
-}
-
-function validatePassword(password: string) {
-  if (password.length < 10) {
-    return "La contraseña debe tener al menos 10 caracteres.";
-  }
-
-  if (!/[A-Z]/.test(password)) {
-    return "La contraseña debe incluir al menos una mayúscula.";
-  }
-
-  if (!/[^A-Za-z0-9]/.test(password)) {
-    return "La contraseña debe incluir al menos un símbolo.";
-  }
-
-  return null;
 }
 
 function translateAuthError(message: string) {

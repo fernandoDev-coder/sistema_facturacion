@@ -13,6 +13,7 @@ const navItems = [
   { href: "/budgets", key: "budgets" },
   { href: "/settings/company", key: "company" },
   { href: "/settings/billing", key: "plan" },
+  { href: "/settings/account", key: "account" },
 ] as const;
 
 type NavKey = (typeof navItems)[number]["key"] | "users";

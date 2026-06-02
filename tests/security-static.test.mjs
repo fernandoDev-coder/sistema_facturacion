@@ -64,6 +64,27 @@ test("special account access is pinned to the requested emails", () => {
   assert.match(profiles, /has_lifetime_access: true/);
 });
 
+test("self-service account deletion requires confirmation and blocks admins", () => {
+  const accountAction = readProjectFile("app/actions/account.ts");
+  const accountPage = readProjectFile("app/(private)/settings/account/page.tsx");
+  const schema = readProjectFile("supabase/schema.sql");
+  const types = readProjectFile("lib/types.ts");
+
+  assert.match(accountAction, /export async function saveAccountProfileAction/);
+  assert.match(accountAction, /full_name: fullName \|\| null/);
+  assert.match(accountAction, /export async function changePasswordAction/);
+  assert.match(accountAction, /validatePassword\(newPassword\)/);
+  assert.match(accountAction, /confirmationEmail !== userEmail/);
+  assert.match(accountAction, /profile\?\.is_super_admin/);
+  assert.match(accountAction, /subscriptions\.cancel\(profile\.stripe_subscription_id\)/);
+  assert.match(accountAction, /auth\.admin\.deleteUser\(user\.id\)/);
+  assert.match(schema, /alter table public\.profiles add column if not exists full_name text/);
+  assert.match(types, /full_name: string \| null/);
+  assert.match(accountPage, /name="full_name"/);
+  assert.match(accountPage, /name="confirm_email"/);
+  assert.match(accountPage, /Borrar mi cuenta definitivamente/);
+});
+
 test("company logo URLs are normalized and protocol-validated before storing", () => {
   const validators = readProjectFile("lib/validators.ts");
   const companyAction = readProjectFile("app/actions/company.ts");

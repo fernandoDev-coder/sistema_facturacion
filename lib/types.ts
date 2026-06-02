@@ -16,6 +16,7 @@ export type Database = {
         Row: {
           id: string;
           email: string | null;
+          full_name: string | null;
           role: ProfileRole;
           plan: ProfilePlan;
           is_super_admin: boolean;
@@ -30,6 +31,7 @@ export type Database = {
         Insert: {
           id: string;
           email?: string | null;
+          full_name?: string | null;
           role?: ProfileRole;
           plan?: ProfilePlan;
           is_super_admin?: boolean;
@@ -43,6 +45,7 @@ export type Database = {
         };
         Update: {
           email?: string | null;
+          full_name?: string | null;
           role?: ProfileRole;
           plan?: ProfilePlan;
           is_super_admin?: boolean;

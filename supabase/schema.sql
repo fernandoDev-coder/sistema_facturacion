@@ -3,6 +3,7 @@ create extension if not exists pgcrypto;
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   email text,
+  full_name text,
   role text not null default 'user',
   plan text not null default 'starter',
   is_super_admin boolean not null default false,
@@ -164,6 +165,7 @@ set public = excluded.public,
     allowed_mime_types = excluded.allowed_mime_types;
 
 alter table public.profiles add column if not exists role text not null default 'user';
+alter table public.profiles add column if not exists full_name text;
 alter table public.profiles add column if not exists plan text not null default 'starter';
 alter table public.profiles add column if not exists is_super_admin boolean not null default false;
 alter table public.profiles add column if not exists has_lifetime_access boolean not null default false;
@@ -346,7 +348,7 @@ on public.profiles,
 to authenticated;
 
 revoke update on public.profiles from authenticated;
-grant update (email, onboarding_completed_at) on public.profiles to authenticated;
+grant update (email, full_name, onboarding_completed_at) on public.profiles to authenticated;
 
 grant select, insert, update, delete
 on public.profiles,
