@@ -96,6 +96,24 @@ test("admin panel uses localized dictionary labels", () => {
   assert.match(i18n, /title: "System panel"/);
 });
 
+test("public SEO files expose only crawlable marketing pages", () => {
+  const layout = readProjectFile("app/layout.tsx");
+  const robots = readProjectFile("app/robots.ts");
+  const sitemap = readProjectFile("app/sitemap.ts");
+  const privateLayout = readProjectFile("app/(private)/layout.tsx");
+  const authLayout = readProjectFile("app/(auth)/layout.tsx");
+
+  assert.match(layout, /metadataBase: getSiteUrl\(\)/);
+  assert.match(layout, /Facturacion online/);
+  assert.match(robots, /disallow: \[/);
+  assert.match(robots, /"\/admin\/"/);
+  assert.match(robots, /getAbsoluteUrl\("\/sitemap\.xml"\)/);
+  assert.match(sitemap, /path: "\/pricing"/);
+  assert.doesNotMatch(sitemap, /\/dashboard|\/admin|\/settings/);
+  assert.match(privateLayout, /index: false/);
+  assert.match(authLayout, /index: false/);
+});
+
 test("company logo URLs are normalized and protocol-validated before storing", () => {
   const validators = readProjectFile("lib/validators.ts");
   const companyAction = readProjectFile("app/actions/company.ts");
