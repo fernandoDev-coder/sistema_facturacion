@@ -117,6 +117,18 @@ test("public SEO files expose only crawlable marketing pages", () => {
   assert.match(authLayout, /index: false/);
 });
 
+test("demo seed script only clears marked screenshot data", () => {
+  const seedDemo = readProjectFile("scripts/seed-demo-data.mjs");
+  const packageJson = JSON.parse(readProjectFile("package.json"));
+
+  assert.equal(packageJson.scripts["seed:demo-data"], "node scripts/seed-demo-data.mjs");
+  assert.match(seedDemo, /const DEMO_MARKER = "DEMO_SCREENSHOT_SEED"/);
+  assert.match(seedDemo, /\.eq\("notes", DEMO_MARKER\)/);
+  assert.match(seedDemo, /SEED_PRO_USER_EMAIL/);
+  assert.match(seedDemo, /document_type: "budget"/);
+  assert.match(seedDemo, /document_type: "invoice"/);
+});
+
 test("company logo URLs are normalized and protocol-validated before storing", () => {
   const validators = readProjectFile("lib/validators.ts");
   const companyAction = readProjectFile("app/actions/company.ts");
