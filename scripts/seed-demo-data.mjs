@@ -186,7 +186,7 @@ async function seedDocuments(userId, clients) {
       invoice_number: "F-2026-001",
       invoice_date: "2026-06-01",
       subject: "Servicios mensuales de gestion administrativa",
-      status: "paid",
+      status: "draft",
       items: [
         ["Gestion documental y facturacion", 420],
         ["Soporte y seguimiento mensual", 180],
@@ -198,7 +198,7 @@ async function seedDocuments(userId, clients) {
       invoice_number: "F-2026-002",
       invoice_date: "2026-06-02",
       subject: "Mantenimiento y soporte mensual",
-      status: "pending",
+      status: "draft",
       items: [
         ["Administracion mensual de incidencias", 350],
         ["Revision de documentacion y reportes", 125],
@@ -223,7 +223,7 @@ async function seedDocuments(userId, clients) {
       invoice_number: "P-2026-002",
       invoice_date: "2026-06-04",
       subject: "Optimización de reporting financiero",
-      status: "pending",
+      status: "draft",
       items: [
         ["Diseno de informes y plantillas", 280],
         ["Implementacion y revision final", 520],

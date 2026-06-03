@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { createAuditLog } from "@/lib/audit";
 import { canExportInvoices, getProfileForLimits } from "@/lib/plan-limits";
 import { createClient } from "@/lib/supabase/server";
 import { invoiceStatuses, type InvoiceStatus, type InvoiceWithCommunity } from "@/lib/types";
@@ -17,6 +18,11 @@ const csvHeaders = [
   "irpf_importe",
   "total",
   "estado",
+  "serie",
+  "numero_secuencial",
+  "emitida_en",
+  "anulada_en",
+  "estado_fiscal",
   "metodo_pago",
   "concepto",
   "notas",
@@ -106,6 +112,18 @@ export async function GET(request: Request) {
   const csv = toCsv(invoices);
   const filename = `facturas-${from}-a-${to}.csv`;
 
+  try {
+    await createAuditLog(supabase, user.id, "invoice_export", user.id, "csv_export_generated", {
+      from,
+      to,
+      status,
+      client_filtered: Boolean(clientId),
+      row_count: invoices.length,
+    });
+  } catch (error) {
+    return csvError((error as Error).message, 500);
+  }
+
   return new Response(`\uFEFF${csv}`, {
     status: 200,
     headers: {
@@ -130,6 +148,11 @@ function toCsv(invoices: InvoiceWithCommunity[]) {
     "",
     formatCsvNumber(invoice.total),
     invoice.status,
+    invoice.invoice_series ?? "",
+    invoice.sequential_number ?? "",
+    invoice.issued_at ?? "",
+    invoice.cancelled_at ?? "",
+    invoice.fiscal_status,
     "",
     invoice.subject,
     invoice.notes ?? "",

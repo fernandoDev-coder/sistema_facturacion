@@ -29,6 +29,22 @@ export default async function EditInvoicePage({
 
   if (!invoice) notFound();
 
+  if (invoice.status !== "draft") {
+    return (
+      <div className="space-y-6">
+        <div>
+          <Link href="/invoices" className={buttonClass({ variant: "ghost", size: "sm" })}>
+            {t.common.back}
+          </Link>
+          <h1 className="mt-2 text-2xl font-semibold">{t.pages.invoices.editTitle}</h1>
+        </div>
+        <section className="rounded-lg border border-zinc-200 bg-white p-4 text-sm leading-6 text-zinc-700 shadow-sm sm:p-6">
+          Esta factura ya ha sido emitida y no puede modificarse directamente para preservar la trazabilidad.
+        </section>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div>

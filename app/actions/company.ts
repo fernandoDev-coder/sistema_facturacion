@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { createAuditLog } from "@/lib/audit";
 import { nullableText } from "@/lib/format";
 import { getPlanLimits, getProfileForLimits } from "@/lib/plan-limits";
 import { createClient, requireUser } from "@/lib/supabase/server";
@@ -32,6 +33,8 @@ export async function saveCompanySettingsAction(formData: FormData) {
   const iban = cleanIban(nullableText(formData.get("iban")));
   const logoUrl = cleanLogoUrl(nullableText(formData.get("logo_url")));
   const logoFile = formData.get("logo_file");
+  const defaultInvoiceSeries = nullableText(formData.get("default_invoice_series"))?.trim().toUpperCase() || "F";
+  const nextInvoiceNumber = Math.max(1, Math.floor(Number(formData.get("next_invoice_number")) || 1));
   const attemptedLogo = Boolean(logoUrl.value) || (logoFile instanceof File && logoFile.size > 0);
   const [profile, { data: existingCompany }] = await Promise.all([
     getProfileForLimits(supabase, user.id),
@@ -74,16 +77,24 @@ export async function saveCompanySettingsAction(formData: FormData) {
     iban: iban.value,
     logo_url: limits.companyLogo ? uploadedLogoUrl ?? logoUrl.value : existingCompany?.logo_url ?? null,
     invoice_footer: nullableText(formData.get("invoice_footer")),
+    default_invoice_series: defaultInvoiceSeries,
+    next_invoice_number: nextInvoiceNumber,
     updated_at: new Date().toISOString(),
   };
 
-  const { error } = await supabase.from("company_settings").upsert(payload, {
-    onConflict: "owner_id",
-  });
+  const { data: savedCompany, error } = await supabase
+    .from("company_settings")
+    .upsert(payload, {
+      onConflict: "owner_id",
+    })
+    .select("id")
+    .single();
 
-  if (error) {
-    redirect(`/settings/company?message=${encodeURIComponent(error.message)}`);
+  if (error || !savedCompany) {
+    redirect(`/settings/company?message=${encodeURIComponent(error?.message ?? "No se pudo guardar la configuracion.")}`);
   }
+
+  await createAuditLog(supabase, user.id, "company_settings", savedCompany.id, "company_settings_updated");
 
   revalidatePath("/settings/company");
   revalidatePath("/invoices");

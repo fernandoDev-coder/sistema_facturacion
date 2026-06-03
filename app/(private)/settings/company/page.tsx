@@ -80,6 +80,23 @@ export default async function CompanySettingsPage({
               title={t.pages.company.ibanTitle}
               className="md:col-span-2"
             />
+            <Field
+              label="Serie de facturas"
+              name="default_invoice_series"
+              defaultValue={company?.default_invoice_series ?? "F"}
+              maxLength={12}
+              pattern="[A-Za-z0-9_-]{1,12}"
+              className="md:col-span-1"
+            />
+            <Field
+              label="Siguiente numero"
+              name="next_invoice_number"
+              type="number"
+              min={1}
+              step={1}
+              defaultValue={company?.next_invoice_number ?? 1}
+              className="md:col-span-1"
+            />
             {limits.companyLogo ? (
               <>
                 <Field

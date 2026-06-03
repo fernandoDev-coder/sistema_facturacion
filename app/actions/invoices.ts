@@ -2,12 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { createAuditLog } from "@/lib/audit";
 import { calculateTotals, documentNumber, nullableText, requiredText, toDecimal } from "@/lib/format";
 import { assertCanCreateDocuments, assertCanUseMonthlyBulkInvoices } from "@/lib/plan-limits";
 import { createClient, requireUser } from "@/lib/supabase/server";
 import type { Community, DocumentType, InvoiceStatus } from "@/lib/types";
 
-const allowedStatuses: InvoiceStatus[] = ["draft", "pending", "paid", "cancelled"];
+const allowedStatuses: InvoiceStatus[] = ["draft", "issued", "cancelled", "corrective"];
 const allowedDocumentTypes: DocumentType[] = ["invoice", "budget"];
 
 type ParsedLineItem = {
@@ -26,7 +27,7 @@ function parseInvoicePayload(formData: FormData) {
   const invoiceDate = requiredText(formData.get("invoice_date"));
   const month = Number(formData.get("month"));
   const year = Number(formData.get("year"));
-  const status = requiredText(formData.get("status")) as InvoiceStatus;
+  const status = parseDocumentStatus(formData.get("status"), documentType);
   const items = parseLineItems(formData);
 
   if (!communityId || !invoiceNumber || !invoiceDate || !month || !year) {
@@ -129,6 +130,25 @@ export async function deleteInvoiceAction(formData: FormData) {
   const redirectPath = safeDocumentRedirectPath(formData.get("redirect_path"));
   const supabase = await createClient();
 
+  const { data: existingInvoice, error: existingError } = await supabase
+    .from("invoices")
+    .select("id, document_type, status")
+    .eq("id", id)
+    .eq("owner_id", user.id)
+    .maybeSingle();
+
+  if (existingError || !existingInvoice) {
+    redirect(`${redirectPath}?message=${encodeURIComponent(existingError?.message ?? "Documento no encontrado.")}`);
+  }
+
+  if (existingInvoice.document_type === "invoice" && existingInvoice.status !== "draft") {
+    redirect(
+      `${redirectPath}?message=${encodeURIComponent(
+        "Las facturas emitidas no se eliminan. Si una factura emitida contiene un error, debe anularse o rectificarse para mantener la trazabilidad.",
+      )}`,
+    );
+  }
+
   const { data: deletedInvoice, error } = await supabase
     .from("invoices")
     .delete()
@@ -147,27 +167,69 @@ export async function deleteInvoiceAction(formData: FormData) {
   redirect(redirectPath);
 }
 
-export async function markInvoicePaidAction(formData: FormData) {
+export async function issueInvoiceAction(formData: FormData) {
   const user = await requireUser();
   const id = requiredText(formData.get("id"));
-  const supabase = await createClient();
 
-  const { data: updatedInvoice, error } = await supabase
-    .from("invoices")
-    .update({ status: "paid", updated_at: new Date().toISOString() })
-    .eq("id", id)
-    .eq("owner_id", user.id)
-    .eq("document_type", "invoice")
-    .select("id")
-    .maybeSingle();
-
-  if (error || !updatedInvoice) {
-    redirect(`/invoices?message=${encodeURIComponent(error?.message ?? "Factura no encontrada.")}`);
+  try {
+    await issueInvoice(id, user.id);
+  } catch (error) {
+    redirect(`/invoices?message=${encodeURIComponent((error as Error).message)}`);
   }
 
   revalidatePath("/invoices");
   revalidatePath("/dashboard");
-  redirect("/invoices");
+  redirect(`/invoices?message=${encodeURIComponent("Factura emitida con registro fiscal interno.")}`);
+}
+
+export async function cancelInvoiceAction(formData: FormData) {
+  const user = await requireUser();
+  const id = requiredText(formData.get("id"));
+  const reason = requiredText(formData.get("reason"));
+
+  try {
+    await cancelInvoice(id, user.id, reason);
+  } catch (error) {
+    redirect(`/invoices?message=${encodeURIComponent((error as Error).message)}`);
+  }
+
+  revalidatePath("/invoices");
+  revalidatePath("/dashboard");
+  redirect(`/invoices?message=${encodeURIComponent("Factura anulada con registro fiscal interno.")}`);
+}
+
+export async function issueInvoice(invoiceId: string, userId: string) {
+  const user = await requireUser();
+
+  if (user.id !== userId) {
+    throw new Error("Usuario no autorizado.");
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("issue_invoice", { p_invoice_id: invoiceId });
+
+  if (error || !data) {
+    throw new Error(error?.message ?? "No se pudo emitir la factura.");
+  }
+
+  return data;
+}
+
+export async function cancelInvoice(invoiceId: string, userId: string, reason: string) {
+  const user = await requireUser();
+
+  if (user.id !== userId) {
+    throw new Error("Usuario no autorizado.");
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("cancel_invoice", { p_invoice_id: invoiceId, p_reason: reason });
+
+  if (error || !data) {
+    throw new Error(error?.message ?? "No se pudo anular la factura.");
+  }
+
+  return data;
 }
 
 export async function createMonthlyInvoicesAction(formData: FormData) {
@@ -287,6 +349,10 @@ export async function createMonthlyInvoicesAction(formData: FormData) {
     redirect(`/invoices/create-month?message=${encodeURIComponent(error?.message ?? "No se pudieron crear las facturas.")}`);
   }
 
+  await Promise.all(
+    createdInvoices.map((invoice) => createAuditLog(supabase, user.id, "invoice", invoice.id, "invoice_created", { source: "monthly_bulk" })),
+  );
+
   const itemsByCommunity = new Map(rows.map((row) => [row.community_id, row.items]));
   const itemRows = createdInvoices.flatMap((invoice) =>
     (itemsByCommunity.get(invoice.community_id) ?? []).map((item) => ({
@@ -352,6 +418,8 @@ async function createDocumentAction(formData: FormData, documentType: DocumentTy
     redirect(`${basePath(documentType)}/new?message=${encodeURIComponent(itemError.message)}`);
   }
 
+  await createAuditLog(supabase, user.id, documentType, createdInvoice.id, documentType === "invoice" ? "invoice_created" : "budget_created");
+
   revalidateDocumentPaths(documentType);
   redirect(basePath(documentType));
 }
@@ -365,6 +433,26 @@ async function updateDocumentAction(formData: FormData, documentType: DocumentTy
 
   if (payload.document_type !== documentType) {
     throw new Error("Tipo de documento incoherente.");
+  }
+
+  const { data: existingDocument, error: existingError } = await supabase
+    .from("invoices")
+    .select("id, status")
+    .eq("id", id)
+    .eq("owner_id", user.id)
+    .eq("document_type", documentType)
+    .maybeSingle();
+
+  if (existingError || !existingDocument) {
+    redirect(`${basePath(documentType)}/${id}/edit?message=${encodeURIComponent(existingError?.message ?? "Documento no encontrado.")}`);
+  }
+
+  if (documentType === "invoice" && existingDocument.status !== "draft") {
+    redirect(
+      `${basePath(documentType)}/${id}/edit?message=${encodeURIComponent(
+        "Esta factura ya ha sido emitida y no puede modificarse directamente para preservar la trazabilidad.",
+      )}`,
+    );
   }
 
   const { items, ...invoicePayload } = payload;
@@ -399,6 +487,8 @@ async function updateDocumentAction(formData: FormData, documentType: DocumentTy
   if (itemError) {
     redirect(`${basePath(documentType)}/${id}/edit?message=${encodeURIComponent(itemError.message)}`);
   }
+
+  await createAuditLog(supabase, user.id, documentType, id, documentType === "invoice" ? "invoice_updated" : "budget_updated");
 
   revalidateDocumentPaths(documentType);
   redirect(basePath(documentType));
@@ -461,4 +551,22 @@ function safeDocumentRedirectPath(value: FormDataEntryValue | null) {
 function revalidateDocumentPaths(documentType: DocumentType) {
   revalidatePath(basePath(documentType));
   revalidatePath("/dashboard");
+}
+
+function parseDocumentStatus(value: FormDataEntryValue | null, documentType: DocumentType): InvoiceStatus {
+  const status = requiredText(value) as InvoiceStatus;
+
+  if (!allowedStatuses.includes(status)) {
+    throw new Error("Estado no valido.");
+  }
+
+  if (documentType === "invoice" && status !== "draft") {
+    throw new Error("Las facturas se crean y editan como borrador. Usa Emitir factura para cambiar su estado.");
+  }
+
+  if (documentType === "budget" && status !== "draft" && status !== "cancelled") {
+    throw new Error("Los presupuestos solo pueden estar en borrador o anulados.");
+  }
+
+  return status;
 }

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { createAuditLog } from "@/lib/audit";
 import { nullableText, requiredText, toDecimal } from "@/lib/format";
 import { assertCanCreateClient } from "@/lib/plan-limits";
 import { createClient, requireUser } from "@/lib/supabase/server";
@@ -56,14 +57,20 @@ export async function createClientAction(formData: FormData) {
     redirect(`/clients/new?message=${encodeURIComponent((error as Error).message)}`);
   }
 
-  const { error } = await supabase.from("communities").insert({
-    owner_id: user.id,
-    ...payload,
-  });
+  const { data: createdClient, error } = await supabase
+    .from("communities")
+    .insert({
+      owner_id: user.id,
+      ...payload,
+    })
+    .select("id")
+    .single();
 
-  if (error) {
-    redirect(`/clients/new?message=${encodeURIComponent(error.message)}`);
+  if (error || !createdClient) {
+    redirect(`/clients/new?message=${encodeURIComponent(error?.message ?? "No se pudo crear el cliente.")}`);
   }
+
+  await createAuditLog(supabase, user.id, "client", createdClient.id, "client_created");
 
   revalidatePath("/clients");
   redirect("/clients");
@@ -92,6 +99,8 @@ export async function updateClientAction(formData: FormData) {
   if (error || !updatedClient) {
     redirect(`/clients/${id}/edit?message=${encodeURIComponent(error?.message ?? "Cliente no encontrado.")}`);
   }
+
+  await createAuditLog(supabase, user.id, "client", id, "client_updated");
 
   revalidatePath("/clients");
   redirect("/clients");

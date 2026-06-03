@@ -74,9 +74,9 @@ const defaultLabels: DocumentFormLabels = {
 
 const defaultStatusLabels: Record<InvoiceStatus, string> = {
   draft: "Borrador",
-  pending: "Pendiente",
-  paid: "Pagada",
-  cancelled: "Cancelada",
+  issued: "Emitida",
+  cancelled: "Anulada",
+  corrective: "Rectificativa",
 };
 
 export function InvoiceForm({
@@ -92,6 +92,7 @@ export function InvoiceForm({
 }: InvoiceFormProps) {
   const today = new Date().toISOString().slice(0, 10);
   const label = labels[documentType];
+  const availableStatuses = documentType === "budget" ? invoiceStatuses.filter((status) => status.value === "draft" || status.value === "cancelled") : invoiceStatuses;
   const [communityId, setCommunityId] = useState(invoice?.community_id ?? communities[0]?.id ?? "");
   const [lineItems, setLineItems] = useState<LineItem[]>(() => {
     if (items.length) {
@@ -225,20 +226,30 @@ export function InvoiceForm({
           </select>
         </label>
         <Field label={labels.year} name="year" type="number" required defaultValue={invoice?.year ?? new Date().getFullYear()} />
-        <label className="block">
-          <span className="text-sm font-medium text-zinc-800">{labels.status}</span>
-          <select
-            name="status"
-            defaultValue={invoice?.status ?? "draft"}
-            className="mt-1 min-h-11 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
-          >
-            {invoiceStatuses.map((status) => (
-              <option key={status.value} value={status.value}>
-                {statusLabels[status.value]}
-              </option>
-            ))}
-          </select>
-        </label>
+        {documentType === "invoice" ? (
+          <label className="block">
+            <span className="text-sm font-medium text-zinc-800">{labels.status}</span>
+            <input type="hidden" name="status" value="draft" />
+            <span className="mt-1 flex min-h-11 w-full items-center rounded-md border border-zinc-200 bg-zinc-50 px-3 text-sm text-zinc-700">
+              {statusLabels.draft}
+            </span>
+          </label>
+        ) : (
+          <label className="block">
+            <span className="text-sm font-medium text-zinc-800">{labels.status}</span>
+            <select
+              name="status"
+              defaultValue={invoice?.status ?? "draft"}
+              className="mt-1 min-h-11 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
+            >
+              {availableStatuses.map((status) => (
+                <option key={status.value} value={status.value}>
+                  {statusLabels[status.value]}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
       </div>
 
       <section className="rounded-lg border border-zinc-200 bg-zinc-50 p-4">

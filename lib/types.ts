@@ -1,13 +1,17 @@
 export type DocumentType = "invoice" | "budget";
 
-export type InvoiceStatus = "draft" | "pending" | "paid" | "cancelled";
+export type InvoiceStatus = "draft" | "issued" | "cancelled" | "corrective";
+export type FiscalStatus = "not_generated" | "generated_internal" | "pending_aeat" | "accepted" | "rejected" | "error";
+export type FiscalRecordType = "alta" | "anulacion";
+export type FiscalRecordMode = "internal_pending_verifactu" | "verifactu" | "no_verifactu";
+export type AeatStatus = "not_submitted" | "pending" | "accepted" | "rejected" | "error";
 export type ExpenseDocumentStatus = "pending" | "paid" | "archived";
 
 export const invoiceStatuses: Array<{ value: InvoiceStatus; label: string }> = [
   { value: "draft", label: "Borrador" },
-  { value: "pending", label: "Pendiente" },
-  { value: "paid", label: "Pagada" },
-  { value: "cancelled", label: "Cancelada" },
+  { value: "issued", label: "Emitida" },
+  { value: "cancelled", label: "Anulada" },
+  { value: "corrective", label: "Rectificativa" },
 ];
 
 export type Database = {
@@ -155,6 +159,37 @@ export type Database = {
         Update: Partial<Omit<Subscription, "id" | "owner_id" | "created_at">>;
         Relationships: [];
       };
+      fiscal_records: {
+        Row: FiscalRecord;
+        Insert: Partial<FiscalRecord> & {
+          owner_id: string;
+          invoice_id: string;
+          record_type: FiscalRecordType;
+          record_payload: unknown;
+          chain_sequence: number;
+        };
+        Update: Partial<Omit<FiscalRecord, "id" | "owner_id" | "invoice_id" | "created_at">>;
+        Relationships: [
+          {
+            foreignKeyName: "fiscal_records_invoice_id_fkey";
+            columns: ["invoice_id"];
+            isOneToOne: false;
+            referencedRelation: "invoices";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      audit_logs: {
+        Row: AuditLog;
+        Insert: Partial<AuditLog> & {
+          owner_id: string;
+          entity_type: string;
+          entity_id: string;
+          action: string;
+        };
+        Update: Partial<Omit<AuditLog, "id" | "owner_id" | "created_at">>;
+        Relationships: [];
+      };
       billing_events: {
         Row: BillingEvent;
         Insert: Partial<BillingEvent> & {
@@ -171,6 +206,14 @@ export type Database = {
       is_super_admin: {
         Args: Record<string, never>;
         Returns: boolean;
+      };
+      issue_invoice: {
+        Args: { p_invoice_id: string };
+        Returns: Invoice;
+      };
+      cancel_invoice: {
+        Args: { p_invoice_id: string; p_reason: string };
+        Returns: Invoice;
       };
     };
     Enums: Record<string, never>;
@@ -198,6 +241,8 @@ export type CompanySettings = {
   iban: string | null;
   logo_url: string | null;
   invoice_footer: string | null;
+  default_invoice_series: string;
+  next_invoice_number: number;
   created_at: string;
   updated_at: string;
 };
@@ -244,6 +289,13 @@ export type Invoice = {
   vat_amount: number;
   total: number;
   status: InvoiceStatus;
+  issued_at: string | null;
+  cancelled_at: string | null;
+  corrected_invoice_id: string | null;
+  invoice_series: string | null;
+  sequential_number: number | null;
+  fiscal_record_id: string | null;
+  fiscal_status: FiscalStatus;
   notes: string | null;
   created_at: string;
   updated_at: string;
@@ -303,6 +355,36 @@ export type Subscription = {
   cancel_at_period_end: boolean;
   created_at: string;
   updated_at: string;
+};
+
+export type FiscalRecord = {
+  id: string;
+  owner_id: string;
+  invoice_id: string;
+  record_type: FiscalRecordType;
+  mode: FiscalRecordMode;
+  record_version: string;
+  record_payload: unknown;
+  record_xml: string | null;
+  hash: string | null;
+  previous_record_id: string | null;
+  previous_hash: string | null;
+  chain_sequence: number;
+  generated_at: string;
+  submitted_at: string | null;
+  aeat_status: AeatStatus;
+  aeat_response: unknown | null;
+  created_at: string;
+};
+
+export type AuditLog = {
+  id: string;
+  owner_id: string;
+  entity_type: string;
+  entity_id: string;
+  action: string;
+  metadata: unknown | null;
+  created_at: string;
 };
 
 export type BillingEvent = {

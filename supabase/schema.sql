@@ -32,6 +32,8 @@ create table if not exists public.company_settings (
   iban text,
   logo_url text,
   invoice_footer text,
+  default_invoice_series text not null default 'F',
+  next_invoice_number integer not null default 1,
   created_at timestamp with time zone not null default now(),
   updated_at timestamp with time zone not null default now(),
   constraint company_settings_owner_id_key unique (owner_id),
@@ -101,13 +103,29 @@ create table if not exists public.invoices (
   vat_rate numeric not null default 21,
   vat_amount numeric not null default 0,
   total numeric not null default 0,
-  status text not null default 'draft' check (status in ('draft', 'pending', 'paid', 'cancelled')),
+  status text not null default 'draft' check (status in ('draft', 'issued', 'cancelled', 'corrective')),
+  issued_at timestamp with time zone,
+  cancelled_at timestamp with time zone,
+  corrected_invoice_id uuid references public.invoices(id) on delete set null,
+  invoice_series text,
+  sequential_number integer,
+  fiscal_record_id uuid,
+  fiscal_status text not null default 'not_generated' check (
+    fiscal_status in ('not_generated', 'generated_internal', 'pending_aeat', 'accepted', 'rejected', 'error')
+  ),
   notes text,
   created_at timestamp with time zone not null default now(),
   updated_at timestamp with time zone not null default now()
 );
 
 alter table public.invoices add column if not exists document_type text not null default 'invoice';
+alter table public.invoices add column if not exists issued_at timestamp with time zone;
+alter table public.invoices add column if not exists cancelled_at timestamp with time zone;
+alter table public.invoices add column if not exists corrected_invoice_id uuid references public.invoices(id) on delete set null;
+alter table public.invoices add column if not exists invoice_series text;
+alter table public.invoices add column if not exists sequential_number integer;
+alter table public.invoices add column if not exists fiscal_record_id uuid;
+alter table public.invoices add column if not exists fiscal_status text not null default 'not_generated';
 
 create table if not exists public.recurring_plans (
   id uuid primary key default gen_random_uuid(),
@@ -158,6 +176,40 @@ create table if not exists public.invoice_items (
   sort_order int not null default 0,
   created_at timestamp with time zone not null default now()
 );
+
+create table if not exists public.fiscal_records (
+  id uuid primary key default gen_random_uuid(),
+  owner_id uuid not null references auth.users(id) on delete cascade,
+  invoice_id uuid not null references public.invoices(id) on delete cascade,
+  record_type text not null check (record_type in ('alta', 'anulacion')),
+  mode text not null default 'internal_pending_verifactu' check (mode in ('internal_pending_verifactu', 'verifactu', 'no_verifactu')),
+  record_version text not null default 'internal-v1',
+  record_payload jsonb not null,
+  record_xml text,
+  hash text,
+  previous_record_id uuid references public.fiscal_records(id) on delete set null,
+  previous_hash text,
+  chain_sequence integer not null,
+  generated_at timestamp with time zone not null default now(),
+  submitted_at timestamp with time zone,
+  aeat_status text not null default 'not_submitted' check (aeat_status in ('not_submitted', 'pending', 'accepted', 'rejected', 'error')),
+  aeat_response jsonb,
+  created_at timestamp with time zone not null default now()
+);
+
+create table if not exists public.audit_logs (
+  id uuid primary key default gen_random_uuid(),
+  owner_id uuid not null references auth.users(id) on delete cascade,
+  entity_type text not null,
+  entity_id uuid not null,
+  action text not null,
+  metadata jsonb,
+  created_at timestamp with time zone not null default now()
+);
+
+alter table public.invoices drop constraint if exists invoices_fiscal_record_id_fkey;
+alter table public.invoices add constraint invoices_fiscal_record_id_fkey
+foreign key (fiscal_record_id) references public.fiscal_records(id) on delete set null;
 
 create table if not exists public.subscriptions (
   id uuid primary key default gen_random_uuid(),
@@ -236,16 +288,32 @@ create index if not exists invoices_owner_year_month_idx on public.invoices(owne
 create index if not exists invoices_owner_document_year_idx on public.invoices(owner_id, document_type, year);
 create index if not exists invoices_owner_recurring_period_idx on public.invoices(owner_id, recurring_plan_id, year, month) where recurring_plan_id is not null;
 create index if not exists invoices_community_id_idx on public.invoices(community_id);
+create unique index if not exists invoices_owner_issued_number_key
+on public.invoices(owner_id, invoice_series, sequential_number)
+where document_type = 'invoice'
+  and status in ('issued', 'cancelled', 'corrective')
+  and invoice_series is not null
+  and sequential_number is not null;
 create index if not exists recurring_plans_owner_id_idx on public.recurring_plans(owner_id);
 create index if not exists recurring_plans_owner_active_idx on public.recurring_plans(owner_id, is_active);
 create index if not exists expense_documents_owner_issue_date_idx on public.expense_documents(owner_id, issue_date);
 create index if not exists expense_documents_owner_status_idx on public.expense_documents(owner_id, status);
 create index if not exists invoice_items_owner_id_idx on public.invoice_items(owner_id);
 create index if not exists invoice_items_invoice_id_idx on public.invoice_items(invoice_id);
+create index if not exists fiscal_records_owner_id_idx on public.fiscal_records(owner_id);
+create index if not exists fiscal_records_invoice_id_idx on public.fiscal_records(invoice_id);
+create index if not exists fiscal_records_generated_at_idx on public.fiscal_records(generated_at);
+create index if not exists fiscal_records_chain_sequence_idx on public.fiscal_records(chain_sequence);
+create unique index if not exists fiscal_records_owner_chain_sequence_key on public.fiscal_records(owner_id, chain_sequence);
+create index if not exists audit_logs_owner_id_idx on public.audit_logs(owner_id);
+create index if not exists audit_logs_entity_idx on public.audit_logs(entity_type, entity_id);
+create index if not exists audit_logs_created_at_idx on public.audit_logs(created_at);
 create index if not exists subscriptions_owner_id_idx on public.subscriptions(owner_id);
 create index if not exists subscriptions_stripe_customer_id_idx on public.subscriptions(stripe_customer_id);
 
 alter table public.company_settings add column if not exists logo_url text;
+alter table public.company_settings add column if not exists default_invoice_series text not null default 'F';
+alter table public.company_settings add column if not exists next_invoice_number integer not null default 1;
 
 alter table public.profiles drop constraint if exists profiles_role_check;
 alter table public.profiles add constraint profiles_role_check check (
@@ -315,6 +383,27 @@ alter table public.communities add constraint communities_default_vat_range_chec
 alter table public.invoices drop constraint if exists invoices_document_type_check;
 alter table public.invoices add constraint invoices_document_type_check check (
   document_type in ('invoice', 'budget')
+);
+
+alter table public.invoices drop constraint if exists invoices_status_check;
+update public.invoices
+set status = 'issued',
+    issued_at = coalesce(issued_at, updated_at, created_at)
+where document_type = 'invoice'
+  and status in ('pending', 'paid');
+
+update public.invoices
+set status = 'draft'
+where document_type = 'budget'
+  and status in ('pending', 'paid');
+
+alter table public.invoices add constraint invoices_status_check check (
+  status in ('draft', 'issued', 'cancelled', 'corrective')
+);
+
+alter table public.invoices drop constraint if exists invoices_fiscal_status_check;
+alter table public.invoices add constraint invoices_fiscal_status_check check (
+  fiscal_status in ('not_generated', 'generated_internal', 'pending_aeat', 'accepted', 'rejected', 'error')
 );
 
 alter table public.recurring_plans drop constraint if exists recurring_plans_frequency_check;
@@ -405,6 +494,8 @@ alter table public.invoices enable row level security;
 alter table public.recurring_plans enable row level security;
 alter table public.expense_documents enable row level security;
 alter table public.invoice_items enable row level security;
+alter table public.fiscal_records enable row level security;
+alter table public.audit_logs enable row level security;
 alter table public.subscriptions enable row level security;
 alter table public.billing_events enable row level security;
 
@@ -421,6 +512,9 @@ on public.profiles,
    public.subscriptions
 to authenticated;
 
+grant select on public.fiscal_records to authenticated;
+grant select, insert on public.audit_logs to authenticated;
+
 revoke update on public.profiles from authenticated;
 grant update (email, full_name, onboarding_completed_at) on public.profiles to authenticated;
 
@@ -432,6 +526,8 @@ on public.profiles,
    public.recurring_plans,
    public.expense_documents,
    public.invoice_items,
+   public.fiscal_records,
+   public.audit_logs,
    public.subscriptions,
    public.billing_events
 to service_role;
@@ -617,7 +713,7 @@ with check (
 drop policy if exists "invoices_delete_own" on public.invoices;
 create policy "invoices_delete_own"
 on public.invoices for delete
-using (auth.uid() = owner_id);
+using (auth.uid() = owner_id and (document_type = 'budget' or status = 'draft'));
 
 drop policy if exists "recurring_plans_select_own" on public.recurring_plans;
 create policy "recurring_plans_select_own"
@@ -737,6 +833,21 @@ using (
       and invoices.owner_id = auth.uid()
   )
 );
+
+drop policy if exists "fiscal_records_select_own" on public.fiscal_records;
+create policy "fiscal_records_select_own"
+on public.fiscal_records for select
+using (auth.uid() = owner_id);
+
+drop policy if exists "audit_logs_select_own" on public.audit_logs;
+create policy "audit_logs_select_own"
+on public.audit_logs for select
+using (auth.uid() = owner_id);
+
+drop policy if exists "audit_logs_insert_own" on public.audit_logs;
+create policy "audit_logs_insert_own"
+on public.audit_logs for insert
+with check (auth.uid() = owner_id);
 
 drop policy if exists "subscriptions_select_own" on public.subscriptions;
 create policy "subscriptions_select_own"

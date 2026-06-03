@@ -37,7 +37,7 @@ export default async function DashboardPage() {
     clients,
     documentsThisMonth,
     { count: invoices },
-    { count: pending },
+    { count: issued },
     { count: budgets },
     { data: recentInvoices },
     { data: recentBudgets },
@@ -55,7 +55,7 @@ export default async function DashboardPage() {
       .select("id", { count: "exact", head: true })
       .eq("owner_id", user.id)
       .eq("document_type", "invoice")
-      .eq("status", "pending"),
+      .eq("status", "issued"),
     supabase
       .from("invoices")
       .select("id", { count: "exact", head: true })
@@ -146,7 +146,7 @@ export default async function DashboardPage() {
           unlimitedLabel={t.common.noLimitPro}
           warning={documentWarning}
         />
-        <Metric label={t.pages.dashboard.invoicesCreated} value={String(invoices ?? 0)} hint={`${pending ?? 0} ${t.pages.dashboard.pending}`} />
+        <Metric label={t.pages.dashboard.invoicesCreated} value={String(invoices ?? 0)} hint={`${issued ?? 0} ${t.pages.dashboard.pending}`} />
         <Metric label={t.pages.dashboard.budgetsCreated} value={String(budgets ?? 0)} hint={isPro ? t.pages.dashboard.proActive : t.common.freePlan} />
       </section>
 

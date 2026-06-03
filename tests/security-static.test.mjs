@@ -21,9 +21,11 @@ test("server actions verify owned-row mutations before continuing", () => {
   const mutationChecks = [...clientActions.matchAll(/\.select\("id"\)\s*\.maybeSingle\(\)/g)].length
     + [...invoiceActions.matchAll(/\.select\("id"\)\s*\.maybeSingle\(\)/g)].length;
 
-  assert.ok(mutationChecks >= 5);
+  assert.ok(mutationChecks >= 4);
   assert.match(invoiceActions, /safeDocumentRedirectPath/);
   assert.match(invoiceActions, /Documento no encontrado/);
+  assert.match(invoiceActions, /existingInvoice\.document_type === "invoice" && existingInvoice\.status !== "draft"/);
+  assert.match(invoiceActions, /existingDocument\.status !== "draft"/);
   assert.match(clientActions, /Cliente no encontrado/);
 });
 
@@ -176,6 +178,92 @@ test("invoice CSV export is plan-gated and owner-scoped", () => {
   assert.match(exportRoute, /Content-Disposition/);
   assert.match(invoicesPage, /action="\/api\/export\/invoices\.csv"/);
   assert.match(invoicesPage, /t\.pages\.invoices\.exportUnavailable/);
+});
+
+test("invoice lifecycle is aligned with internal fiscal traceability", () => {
+  const invoiceActions = readProjectFile("app/actions/invoices.ts");
+  const invoiceForm = readProjectFile("components/invoice-form.tsx");
+  const invoicesPage = readProjectFile("app/(private)/invoices/page.tsx");
+  const editInvoicePage = readProjectFile("app/(private)/invoices/[id]/edit/page.tsx");
+  const schema = readProjectFile("supabase/schema.sql");
+  const migration = readProjectFile("supabase/migrations/20260603093000_verifactu_architecture_alignment.sql");
+  const types = readProjectFile("lib/types.ts");
+
+  assert.match(types, /export type InvoiceStatus = "draft" \| "issued" \| "cancelled" \| "corrective"/);
+  assert.match(schema, /create table if not exists public\.fiscal_records/);
+  assert.match(schema, /create table if not exists public\.audit_logs/);
+  assert.match(schema, /invoices_owner_issued_number_key/);
+  assert.match(migration, /create or replace function public\.issue_invoice\(p_invoice_id uuid\)/);
+  assert.match(migration, /create or replace function public\.cancel_invoice\(p_invoice_id uuid, p_reason text\)/);
+  assert.match(migration, /record_type', 'alta'/);
+  assert.match(migration, /record_type', 'anulacion'/);
+  assert.match(migration, /pg_advisory_xact_lock/);
+  assert.match(migration, /previous_record_id/);
+  assert.match(migration, /chain_sequence/);
+  assert.match(invoiceActions, /export async function issueInvoice\(invoiceId: string, userId: string\)/);
+  assert.match(invoiceActions, /export async function cancelInvoice\(invoiceId: string, userId: string, reason: string\)/);
+  assert.match(invoiceActions, /existingInvoice\.status !== "draft"/);
+  assert.match(invoiceActions, /existingDocument\.status !== "draft"/);
+  assert.match(invoiceActions, /invoice_created/);
+  assert.match(invoiceActions, /invoice_updated/);
+  assert.match(invoicesPage, /Emitir factura/);
+  assert.match(invoicesPage, /Anular factura/);
+  assert.match(invoicesPage, /Esta factura ya ha sido emitida y no puede modificarse directamente/);
+  assert.match(editInvoicePage, /invoice\.status !== "draft"/);
+  assert.match(invoiceForm, /name="status" value="draft"/);
+});
+
+test("CSV export and audit logs include fiscal fields without mutating invoices", () => {
+  const exportRoute = readProjectFile("app/api/export/invoices.csv/route.ts");
+  const audit = readProjectFile("lib/audit.ts");
+
+  assert.match(exportRoute, /"serie"/);
+  assert.match(exportRoute, /"numero_secuencial"/);
+  assert.match(exportRoute, /"emitida_en"/);
+  assert.match(exportRoute, /"anulada_en"/);
+  assert.match(exportRoute, /"estado_fiscal"/);
+  assert.match(exportRoute, /csv_export_generated/);
+  assert.match(exportRoute, /createAuditLog/);
+  assert.doesNotMatch(exportRoute, /\.update\(/);
+  assert.doesNotMatch(exportRoute, /\.delete\(/);
+  assert.match(audit, /metadata: metadata \?\? null/);
+});
+
+test("future AEAT, XML, QR and hash code is scaffolded without real submission", () => {
+  const hash = readProjectFile("lib/fiscal/hash.ts");
+  const qr = readProjectFile("lib/fiscal/qr.ts");
+  const xml = readProjectFile("lib/fiscal/aeat/xml.ts");
+  const client = readProjectFile("lib/fiscal/aeat/client.ts");
+  const roadmap = readProjectFile("docs/verifactu-roadmap.md");
+
+  assert.match(hash, /TODO VERIFACTU: validar campos exactos/);
+  assert.match(hash, /No debe presentarse como hash VeriFactu oficial/);
+  assert.match(qr, /TODO VERIFACTU: implementar QR unicamente/);
+  assert.match(qr, /throw new Error/);
+  assert.match(xml, /validar contra XSD oficial/);
+  assert.match(client, /Envio AEAT no implementado/);
+  assert.match(roadmap, /Real Decreto 1007\/2023/);
+  assert.match(roadmap, /Orden HAC\/1177\/2024/);
+  assert.doesNotMatch(client, /fetch\(/);
+  assert.doesNotMatch(client, /XMLHttpRequest|axios/);
+});
+
+test("public UI avoids prohibited VeriFactu and AEAT compliance claims", () => {
+  const publicText = [
+    readProjectFile("lib/i18n.ts"),
+    readProjectFile("app/page.tsx"),
+    readProjectFile("app/pricing/page.tsx"),
+    readProjectFile("components/document-print.tsx"),
+  ].join("\n");
+
+  assert.doesNotMatch(publicText, /cumple VeriFactu/i);
+  assert.doesNotMatch(publicText, /cumple AEAT/i);
+  assert.doesNotMatch(publicText, /software certificado/i);
+  assert.doesNotMatch(publicText, /certificado AEAT/i);
+  assert.doesNotMatch(publicText, /homologado/i);
+  assert.doesNotMatch(publicText, /factura verificable/i);
+  assert.doesNotMatch(publicText, /QR VeriFactu/i);
+  assert.doesNotMatch(publicText, /VERI\*FACTU/);
 });
 
 test("private beta disables real payments and removes legal placeholders", () => {

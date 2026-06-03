@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { deleteInvoiceAction, markInvoicePaidAction } from "@/app/actions/invoices";
+import { cancelInvoiceAction, deleteInvoiceAction, issueInvoiceAction } from "@/app/actions/invoices";
 import { buttonClass } from "@/components/button-styles";
 import { ConfirmForm } from "@/components/confirm-form";
 import { Message } from "@/components/message";
@@ -177,23 +177,32 @@ export default async function InvoicesPage({
                 <Link href={`/invoices/${invoice.id}/print`} className={buttonClass({ variant: "print", size: "full" })}>
                   {t.common.print}
                 </Link>
-                <Link href={`/invoices/${invoice.id}/edit`} className={buttonClass({ variant: "warning", size: "full" })}>
-                  {t.common.edit}
-                </Link>
-                {invoice.status !== "paid" ? (
-                  <form action={markInvoicePaidAction}>
+                {invoice.status === "draft" ? (
+                  <Link href={`/invoices/${invoice.id}/edit`} className={buttonClass({ variant: "warning", size: "full" })}>
+                    {t.common.edit}
+                  </Link>
+                ) : (
+                  <p className="rounded-md bg-zinc-50 px-3 py-2 text-sm text-zinc-600">
+                    Esta factura ya ha sido emitida y no puede modificarse directamente para preservar la trazabilidad.
+                  </p>
+                )}
+                {invoice.status === "draft" ? (
+                  <form action={issueInvoiceAction}>
                     <input type="hidden" name="id" value={invoice.id} />
-                    <button className={buttonClass({ variant: "success", size: "full" })}>{t.pages.invoices.paid}</button>
+                    <button className={buttonClass({ variant: "success", size: "full" })}>Emitir factura</button>
                   </form>
                 ) : null}
-                <ConfirmForm
-                  action={deleteInvoiceAction}
-                  id={invoice.id}
-                  label={t.common.delete}
-                  message={t.pages.invoices.deleteConfirm}
-                  fields={{ redirect_path: "/invoices" }}
-                  className="w-full"
-                />
+                {invoice.status === "issued" ? <CancelInvoiceForm id={invoice.id} full /> : null}
+                {invoice.status === "draft" ? (
+                  <ConfirmForm
+                    action={deleteInvoiceAction}
+                    id={invoice.id}
+                    label={t.common.delete}
+                    message={t.pages.invoices.deleteConfirm}
+                    fields={{ redirect_path: "/invoices" }}
+                    className="w-full"
+                  />
+                ) : null}
               </div>
             </article>
           ))}
@@ -234,23 +243,33 @@ export default async function InvoicesPage({
                       <Link href={`/invoices/${invoice.id}/print`} className={buttonClass({ variant: "print", size: "sm" })}>
                         {t.common.print}
                       </Link>
-                      <Link href={`/invoices/${invoice.id}/edit`} className={buttonClass({ variant: "warning", size: "sm" })}>
-                        {t.common.edit}
-                      </Link>
-                      {invoice.status !== "paid" ? (
-                        <form action={markInvoicePaidAction} className="inline">
+                      {invoice.status === "draft" ? (
+                        <Link href={`/invoices/${invoice.id}/edit`} className={buttonClass({ variant: "warning", size: "sm" })}>
+                          {t.common.edit}
+                        </Link>
+                      ) : null}
+                      {invoice.status === "draft" ? (
+                        <form action={issueInvoiceAction} className="inline">
                           <input type="hidden" name="id" value={invoice.id} />
-                          <button className={buttonClass({ variant: "success", size: "sm" })}>{t.pages.invoices.paid}</button>
+                          <button className={buttonClass({ variant: "success", size: "sm" })}>Emitir factura</button>
                         </form>
                       ) : null}
-                      <ConfirmForm
-                        action={deleteInvoiceAction}
-                        id={invoice.id}
-                        label={t.common.delete}
-                        message={t.pages.invoices.deleteConfirm}
-                        fields={{ redirect_path: "/invoices" }}
-                      />
+                      {invoice.status === "issued" ? <CancelInvoiceForm id={invoice.id} /> : null}
+                      {invoice.status === "draft" ? (
+                        <ConfirmForm
+                          action={deleteInvoiceAction}
+                          id={invoice.id}
+                          label={t.common.delete}
+                          message={t.pages.invoices.deleteConfirm}
+                          fields={{ redirect_path: "/invoices" }}
+                        />
+                      ) : null}
                     </div>
+                    {invoice.status !== "draft" ? (
+                      <p className="mt-2 max-w-sm text-right text-xs leading-5 text-zinc-500">
+                        Esta factura ya ha sido emitida y no puede modificarse directamente para preservar la trazabilidad.
+                      </p>
+                    ) : null}
                   </td>
                 </tr>
               ))
@@ -265,6 +284,21 @@ export default async function InvoicesPage({
         </table>
       </div>
     </div>
+  );
+}
+
+function CancelInvoiceForm({ id, full = false }: { id: string; full?: boolean }) {
+  return (
+    <form action={cancelInvoiceAction} className={full ? "col-span-2 grid gap-2" : "inline-flex max-w-xs gap-2"}>
+      <input type="hidden" name="id" value={id} />
+      <input
+        name="reason"
+        required
+        placeholder="Motivo"
+        className="min-h-10 rounded-md border border-zinc-300 px-3 text-sm"
+      />
+      <button className={buttonClass({ variant: "danger", size: full ? "full" : "sm" })}>Anular factura</button>
+    </form>
   );
 }
 
