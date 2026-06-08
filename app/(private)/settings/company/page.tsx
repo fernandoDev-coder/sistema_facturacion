@@ -1,6 +1,7 @@
 import { saveCompanySettingsAction } from "@/app/actions/company";
 import { FormButton } from "@/components/form-button";
 import { Message } from "@/components/message";
+import { PostalCodeFields } from "@/components/postal-code-fields";
 import { getDictionary, getLocale } from "@/lib/i18n";
 import { getPlanLimits } from "@/lib/plan-limits";
 import { getCurrentProfile } from "@/lib/profiles";
@@ -46,18 +47,12 @@ export default async function CompanySettingsPage({
               title={t.pages.company.taxTitle}
             />
             <Field label={t.pages.company.address} name="address" defaultValue={company?.address} className="md:col-span-2" />
-            <Field
-              label={t.pages.company.postalCode}
-              name="postal_code"
-              defaultValue={company?.postal_code}
-              inputMode="numeric"
-              maxLength={5}
-              pattern="[0-9]{5}"
-              placeholder="28001"
-              title={t.pages.company.postalTitle}
+            <PostalCodeFields
+              labels={t.pages.company}
+              postalCode={company?.postal_code}
+              city={company?.city}
+              province={company?.province}
             />
-            <Field label={t.pages.company.city} name="city" defaultValue={company?.city} />
-            <Field label={t.pages.company.province} name="province" defaultValue={company?.province} />
             <Field label={t.pages.company.email} name="email" type="email" defaultValue={company?.email} />
             <Field
               label={t.pages.company.phone}

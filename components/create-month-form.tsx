@@ -218,9 +218,10 @@ export function CreateMonthForm({
                   <span className="mb-1 block text-sm font-medium text-zinc-800 sm:hidden">{labels.base}</span>
                   <input
                     name={`amount_${community.id}`}
-                    type="number"
-                    step="0.01"
+                    type="text"
+                    inputMode="decimal"
                     defaultValue="0"
+                    placeholder="0,00"
                     className="min-h-11 w-full rounded-md border border-zinc-300 px-3 text-sm"
                   />
                 </td>
@@ -228,9 +229,10 @@ export function CreateMonthForm({
                   <span className="mb-1 block text-sm font-medium text-zinc-800 sm:hidden">{labels.vat}</span>
                   <input
                     name={`vat_${community.id}`}
-                    type="number"
-                    step="0.01"
+                    type="text"
+                    inputMode="decimal"
                     defaultValue={community.default_vat ?? 21}
+                    placeholder="21"
                     className="min-h-11 w-full rounded-md border border-zinc-300 px-3 text-sm"
                   />
                 </td>

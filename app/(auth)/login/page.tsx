@@ -47,6 +47,11 @@ export default async function LoginPage({
               showLabel={t.auth.showPassword}
               hideLabel={t.auth.hidePassword}
             />
+            <div className="text-right">
+              <Link href="/forgot-password" className="text-sm font-medium text-slate-900 hover:underline">
+                {t.auth.forgotPassword}
+              </Link>
+            </div>
             <RememberSessionField title={t.auth.rememberTitle} description={t.auth.rememberDescription} />
             <FormButton className="w-full">{t.auth.enter}</FormButton>
           </form>

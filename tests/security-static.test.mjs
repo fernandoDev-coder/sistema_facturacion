@@ -162,6 +162,21 @@ test("company logo uploads are size-limited and stored in a user-scoped bucket",
   assert.match(nextConfig, /bodySizeLimit: "3mb"/);
 });
 
+test("client and company forms suggest postal codes from city input", () => {
+  const postalCodeFields = readProjectFile("components/postal-code-fields.tsx");
+  const communityForm = readProjectFile("components/community-form.tsx");
+  const companyPage = readProjectFile("app/(private)/settings/company/page.tsx");
+  const postalCodeSuggestions = readProjectFile("lib/postal-code-suggestions.ts");
+
+  assert.match(postalCodeFields, /getPostalCodeSuggestions\(city, province\)/);
+  assert.match(postalCodeFields, /onBlur=\{handleCityBlur\}/);
+  assert.match(postalCodeFields, /name="postal_code"/);
+  assert.match(communityForm, /<PostalCodeFields/);
+  assert.match(companyPage, /<PostalCodeFields/);
+  assert.match(postalCodeSuggestions, /city: "Valencia"/);
+  assert.match(postalCodeSuggestions, /postalCodes: \["46900"\]/);
+});
+
 test("invoice CSV export is plan-gated and owner-scoped", () => {
   const exportRoute = readProjectFile("app/api/export/invoices.csv/route.ts");
   const invoicesPage = readProjectFile("app/(private)/invoices/page.tsx");
@@ -211,6 +226,17 @@ test("invoice lifecycle is aligned with internal fiscal traceability", () => {
   assert.match(invoicesPage, /Esta factura ya ha sido emitida y no puede modificarse directamente/);
   assert.match(editInvoicePage, /invoice\.status !== "draft"/);
   assert.match(invoiceForm, /name="status" value="draft"/);
+});
+
+test("invoice amount fields accept comma decimal input", () => {
+  const invoiceForm = readProjectFile("components/invoice-form.tsx");
+  const createMonthForm = readProjectFile("components/create-month-form.tsx");
+
+  assert.match(invoiceForm, /inputMode="decimal"/);
+  assert.match(invoiceForm, /placeholder="0,00"/);
+  assert.match(createMonthForm, /inputMode="decimal"/);
+  assert.match(createMonthForm, /placeholder="0,00"/);
+  assert.match(readProjectFile("lib/format.ts"), /\.replace\(",", "\."\)/);
 });
 
 test("CSV export and audit logs include fiscal fields without mutating invoices", () => {

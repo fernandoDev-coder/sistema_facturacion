@@ -1,4 +1,5 @@
 import { FormButton } from "@/components/form-button";
+import { PostalCodeFields } from "@/components/postal-code-fields";
 import type { Community } from "@/lib/types";
 
 type CommunityFormLabels = {
@@ -18,6 +19,9 @@ type CommunityFormLabels = {
   taxTitle: string;
   postalTitle: string;
   phoneTitle: string;
+  postalSuggestion: string;
+  postalMultiple: string;
+  postalApply: string;
 };
 
 type CommunityFormProps = {
@@ -43,6 +47,9 @@ const defaultLabels: CommunityFormLabels = {
   taxTitle: "Introduce un DNI, NIE o CIF válido. Ejemplos: 12345678Z, X1234567L, B46066361, N0027810A.",
   postalTitle: "Debe tener 5 dígitos.",
   phoneTitle: "Introduce un teléfono español válido.",
+  postalSuggestion: "Código postal sugerido para esta localidad:",
+  postalMultiple: "Esta localidad puede tener varios códigos postales. Elige uno o escribe el correcto.",
+  postalApply: "Usar",
 };
 
 export function CommunityForm({ action, community, labels = defaultLabels }: CommunityFormProps) {
@@ -62,18 +69,12 @@ export function CommunityForm({ action, community, labels = defaultLabels }: Com
           title={labels.taxTitle}
         />
         <Field label={labels.address} name="address" defaultValue={community?.address} className="md:col-span-2" />
-        <Field
-          label={labels.postalCode}
-          name="postal_code"
-          defaultValue={community?.postal_code}
-          inputMode="numeric"
-          maxLength={5}
-          pattern="[0-9]{5}"
-          placeholder="28001"
-          title={labels.postalTitle}
+        <PostalCodeFields
+          labels={labels}
+          postalCode={community?.postal_code}
+          city={community?.city}
+          province={community?.province}
         />
-        <Field label={labels.city} name="city" defaultValue={community?.city} />
-        <Field label={labels.province} name="province" defaultValue={community?.province} />
         <Field label={labels.email} name="email" type="email" defaultValue={community?.email} />
         <Field
           label={labels.phone}

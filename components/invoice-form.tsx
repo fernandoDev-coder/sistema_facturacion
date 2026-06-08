@@ -279,22 +279,24 @@ export function InvoiceForm({
               <label className="block">
                 <span className="text-sm font-medium text-zinc-800">{labels.base}</span>
                 <input
-                  type="number"
-                  step="0.01"
+                  type="text"
+                  inputMode="decimal"
                   required
                   value={item.amount}
                   onChange={(event) => updateItem(index, { amount: event.target.value })}
+                  placeholder="0,00"
                   className="mt-1 min-h-11 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
                 />
               </label>
               <label className="block">
                 <span className="text-sm font-medium text-zinc-800">{labels.vatPercent}</span>
                 <input
-                  type="number"
-                  step="0.01"
+                  type="text"
+                  inputMode="decimal"
                   required
                   value={item.vat_rate}
                   onChange={(event) => updateItem(index, { vat_rate: event.target.value })}
+                  placeholder="21"
                   className="mt-1 min-h-11 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
                 />
               </label>

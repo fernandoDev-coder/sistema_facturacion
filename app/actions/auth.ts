@@ -35,23 +35,41 @@ function translateAuthError(message: string) {
 }
 
 async function getEmailRedirectTo() {
+  const baseUrl = await getBaseUrl();
+  if (baseUrl) {
+    return `${baseUrl}/login?message=${encodeURIComponent("Email verificado. Ya puedes iniciar sesión.")}`;
+  }
+
+  return undefined;
+}
+
+async function getPasswordRecoveryRedirectTo() {
+  const baseUrl = await getBaseUrl();
+  if (baseUrl) {
+    return `${baseUrl}/auth/callback?next=/reset-password`;
+  }
+
+  return undefined;
+}
+
+async function getBaseUrl() {
   const configuredSiteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? process.env.SITE_URL;
   if (configuredSiteUrl) {
-    return `${configuredSiteUrl.replace(/\/$/, "")}/login?message=${encodeURIComponent("Email verificado. Ya puedes iniciar sesión.")}`;
+    return configuredSiteUrl.replace(/\/$/, "");
   }
 
   const headerList = await headers();
   const host = headerList.get("x-forwarded-host") ?? headerList.get("host");
 
   if (!host) {
-    return undefined;
+    return null;
   }
 
   const protocol =
     headerList.get("x-forwarded-proto") ??
     (host.startsWith("localhost") || host.startsWith("127.0.0.1") ? "http" : "https");
 
-  return `${protocol}://${host}/login?message=${encodeURIComponent("Email verificado. Ya puedes iniciar sesión.")}`;
+  return `${protocol}://${host}`;
 }
 
 export async function loginAction(formData: FormData) {
@@ -156,6 +174,61 @@ export async function resendVerificationAction(formData: FormData) {
   }
 
   authRedirect("/login", "Te hemos reenviado el email de verificación.");
+}
+
+export async function requestPasswordResetAction(formData: FormData) {
+  const email = String(formData.get("email") ?? "").trim();
+
+  if (!email) {
+    authRedirect("/forgot-password", "Introduce el email de tu cuenta.");
+  }
+
+  const supabase = await createClient({ persistSession: false });
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: await getPasswordRecoveryRedirectTo(),
+  });
+
+  if (error) {
+    authRedirect("/forgot-password", translateAuthError(error.message), { email });
+  }
+
+  authRedirect(
+    "/forgot-password",
+    "Si existe una cuenta con ese email, te enviaremos un enlace para crear una nueva contraseña.",
+    { email },
+  );
+}
+
+export async function updateRecoveredPasswordAction(formData: FormData) {
+  const password = String(formData.get("password") ?? "");
+  const passwordConfirm = String(formData.get("password_confirm") ?? "");
+
+  const passwordError = validatePassword(password);
+  if (passwordError) {
+    authRedirect("/reset-password", passwordError);
+  }
+
+  if (password !== passwordConfirm) {
+    authRedirect("/reset-password", "Las contraseñas no coinciden.");
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    authRedirect("/forgot-password", "El enlace de recuperación ha caducado o no es válido. Solicita uno nuevo.");
+  }
+
+  const { error } = await supabase.auth.updateUser({ password });
+
+  if (error) {
+    authRedirect("/reset-password", translateAuthError(error.message));
+  }
+
+  await supabase.auth.signOut();
+  authRedirect("/login", "Contraseña actualizada. Ya puedes iniciar sesión.");
 }
 
 export async function completeOnboardingAction() {
