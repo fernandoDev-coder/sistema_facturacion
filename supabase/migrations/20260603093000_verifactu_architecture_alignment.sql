@@ -489,3 +489,5 @@ $$;
 
 grant execute on function public.issue_invoice(uuid) to authenticated;
 grant execute on function public.cancel_invoice(uuid, text) to authenticated;
+
+notify pgrst, 'reload schema';

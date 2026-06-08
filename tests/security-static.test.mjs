@@ -210,6 +210,7 @@ test("invoice lifecycle is aligned with internal fiscal traceability", () => {
   assert.match(schema, /invoices_owner_issued_number_key/);
   assert.match(migration, /create or replace function public\.issue_invoice\(p_invoice_id uuid\)/);
   assert.match(migration, /create or replace function public\.cancel_invoice\(p_invoice_id uuid, p_reason text\)/);
+  assert.match(migration, /notify pgrst, 'reload schema'/);
   assert.match(migration, /record_type', 'alta'/);
   assert.match(migration, /record_type', 'anulacion'/);
   assert.match(migration, /pg_advisory_xact_lock/);
@@ -217,6 +218,9 @@ test("invoice lifecycle is aligned with internal fiscal traceability", () => {
   assert.match(migration, /chain_sequence/);
   assert.match(invoiceActions, /export async function issueInvoice\(invoiceId: string, userId: string\)/);
   assert.match(invoiceActions, /export async function cancelInvoice\(invoiceId: string, userId: string, reason: string\)/);
+  assert.match(invoiceActions, /translateFiscalRpcError/);
+  assert.match(invoiceActions, /PGRST202/);
+  assert.match(invoiceActions, /20260603093000_verifactu_architecture_alignment\.sql/);
   assert.match(invoiceActions, /existingInvoice\.status !== "draft"/);
   assert.match(invoiceActions, /existingDocument\.status !== "draft"/);
   assert.match(invoiceActions, /invoice_created/);

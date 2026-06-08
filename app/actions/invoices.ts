@@ -209,7 +209,7 @@ export async function issueInvoice(invoiceId: string, userId: string) {
   const { data, error } = await supabase.rpc("issue_invoice", { p_invoice_id: invoiceId });
 
   if (error || !data) {
-    throw new Error(error?.message ?? "No se pudo emitir la factura.");
+    throw new Error(translateFiscalRpcError(error, "emitir"));
   }
 
   return data;
@@ -226,7 +226,7 @@ export async function cancelInvoice(invoiceId: string, userId: string, reason: s
   const { data, error } = await supabase.rpc("cancel_invoice", { p_invoice_id: invoiceId, p_reason: reason });
 
   if (error || !data) {
-    throw new Error(error?.message ?? "No se pudo anular la factura.");
+    throw new Error(translateFiscalRpcError(error, "anular"));
   }
 
   return data;
@@ -569,4 +569,17 @@ function parseDocumentStatus(value: FormDataEntryValue | null, documentType: Doc
   }
 
   return status;
+}
+
+function translateFiscalRpcError(error: { code?: string; message?: string } | null, action: "emitir" | "anular") {
+  const message = error?.message ?? `No se pudo ${action} la factura.`;
+
+  if (
+    error?.code === "PGRST202" ||
+    (message.includes("schema cache") && (message.includes("issue_invoice") || message.includes("cancel_invoice")))
+  ) {
+    return "Falta aplicar la migracion fiscal de Supabase. Ejecuta supabase/migrations/20260603093000_verifactu_architecture_alignment.sql en la base de datos y recarga la cache de esquema antes de emitir o anular facturas.";
+  }
+
+  return message;
 }
