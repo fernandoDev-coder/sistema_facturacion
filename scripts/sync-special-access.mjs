@@ -1,37 +1,30 @@
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
-import { createClient } from "@supabase/supabase-js";
+import { loadEnvFile, normalizeRequiredEmail, redactEmail, requireEnv } from "./admin-script-utils.mjs";
 
-const specialAccounts = new Map([
-  [
-    "fernandolaramillan@gmail.com",
-    {
+const env = loadEnvFile(".env.local");
+const supabaseUrl = requireEnv(env, "NEXT_PUBLIC_SUPABASE_URL");
+const serviceRoleKey = requireEnv(env, "SUPABASE_SERVICE_ROLE_KEY");
+const accessAssignments = [
+  {
+    email: normalizeRequiredEmail(env, "SUPER_ADMIN_EMAIL"),
+    access: {
       role: "super_admin",
       plan: "enterprise",
       is_super_admin: true,
       has_lifetime_access: true,
     },
-  ],
-  [
-    "jandry38@hotmail.es",
-    {
+  },
+  {
+    email: normalizeRequiredEmail(env, "LIFETIME_PREMIUM_EMAIL"),
+    access: {
       role: "user",
       plan: "premium",
       is_super_admin: false,
       has_lifetime_access: true,
     },
-  ],
-]);
+  },
+];
 
-loadEnvFile(".env.local");
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-if (!supabaseUrl || !serviceRoleKey) {
-  throw new Error("Faltan NEXT_PUBLIC_SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY en .env.local.");
-}
-
+const { createClient } = await import("@supabase/supabase-js");
 const admin = createClient(supabaseUrl, serviceRoleKey, {
   auth: {
     autoRefreshToken: false,
@@ -41,28 +34,28 @@ const admin = createClient(supabaseUrl, serviceRoleKey, {
 
 const users = await listAllUsers();
 
-for (const [email, access] of specialAccounts) {
+for (const { email, access } of accessAssignments) {
   const user = users.find((candidate) => candidate.email?.trim().toLowerCase() === email);
 
   if (!user) {
-    console.log(`${email}: no existe en Auth; se sincronizara cuando se registre.`);
+    console.log(`${redactEmail(email)}: no existe en Auth; no se aplicaron cambios.`);
     continue;
   }
 
   const { error } = await admin.from("profiles").upsert(
     {
       id: user.id,
-      email: user.email ?? email,
+      email,
       ...access,
     },
     { onConflict: "id" },
   );
 
   if (error) {
-    throw new Error(`${email}: ${error.message}`);
+    throw new Error(`No se pudo sincronizar una cuenta privilegiada: ${error.message}`);
   }
 
-  console.log(`${email}: sincronizado como ${access.role} con plan ${access.plan}.`);
+  console.log(`${redactEmail(email)}: acceso sincronizado.`);
 }
 
 async function listAllUsers() {
@@ -86,26 +79,3 @@ async function listAllUsers() {
   }
 }
 
-function loadEnvFile(path) {
-  const envPath = resolve(path);
-  const content = readFileSync(envPath, "utf8");
-
-  for (const line of content.split(/\r?\n/)) {
-    if (!line || line.trim().startsWith("#")) {
-      continue;
-    }
-
-    const separatorIndex = line.indexOf("=");
-
-    if (separatorIndex === -1) {
-      continue;
-    }
-
-    const key = line.slice(0, separatorIndex).trim();
-    const value = line.slice(separatorIndex + 1).trim();
-
-    if (key && !process.env[key]) {
-      process.env[key] = value;
-    }
-  }
-}

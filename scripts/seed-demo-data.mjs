@@ -1,23 +1,23 @@
-import { readFileSync, existsSync } from "node:fs";
-import { resolve } from "node:path";
-import { createClient } from "@supabase/supabase-js";
+import {
+  assertSafeSeedEnvironment,
+  loadEnvFile,
+  normalizeEmailValue,
+  normalizeRequiredEmail,
+  redactEmail,
+  requireEnv,
+} from "./admin-script-utils.mjs";
 
 const DEMO_MARKER = "DEMO_SCREENSHOT_SEED";
 const env = loadEnvFile(".env.local");
-const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL;
-const serviceRoleKey = env.SUPABASE_SERVICE_ROLE_KEY;
-const email = process.argv[2] ?? env.SEED_PRO_USER_EMAIL;
+const supabaseUrl = requireEnv(env, "NEXT_PUBLIC_SUPABASE_URL");
+const serviceRoleKey = requireEnv(env, "SUPABASE_SERVICE_ROLE_KEY");
+const email = process.argv[2]
+  ? normalizeEmailValue(process.argv[2], "email de seed demo")
+  : normalizeRequiredEmail(env, "SEED_PRO_USER_EMAIL");
 
-for (const [name, value] of Object.entries({
-  NEXT_PUBLIC_SUPABASE_URL: supabaseUrl,
-  SUPABASE_SERVICE_ROLE_KEY: serviceRoleKey,
-  SEED_PRO_USER_EMAIL: email,
-})) {
-  if (!value) {
-    throw new Error(`Falta ${name} en .env.local o como argumento.`);
-  }
-}
+assertSafeSeedEnvironment(env, supabaseUrl);
 
+const { createClient } = await import("@supabase/supabase-js");
 const admin = createClient(supabaseUrl, serviceRoleKey, {
   auth: {
     autoRefreshToken: false,
@@ -28,7 +28,7 @@ const admin = createClient(supabaseUrl, serviceRoleKey, {
 const user = await findUserByEmail(email);
 
 if (!user) {
-  throw new Error(`No existe el usuario ${email}. Ejecuta primero npm run seed:pro-user.`);
+  throw new Error("No existe el usuario seed. Ejecuta primero npm run seed:pro-user.");
 }
 
 await ensureProProfile(user.id, email);
@@ -38,7 +38,7 @@ await clearExistingDemoData(user.id);
 const clients = await seedClients(user.id);
 await seedDocuments(user.id, clients);
 
-console.log(`Datos demo listos para ${email}`);
+console.log(`Datos demo listos para ${redactEmail(email)}`);
 console.log("Creados: 3 clientes, 4 facturas/presupuestos y sus lineas.");
 
 async function ensureProProfile(userId, userEmail) {
@@ -330,24 +330,3 @@ function roundMoney(value) {
   return Math.round(value * 100) / 100;
 }
 
-function loadEnvFile(path) {
-  const absolutePath = resolve(path);
-
-  if (!existsSync(absolutePath)) {
-    throw new Error(`No existe ${path}.`);
-  }
-
-  return Object.fromEntries(
-    readFileSync(absolutePath, "utf8")
-      .split(/\r?\n/)
-      .map((line) => line.trim())
-      .filter((line) => line && !line.startsWith("#"))
-      .map((line) => {
-        const index = line.indexOf("=");
-        const key = index === -1 ? line : line.slice(0, index);
-        const rawValue = index === -1 ? "" : line.slice(index + 1);
-        const value = rawValue.replace(/^["']|["']$/g, "");
-        return [key, value];
-      }),
-  );
-}

@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import test from "node:test";
-import { createClient } from "@supabase/supabase-js";
 
 const requiredEnv = [
   "NEXT_PUBLIC_SUPABASE_URL",
@@ -14,6 +13,7 @@ const requiredEnv = [
 
 const hasIntegrationEnv = requiredEnv.every((key) => process.env[key]);
 const integrationTest = hasIntegrationEnv ? test : test.skip;
+const { createClient } = hasIntegrationEnv ? await import("@supabase/supabase-js") : { createClient: null };
 
 integrationTest("RLS blocks cross-user reads, creates, updates, and deletes", async () => {
   const userA = createTestClient();
@@ -130,7 +130,79 @@ integrationTest("RLS blocks cross-user reads, creates, updates, and deletes", as
   }
 });
 
+integrationTest("RLS blocks self-service profile privilege escalation", async () => {
+  const userA = createTestClient();
+  const ownerA = await signIn(userA, "SECURITY_TEST_USER_A_EMAIL", "SECURITY_TEST_USER_A_PASSWORD");
+
+  const { data: before, error: beforeError } = await userA
+    .from("profiles")
+    .select("role,plan,is_super_admin,has_lifetime_access,stripe_customer_id,stripe_subscription_id,subscription_status")
+    .eq("id", ownerA)
+    .single();
+
+  assert.ifError(beforeError);
+
+  for (const update of [
+    { role: "super_admin" },
+    { plan: "premium" },
+    { is_super_admin: true },
+    { has_lifetime_access: true },
+    { stripe_customer_id: "cus_forbidden" },
+    { stripe_subscription_id: "sub_forbidden" },
+    { subscription_status: "active" },
+  ]) {
+    const { error } = await userA.from("profiles").update(update).eq("id", ownerA);
+    assert.ok(error, `Expected profile update to fail for ${Object.keys(update)[0]}`);
+  }
+
+  const { data: after, error: afterError } = await userA
+    .from("profiles")
+    .select("role,plan,is_super_admin,has_lifetime_access,stripe_customer_id,stripe_subscription_id,subscription_status")
+    .eq("id", ownerA)
+    .single();
+
+  assert.ifError(afterError);
+  assert.deepEqual(after, before);
+});
+
+integrationTest("company logo storage blocks cross-user writes and deletes", async () => {
+  const userA = createTestClient();
+  const userB = createTestClient();
+  const ownerA = await signIn(userA, "SECURITY_TEST_USER_A_EMAIL", "SECURITY_TEST_USER_A_PASSWORD");
+  const ownerB = await signIn(userB, "SECURITY_TEST_USER_B_EMAIL", "SECURITY_TEST_USER_B_PASSWORD");
+  const objectPath = `${ownerA}/${randomUUID()}.png`;
+  const pngBytes = Buffer.from("89504e470d0a1a0a0000000d49484452", "hex");
+
+  assert.notEqual(ownerA, ownerB);
+
+  try {
+    const { error: uploadOwnError } = await userA.storage.from("company-logos").upload(objectPath, pngBytes, {
+      contentType: "image/png",
+      upsert: false,
+    });
+    assert.ifError(uploadOwnError);
+
+    const { error: crossUploadError } = await userB.storage
+      .from("company-logos")
+      .upload(`${ownerA}/${randomUUID()}.png`, pngBytes, {
+        contentType: "image/png",
+        upsert: false,
+      });
+    assert.ok(crossUploadError);
+
+    const { data: deletedByOtherUser, error: crossDeleteError } = await userB
+      .storage
+      .from("company-logos")
+      .remove([objectPath]);
+    assert.ok(crossDeleteError || deletedByOtherUser?.length === 0);
+  } finally {
+    await userA.storage.from("company-logos").remove([objectPath]);
+  }
+});
+
 function createTestClient() {
+  assert.ok(createClient);
+
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
     auth: {
       autoRefreshToken: false,

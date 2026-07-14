@@ -1,10 +1,15 @@
-import { readFileSync, existsSync } from "node:fs";
-import { resolve } from "node:path";
-import { createClient } from "@supabase/supabase-js";
+import {
+  assertSafeSeedEnvironment,
+  loadEnvFile,
+  normalizeRequiredEmail,
+  redactEmail,
+  requireEnv,
+  validatePrivatePassword,
+} from "./admin-script-utils.mjs";
 
 const env = loadEnvFile(".env.local");
-const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL;
-const serviceRoleKey = env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseUrl = requireEnv(env, "NEXT_PUBLIC_SUPABASE_URL");
+const serviceRoleKey = requireEnv(env, "SUPABASE_SERVICE_ROLE_KEY");
 const seedKind = process.argv[2] ?? "free";
 const seedConfig = {
   free: {
@@ -33,20 +38,13 @@ if (!seedConfig) {
 
 const emailKey = `${seedConfig.envPrefix}_EMAIL`;
 const passwordKey = `${seedConfig.envPrefix}_PASSWORD`;
-const email = env[emailKey];
-const password = env[passwordKey];
+const email = normalizeRequiredEmail(env, emailKey);
+const password = requireEnv(env, passwordKey);
 
-for (const [name, value] of Object.entries({
-  NEXT_PUBLIC_SUPABASE_URL: supabaseUrl,
-  SUPABASE_SERVICE_ROLE_KEY: serviceRoleKey,
-  [emailKey]: email,
-  [passwordKey]: password,
-})) {
-  if (!value) {
-    throw new Error(`Falta ${name} en .env.local.`);
-  }
-}
+validatePrivatePassword(password, passwordKey);
+assertSafeSeedEnvironment(env, supabaseUrl);
 
+const { createClient } = await import("@supabase/supabase-js");
 const admin = createClient(supabaseUrl, serviceRoleKey, {
   auth: {
     autoRefreshToken: false,
@@ -71,7 +69,7 @@ if (!user) {
 }
 
 if (!user) {
-  throw new Error(`No se pudo crear o encontrar el usuario ${email}.`);
+  throw new Error("No se pudo crear o encontrar el usuario seed.");
 }
 
 const { error: updateAuthError } = await admin.auth.admin.updateUserById(user.id, {
@@ -103,16 +101,7 @@ if (profileError) {
   throw profileError;
 }
 
-await admin
-  .from("subscriptions")
-  .update({
-    status: "canceled",
-    cancel_at_period_end: true,
-    updated_at: new Date().toISOString(),
-  })
-  .eq("owner_id", user.id);
-
-console.log(`Usuario ${seedConfig.label} listo: ${email}`);
+console.log(`Usuario ${seedConfig.label} listo: ${redactEmail(email)}`);
 console.log(`Plan: ${seedConfig.plan}`);
 
 async function findUserByEmail(targetEmail) {
@@ -143,24 +132,3 @@ async function findUserByEmail(targetEmail) {
   return null;
 }
 
-function loadEnvFile(path) {
-  const absolutePath = resolve(path);
-
-  if (!existsSync(absolutePath)) {
-    throw new Error(`No existe ${path}.`);
-  }
-
-  return Object.fromEntries(
-    readFileSync(absolutePath, "utf8")
-      .split(/\r?\n/)
-      .map((line) => line.trim())
-      .filter((line) => line && !line.startsWith("#"))
-      .map((line) => {
-        const index = line.indexOf("=");
-        const key = index === -1 ? line : line.slice(0, index);
-        const rawValue = index === -1 ? "" : line.slice(index + 1);
-        const value = rawValue.replace(/^["']|["']$/g, "");
-        return [key, value];
-      }),
-  );
-}

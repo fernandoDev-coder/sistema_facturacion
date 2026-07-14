@@ -1,5 +1,6 @@
 "use server";
 
+import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createAuditLog } from "@/lib/audit";
@@ -128,10 +129,9 @@ async function uploadCompanyLogo(
   }
 
   const storage = supabase.storage.from(LOGO_BUCKET);
-  const objectPath = `${ownerId}/logo.${extension}`;
-  const oldPaths = Object.values(allowedLogoTypes)
-    .map((typeExtension) => `${ownerId}/logo.${typeExtension}`)
-    .filter((path) => path !== objectPath);
+  const objectPath = `${ownerId}/${randomUUID()}.${extension}`;
+  const { data: existingFiles } = await storage.list(ownerId, { limit: 100 });
+  const oldPaths = (existingFiles ?? []).map((file) => `${ownerId}/${file.name}`);
 
   if (oldPaths.length) {
     await storage.remove(oldPaths);
@@ -140,7 +140,7 @@ async function uploadCompanyLogo(
   const { error } = await storage.upload(objectPath, Buffer.from(await value.arrayBuffer()), {
     cacheControl: "60",
     contentType: value.type,
-    upsert: true,
+    upsert: false,
   });
 
   if (error) {

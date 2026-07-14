@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test": "node --test tests/*.test.mjs",
+    "sync:special-access": "node scripts/sync-special-access.mjs",
     "seed:free-user": "node scripts/seed-free-user.mjs free",
     "seed:pro-user": "node scripts/seed-free-user.mjs pro",
     "seed:premium-user": "node scripts/seed-free-user.mjs premium",

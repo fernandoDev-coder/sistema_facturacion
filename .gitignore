@@ -35,6 +35,10 @@ next-dev.*.log
 .env*
 !.env.example
 
+# private local runbooks and operational notes
+/docs/private/
+/private/
+
 # vercel
 .vercel
 

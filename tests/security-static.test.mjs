@@ -1,9 +1,33 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { extname } from "node:path";
 import test from "node:test";
 
 function readProjectFile(path) {
   return readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
+}
+
+function listTextProjectFiles(dir = new URL("../", import.meta.url)) {
+  const ignoredDirs = new Set([".git", ".next", "node_modules"]);
+  const textExtensions = new Set([".js", ".mjs", ".ts", ".tsx", ".sql", ".md", ".yml", ".yaml", ".json", ".example"]);
+  const files = [];
+
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    if (entry.isDirectory()) {
+      if (!ignoredDirs.has(entry.name)) {
+        files.push(...listTextProjectFiles(new URL(`${entry.name}/`, dir)));
+      }
+      continue;
+    }
+
+    const extension = extname(entry.name);
+    if (textExtensions.has(extension) || entry.name === ".env.example") {
+      files.push(new URL(entry.name, dir));
+    }
+  }
+
+  return files;
 }
 
 test("client search avoids raw PostgREST OR filter interpolation", () => {
@@ -55,15 +79,16 @@ test("registration keeps the email after password validation errors", () => {
   assert.match(registerPage, /defaultValue=\{email\}/);
 });
 
-test("special account access is pinned to the requested emails", () => {
+test("privileged access is not granted from hardcoded emails", () => {
   const profiles = readProjectFile("lib/profiles.ts");
+  const syncScript = readProjectFile("scripts/sync-special-access.mjs");
 
-  assert.match(profiles, /const systemAdminEmail = "fernandolaramillan@gmail\.com"/);
-  assert.match(profiles, /const complimentaryPremiumEmail = "jandry38@hotmail\.es"/);
-  assert.match(profiles, /return \[systemAdminEmail\]/);
-  assert.doesNotMatch(profiles, /SUPER_ADMIN_EMAILS/);
-  assert.match(profiles, /plan: "premium"/);
-  assert.match(profiles, /has_lifetime_access: true/);
+  assert.doesNotMatch(profiles, /@[A-Z0-9.-]+\.[A-Z]{2,}/i);
+  assert.doesNotMatch(profiles, /getSpecialAccessUpdate|system.+Admin.+Email|complimentary.+Premium.+Email/);
+  assert.match(profiles, /return \[\]/);
+  assert.match(syncScript, /normalizeRequiredEmail\(env, "SUPER_ADMIN_EMAIL"\)/);
+  assert.match(syncScript, /normalizeRequiredEmail\(env, "LIFETIME_PREMIUM_EMAIL"\)/);
+  assert.match(syncScript, /redactEmail/);
 });
 
 test("self-service account deletion requires confirmation and blocks admins", () => {
@@ -154,12 +179,96 @@ test("company logo uploads are size-limited and stored in a user-scoped bucket",
   assert.match(companyAction, /"image\/png": "png"/);
   assert.match(companyAction, /"image\/jpeg": "jpg"/);
   assert.match(companyAction, /"image\/webp": "webp"/);
+  assert.match(companyAction, /randomUUID\(\)/);
+  assert.match(companyAction, /storage\.list\(ownerId/);
   assert.match(companyAction, /storage\.upload\(objectPath, Buffer\.from\(await value\.arrayBuffer\(\)\)/);
+  assert.match(companyAction, /upsert: false/);
   assert.match(settingsPage, /encType="multipart\/form-data"/);
   assert.match(settingsPage, /name="logo_file"/);
   assert.match(schema, /insert into storage\.buckets \(id, name, public, file_size_limit, allowed_mime_types\)/);
   assert.match(schema, /\(storage\.foldername\(name\)\)\[1\] = auth\.uid\(\)::text/);
   assert.match(nextConfig, /bodySizeLimit: "3mb"/);
+});
+
+test("profile access fields are protected and audited in SQL", () => {
+  const schema = readProjectFile("supabase/schema.sql");
+  const migration = readProjectFile("supabase/migrations/20260714153000_harden_profile_access.sql");
+  const sql = `${schema}\n${migration}`;
+
+  assert.match(sql, /create or replace function public\.protect_profile_sensitive_fields\(\)/);
+  assert.match(sql, /profile access fields can only be changed by service role/);
+  assert.match(sql, /before insert or update on public\.profiles/);
+  assert.match(sql, /revoke update on public\.profiles from authenticated/);
+  assert.match(sql, /grant update \(email, full_name, onboarding_completed_at\) on public\.profiles to authenticated/);
+  assert.match(sql, /revoke insert on public\.profiles from authenticated/);
+  assert.match(sql, /profile_access_changed/);
+  assert.match(sql, /has_lifetime_access/);
+});
+
+test("seed scripts are blocked outside explicit development or test runs", () => {
+  const helper = readProjectFile("scripts/admin-script-utils.mjs");
+  const seedUser = readProjectFile("scripts/seed-free-user.mjs");
+  const seedDemo = readProjectFile("scripts/seed-demo-data.mjs");
+  const result = spawnSync(process.execPath, ["scripts/seed-free-user.mjs", "free"], {
+    cwd: new URL("../", import.meta.url),
+    env: {
+      ...process.env,
+      NODE_ENV: "production",
+      APP_ENV: "development",
+      ALLOW_SEED_DATA: "true",
+      NEXT_PUBLIC_SUPABASE_URL: "https://example.supabase.co",
+      SUPABASE_SERVICE_ROLE_KEY: "dummy",
+      SEED_FREE_USER_EMAIL: "seed@example.test",
+      SEED_FREE_USER_PASSWORD: "TestPassword123!",
+    },
+    encoding: "utf8",
+  });
+
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr + result.stdout, /NODE_ENV=production/);
+  assert.match(helper, /ALLOW_SEED_DATA !== "true"/);
+  assert.match(helper, /APP_ENV debe ser development o test/);
+  assert.match(helper, /CONFIRM_SEED_PROJECT/);
+  assert.doesNotMatch(seedUser, /subscriptions"\)\s*\.update/);
+  assert.match(seedUser, /validatePrivatePassword/);
+  assert.match(seedDemo, /assertSafeSeedEnvironment/);
+});
+
+test("repository does not contain published default passwords or privileged personal emails", () => {
+  const combined = listTextProjectFiles()
+    .map((file) => readFileSync(file, "utf8"))
+    .join("\n");
+  const publishedSeedPassword = ["Test", "Gratis", "2026", "!"].join("");
+  const privilegedEmailNames = new RegExp(`${["fernando", "laramillan"].join("")}|${["jandry", "38"].join("")}`, "i");
+  const oldContactEmail = new RegExp(`${["faktudash", "gmail"].join("@").replace("@", "@")}\\.com`, "i");
+
+  assert.doesNotMatch(combined, new RegExp(publishedSeedPassword.replace("!", "\\!")));
+  assert.doesNotMatch(combined, privilegedEmailNames);
+  assert.doesNotMatch(combined, oldContactEmail);
+  assert.doesNotMatch(readProjectFile(".env.example"), /SEED_FREE_USER_PASSWORD=.+/);
+  assert.match(readProjectFile(".env.example"), /SUPER_ADMIN_EMAIL=\n/);
+  assert.match(readProjectFile(".env.example"), /LIFETIME_PREMIUM_EMAIL=\n/);
+});
+
+test("service role stays in server-only modules or node scripts", () => {
+  const serverModule = readProjectFile("lib/supabase/server.ts");
+  const serviceRoleReferences = listTextProjectFiles()
+    .filter((file) => readFileSync(file, "utf8").includes("SUPABASE_SERVICE_ROLE_KEY"))
+    .map((file) => decodeURIComponent(file.pathname).replaceAll("\\", "/"));
+
+  assert.match(serverModule, /import "server-only"/);
+  assert.doesNotMatch(readProjectFile(".env.example"), /NEXT_PUBLIC_.*SERVICE_ROLE/i);
+  assert.ok(
+    serviceRoleReferences.every((path) => {
+      const normalized = decodeURIComponent(path).replaceAll("\\", "/");
+      return normalized.includes("/scripts/")
+        || normalized.endsWith("/lib/supabase/server.ts")
+        || normalized.endsWith("/.env.example")
+        || normalized.endsWith("/README.md")
+        || normalized.endsWith("/SECURITY_CLEANUP.md")
+        || normalized.endsWith("/tests/security-static.test.mjs");
+    }),
+  );
 });
 
 test("client and company forms suggest postal codes from city input", () => {
@@ -327,9 +436,10 @@ test("private beta disables real payments and removes legal placeholders", () =>
   assert.match(billingPage, /betaAccessHref/);
   assert.match(pricingPage, /betaAccessHref/);
   assert.match(homePage, /t\.home\.betaNotice/);
-  assert.match(betaConfig, /legal: "faktudash@gmail\.com"/);
-  assert.match(betaConfig, /privacy: "faktudash@gmail\.com"/);
-  assert.match(betaConfig, /support: "faktudash@gmail\.com"/);
+  assert.match(betaConfig, /NEXT_PUBLIC_LEGAL_CONTACT_EMAIL/);
+  assert.match(betaConfig, /NEXT_PUBLIC_PRIVACY_CONTACT_EMAIL/);
+  assert.match(betaConfig, /NEXT_PUBLIC_SUPPORT_CONTACT_EMAIL/);
+  assert.doesNotMatch(betaConfig, /gmail|hotmail/i);
   assert.match(footer, /contactEmails\.legal/);
   assert.match(footer, /contactEmails\.privacy/);
   assert.match(footer, /contactEmails\.support/);
@@ -337,4 +447,42 @@ test("private beta disables real payments and removes legal placeholders", () =>
   assert.match(legalPages, /no utiliza cookies de analisis/);
   assert.doesNotMatch(packageJson, /@vercel\/analytics|@vercel\/speed-insights|posthog|hotjar|clarity/i);
   assert.doesNotMatch(layout + homePage, /GoogleAnalytics|gtag|fbq|posthog|hotjar|clarity/i);
+});
+
+test("CSP separates development from production and keeps core hardening directives", () => {
+  const nextConfig = readProjectFile("next.config.ts");
+
+  assert.match(nextConfig, /const scriptSrc = isDevelopment/);
+  assert.match(nextConfig, /\["'self'", "'unsafe-inline'", "'unsafe-eval'", "https:\/\/js\.stripe\.com"\]/);
+  assert.match(nextConfig, /\["'self'", "https:\/\/js\.stripe\.com"\]/);
+  assert.match(nextConfig, /\["frame-ancestors", "'none'"\]/);
+  assert.match(nextConfig, /\["object-src", "'none'"\]/);
+  assert.match(nextConfig, /\["base-uri", "'self'"\]/);
+  assert.match(nextConfig, /\["form-action", "'self'"\]/);
+});
+
+test("administrative routes and Stripe webhook enforce authorization boundaries", () => {
+  const adminPage = readProjectFile("app/(private)/admin/users/page.tsx");
+  const webhook = readProjectFile("app/api/stripe/webhook/route.ts");
+
+  assert.match(adminPage, /requireUser\(\)/);
+  assert.match(adminPage, /profile\?\.is_super_admin/);
+  assert.match(adminPage, /redirect\("\/dashboard"\)/);
+  assert.match(webhook, /request\.headers\.get\("stripe-signature"\)/);
+  assert.match(webhook, /stripe\.webhooks\.constructEvent\(body, signature, webhookSecret\)/);
+});
+
+test("CI runs security checks and Dependabot is configured", () => {
+  const ci = readProjectFile(".github/workflows/ci.yml");
+  const dependabot = readProjectFile(".github/dependabot.yml");
+
+  assert.match(ci, /npm ci/);
+  assert.match(ci, /npm run lint/);
+  assert.match(ci, /npm test/);
+  assert.match(ci, /npm run build/);
+  assert.match(ci, /npm audit --audit-level=high/);
+  assert.match(ci, /gitleaks\/gitleaks-action/);
+  assert.match(ci, /contents: read/);
+  assert.match(dependabot, /package-ecosystem: "npm"/);
+  assert.match(dependabot, /package-ecosystem: "github-actions"/);
 });

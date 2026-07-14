@@ -1,7 +1,7 @@
 export const contactEmails = {
-  legal: "faktudash@gmail.com",
-  privacy: "faktudash@gmail.com",
-  support: "faktudash@gmail.com",
+  legal: getPublicContactEmail("NEXT_PUBLIC_LEGAL_CONTACT_EMAIL"),
+  privacy: getPublicContactEmail("NEXT_PUBLIC_PRIVACY_CONTACT_EMAIL"),
+  support: getPublicContactEmail("NEXT_PUBLIC_SUPPORT_CONTACT_EMAIL"),
 } as const;
 
 export const betaAccessHref = `mailto:${contactEmails.support}?subject=Solicitud%20de%20acceso%20beta%20FaktuDash`;
@@ -20,4 +20,8 @@ export function isStripeLiveEnabled() {
 
 export function getPaymentUnavailableMessage() {
   return "Los pagos todavia no estan disponibles durante la beta privada.";
+}
+
+function getPublicContactEmail(key: string) {
+  return process.env[key] || "contact@example.com";
 }
