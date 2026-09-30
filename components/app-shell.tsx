@@ -3,6 +3,7 @@ import { logoutAction } from "@/app/actions/auth";
 import { BrandLogo } from "@/components/brand-logo";
 import { buttonClass } from "@/components/button-styles";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { MobileNavigation } from "@/components/mobile-navigation";
 import { getDictionary } from "@/lib/i18n";
 import type { Locale } from "@/lib/i18n-config";
 
@@ -63,26 +64,19 @@ export function AppShell({
       </aside>
 
       <header className="sticky top-0 z-20 border-b border-zinc-200 bg-white/95 px-4 py-3 backdrop-blur lg:hidden print:hidden">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center justify-between gap-3">
           <BrandLogo href="/dashboard" markClassName="h-7 w-7" textClassName="text-base" />
           <div className="flex min-w-0 items-center gap-2">
             <LanguageSwitcher locale={locale} labels={languageLabels} />
-            <form action={logoutAction}>
-              <button className={buttonClass({ variant: "secondary", size: "sm" })}>{t.nav.logoutShort}</button>
-            </form>
+            <MobileNavigation
+              items={visibleNavItems.map((item) => ({ href: item.href, label: t.nav[item.key] }))}
+              menuLabel={t.experience.menu}
+              closeLabel={t.experience.close}
+              logoutLabel={t.nav.logout}
+              logoutAction={logoutAction}
+            />
           </div>
         </div>
-        <nav className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
-          {visibleNavItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="flex min-h-10 items-center justify-center rounded-md border border-zinc-200 bg-white px-2 py-2 text-center text-xs font-medium leading-tight text-zinc-700 hover:bg-zinc-50 sm:text-sm"
-            >
-              {t.nav[item.key]}
-            </Link>
-          ))}
-        </nav>
       </header>
 
       <main className="lg:pl-64 print:p-0">

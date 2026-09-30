@@ -64,6 +64,7 @@ export default async function EditInvoicePage({
           labels={t.forms.document}
           months={t.months}
           statusLabels={t.statuses}
+          autosaveLabels={t.experience}
         />
       </section>
     </div>

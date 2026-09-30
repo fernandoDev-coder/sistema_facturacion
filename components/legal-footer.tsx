@@ -12,6 +12,7 @@ export async function LegalFooter({ className = "" }: { className?: string }) {
     { href: "/legal/terminos", label: t.legalFooter.terms },
   ];
   const contactLinks = [
+    { href: "/contact", label: t.legalFooter.contact },
     { href: `mailto:${contactEmails.support}`, label: `${t.legalFooter.support}: ${contactEmails.support}` },
     { href: `mailto:${contactEmails.legal}`, label: `${t.legalFooter.legalContact}: ${contactEmails.legal}` },
     { href: `mailto:${contactEmails.privacy}`, label: `${t.legalFooter.privacyContact}: ${contactEmails.privacy}` },
@@ -32,9 +33,9 @@ export async function LegalFooter({ className = "" }: { className?: string }) {
         </div>
         <nav className="flex flex-wrap gap-x-4 gap-y-2 text-xs">
           {contactLinks.map((link) => (
-            <a key={link.href} href={link.href} className="hover:text-zinc-950 hover:underline">
+            <Link key={`${link.href}-${link.label}`} href={link.href} className="hover:text-zinc-950 hover:underline">
               {link.label}
-            </a>
+            </Link>
           ))}
         </nav>
       </div>

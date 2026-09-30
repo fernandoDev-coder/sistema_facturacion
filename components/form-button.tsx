@@ -24,7 +24,8 @@ export function FormButton({
       disabled={pending}
       className={buttonClass({ variant, size: className.includes("w-full") ? "full" : "md", className })}
     >
-      {pending ? pendingText : children}
+      {pending ? <span className="spinner" aria-hidden="true" /> : null}
+      <span>{pending ? pendingText : children}</span>
     </button>
   );
 }

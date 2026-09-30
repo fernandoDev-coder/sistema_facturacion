@@ -4,6 +4,7 @@ import { getAbsoluteUrl } from "@/lib/site-url";
 const publicRoutes = [
   { path: "/", priority: 1, changeFrequency: "weekly" },
   { path: "/pricing", priority: 0.8, changeFrequency: "monthly" },
+  { path: "/contact", priority: 0.6, changeFrequency: "monthly" },
   { path: "/legal/aviso-legal", priority: 0.3, changeFrequency: "yearly" },
   { path: "/legal/privacidad", priority: 0.3, changeFrequency: "yearly" },
   { path: "/legal/cookies", priority: 0.3, changeFrequency: "yearly" },

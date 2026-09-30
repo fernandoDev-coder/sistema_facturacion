@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { AutosaveForm } from "@/components/autosave-form";
 import { buttonClass } from "@/components/button-styles";
 import { FormButton } from "@/components/form-button";
 import { money, monthNames as defaultMonthNames } from "@/lib/format";
@@ -40,6 +41,7 @@ type InvoiceFormProps = {
   labels?: Readonly<DocumentFormLabels>;
   months?: readonly string[];
   statusLabels?: Readonly<Record<InvoiceStatus, string>>;
+  autosaveLabels?: { saved: string; restored: string };
 };
 
 type LineItem = {
@@ -89,6 +91,7 @@ export function InvoiceForm({
   labels = defaultLabels,
   months = defaultMonthNames,
   statusLabels = defaultStatusLabels,
+  autosaveLabels,
 }: InvoiceFormProps) {
   const today = new Date().toISOString().slice(0, 10);
   const label = labels[documentType];
@@ -171,7 +174,13 @@ export function InvoiceForm({
   }
 
   return (
-    <form action={action} className="space-y-6">
+    <AutosaveForm
+      action={action}
+      storageKey={`faktudash-${documentType}-${invoice?.id ?? "new"}`}
+      savedLabel={autosaveLabels?.saved}
+      restoredLabel={autosaveLabels?.restored}
+      className="space-y-6"
+    >
       {invoice ? <input type="hidden" name="id" value={invoice.id} /> : null}
       <input type="hidden" name="document_type" value={documentType} />
       <input type="hidden" name="subject" value={summarySubject} />
@@ -269,6 +278,7 @@ export function InvoiceForm({
               <label className="block">
                 <span className="text-sm font-medium text-zinc-800">{labels.concept}</span>
                 <textarea
+                  name="draft_item_description"
                   required
                   rows={3}
                   value={item.description}
@@ -279,6 +289,7 @@ export function InvoiceForm({
               <label className="block">
                 <span className="text-sm font-medium text-zinc-800">{labels.base}</span>
                 <input
+                  name="draft_item_amount"
                   type="text"
                   inputMode="decimal"
                   required
@@ -291,6 +302,7 @@ export function InvoiceForm({
               <label className="block">
                 <span className="text-sm font-medium text-zinc-800">{labels.vatPercent}</span>
                 <input
+                  name="draft_item_vat"
                   type="text"
                   inputMode="decimal"
                   required
@@ -332,7 +344,7 @@ export function InvoiceForm({
       </label>
 
       <FormButton className="w-full sm:w-auto">{invoice ? labels.save : `${labels.create} ${label}`}</FormButton>
-    </form>
+    </AutosaveForm>
   );
 }
 

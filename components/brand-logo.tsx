@@ -29,7 +29,7 @@ export function BrandLogo({
       />
       <span className="min-w-0">
         <span className={`block text-lg font-extrabold tracking-normal ${textClassName}`}>
-          <span className="text-[#071a3d]">Faktu</span>
+          <span className="brand-wordmark">Faktu</span>
           <span className="text-blue-700">Dash</span>
         </span>
         {showTagline ? (

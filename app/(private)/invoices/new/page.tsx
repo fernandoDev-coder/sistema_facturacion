@@ -43,6 +43,7 @@ export default async function NewInvoicePage({
             labels={t.forms.document}
             months={t.months}
             statusLabels={t.statuses}
+            autosaveLabels={t.experience}
           />
         </section>
       ) : (

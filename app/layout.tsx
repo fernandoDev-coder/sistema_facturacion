@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { getLocale } from "@/lib/i18n";
+import { ExperienceTools } from "@/components/experience-tools";
+import { getDictionary, getLocale } from "@/lib/i18n";
 import { getSiteUrl } from "@/lib/site-url";
 import "./globals.css";
 
@@ -77,13 +78,28 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const locale = await getLocale();
+  const t = getDictionary(locale);
 
   return (
     <html
       lang={locale}
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {children}
+        <ExperienceTools
+          labels={{
+            ...t.experience,
+            home: locale === "es" ? "Inicio" : "Home",
+            pricing: t.common.pricing,
+            dashboard: t.nav.dashboard,
+            clients: t.nav.clients,
+            invoices: t.nav.invoices,
+            budgets: t.nav.budgets,
+            contact: t.legalFooter.contact,
+          }}
+        />
+      </body>
     </html>
   );
 }

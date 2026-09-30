@@ -9,7 +9,7 @@ export function LanguageSwitcher({
   labels: { language: string; es: string; en: string };
 }) {
   return (
-    <div className="inline-flex items-center gap-1 rounded-md border border-zinc-200 bg-white p-1" aria-label={labels.language}>
+    <div className="inline-flex items-center gap-1 rounded-md border border-zinc-200 bg-white p-1" role="group" aria-label={labels.language}>
       {locales.map((item) => (
         <form key={item} action={setLocaleAction}>
           <input type="hidden" name="locale" value={item} />
