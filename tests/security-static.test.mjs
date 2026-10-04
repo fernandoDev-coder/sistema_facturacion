@@ -60,12 +60,13 @@ test("RLS policies tie invoice relationships to the authenticated owner", () => 
   assert.match(schema, /where invoices\.id = invoice_items\.invoice_id\s+and invoices\.owner_id = auth\.uid\(\)/);
 });
 
-test("dependency policy pins patched Next and overrides vulnerable PostCSS", () => {
+test("dependency policy pins coordinated patched Next packages and overrides vulnerable PostCSS", () => {
   const packageJson = JSON.parse(readProjectFile("package.json"));
 
-  assert.equal(packageJson.dependencies.next, "16.2.6");
-  assert.equal(packageJson.devDependencies["eslint-config-next"], "16.2.6");
-  assert.equal(packageJson.overrides.postcss, "8.5.13");
+  assert.equal(packageJson.dependencies.next, "16.3.8");
+  assert.equal(packageJson.devDependencies["eslint-config-next"], packageJson.dependencies.next);
+  assert.equal(packageJson.overrides.postcss, "8.5.28");
+  assert.equal(packageJson.overrides["@next/eslint-plugin-next"]["fast-glob"], "npm:tinyglobby@0.2.17");
 });
 
 test("registration keeps the email after password validation errors", () => {
@@ -449,16 +450,23 @@ test("private beta disables real payments and removes legal placeholders", () =>
   assert.doesNotMatch(layout + homePage, /GoogleAnalytics|gtag|fbq|posthog|hotjar|clarity/i);
 });
 
-test("CSP separates development from production and keeps core hardening directives", () => {
+test("CSP uses per-request nonces and keeps core hardening directives", () => {
   const nextConfig = readProjectFile("next.config.ts");
+  const proxy = readProjectFile("proxy.ts");
+  const scriptSrc = proxy.match(/const scriptSrc = \[([\s\S]*?)\n  \];/)?.[1] ?? "";
 
-  assert.match(nextConfig, /const scriptSrc = isDevelopment/);
-  assert.match(nextConfig, /\["'self'", "'unsafe-inline'", "'unsafe-eval'", "https:\/\/js\.stripe\.com"\]/);
-  assert.match(nextConfig, /\["'self'", "https:\/\/js\.stripe\.com"\]/);
-  assert.match(nextConfig, /\["frame-ancestors", "'none'"\]/);
-  assert.match(nextConfig, /\["object-src", "'none'"\]/);
-  assert.match(nextConfig, /\["base-uri", "'self'"\]/);
-  assert.match(nextConfig, /\["form-action", "'self'"\]/);
+  assert.doesNotMatch(nextConfig, /Content-Security-Policy/);
+  assert.match(proxy, /crypto\.randomUUID\(\)/);
+  assert.match(proxy, /`'nonce-\$\{nonce\}'`/);
+  assert.match(proxy, /"'strict-dynamic'"/);
+  assert.match(proxy, /isDevelopment \? \["'unsafe-eval'"\] : \[\]/);
+  assert.doesNotMatch(scriptSrc, /unsafe-inline/);
+  assert.match(proxy, /requestHeaders\.set\("x-nonce", nonce\)/);
+  assert.match(proxy, /response\.headers\.set\("Content-Security-Policy", contentSecurityPolicy\)/);
+  assert.match(proxy, /\["frame-ancestors", "'none'"\]/);
+  assert.match(proxy, /\["object-src", "'none'"\]/);
+  assert.match(proxy, /\["base-uri", "'self'"\]/);
+  assert.match(proxy, /\["form-action", "'self'"\]/);
 });
 
 test("administrative routes and Stripe webhook enforce authorization boundaries", () => {
