@@ -34,6 +34,9 @@ next-dev.*.log
 # env files (can opt-in for committing if needed)
 .env*
 !.env.example
+# Explicit local secret files (also covered by .env*)
+.env.local
+.env.test.local
 
 # private local runbooks and operational notes
 /docs/private/
