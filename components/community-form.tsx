@@ -1,3 +1,6 @@
+"use client";
+
+import { AutosaveForm } from "@/components/autosave-form";
 import { FormButton } from "@/components/form-button";
 import { PostalCodeFields } from "@/components/postal-code-fields";
 import type { Community } from "@/lib/types";
@@ -28,6 +31,7 @@ type CommunityFormProps = {
   action: (formData: FormData) => Promise<void>;
   community?: Community;
   labels?: Readonly<CommunityFormLabels>;
+  autosaveLabels?: { saved: string; restored: string };
 };
 
 const defaultLabels: CommunityFormLabels = {
@@ -52,9 +56,15 @@ const defaultLabels: CommunityFormLabels = {
   postalApply: "Usar",
 };
 
-export function CommunityForm({ action, community, labels = defaultLabels }: CommunityFormProps) {
+export function CommunityForm({ action, community, labels = defaultLabels, autosaveLabels }: CommunityFormProps) {
   return (
-    <form action={action} className="space-y-6">
+    <AutosaveForm
+      action={action}
+      storageKey={`faktudash-client-${community?.id ?? "new"}`}
+      savedLabel={autosaveLabels?.saved}
+      restoredLabel={autosaveLabels?.restored}
+      className="space-y-6"
+    >
       {community ? <input type="hidden" name="id" value={community.id} /> : null}
       <div className="grid gap-4 md:grid-cols-2">
         <Field label={labels.name} name="name" required defaultValue={community?.name} />
@@ -106,7 +116,7 @@ export function CommunityForm({ action, community, labels = defaultLabels }: Com
       <div className="grid gap-3 sm:flex sm:items-center">
         <FormButton className="w-full sm:w-auto">{community ? labels.save : labels.create}</FormButton>
       </div>
-    </form>
+    </AutosaveForm>
   );
 }
 

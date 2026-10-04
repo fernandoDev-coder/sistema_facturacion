@@ -83,9 +83,6 @@ export default async function PricingPage() {
             <Link href="/login" className={buttonClass({ variant: "ghost", size: "sm" })}>
               {t.common.login}
             </Link>
-            <Link href="/register" className={buttonClass({ variant: "primary", size: "sm" })}>
-              {t.common.register}
-            </Link>
           </nav>
         </header>
 
@@ -159,9 +156,6 @@ export default async function PricingPage() {
         <section className="mt-10 rounded-lg border border-blue-200 bg-blue-50 p-6">
           <h2 className="text-lg font-semibold text-blue-950">{t.pricing.securePaymentTitle}</h2>
           <p className="mt-2 text-sm leading-6 text-blue-900">{t.pricing.securePayment}</p>
-          <Link href={betaAccessHref} className={buttonClass({ variant: "primary", size: "full", className: "mt-4 sm:w-auto" })}>
-            {t.pricing.choosePro}
-          </Link>
         </section>
       </section>
       <LegalFooter />

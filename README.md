@@ -8,8 +8,10 @@ Beta privada/pre-lanzamiento. La aplicacion incluye una arquitectura inicial ori
 
 ## Desarrollo
 
+Usa Node.js 24, como en CI y Vercel. Si usas nvm, ejecuta `nvm install` y `nvm use` antes de instalar dependencias.
+
 ```bash
-npm install
+npm ci
 cp .env.example .env.local
 npm run dev
 ```

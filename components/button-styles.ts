@@ -10,7 +10,7 @@ export type ButtonVariant =
 export type ButtonSize = "sm" | "md" | "full";
 
 const base =
-  "inline-flex min-w-0 items-center justify-center rounded-md border text-center text-sm font-semibold leading-snug transition focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60";
+  "inline-flex min-w-0 items-center justify-center gap-2 rounded-md border text-center text-sm font-semibold leading-snug transition duration-200 ease-out hover:-translate-y-0.5 hover:shadow-sm active:translate-y-0 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:translate-y-0 disabled:opacity-60 disabled:shadow-none motion-reduce:transform-none";
 
 const variants: Record<ButtonVariant, string> = {
   primary: "border-blue-700 bg-blue-700 text-white hover:bg-blue-800 focus:ring-blue-500",

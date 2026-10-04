@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { loginAction, resendVerificationAction } from "@/app/actions/auth";
 import { BrandLogo } from "@/components/brand-logo";
+import { buttonClass } from "@/components/button-styles";
 import { FormButton } from "@/components/form-button";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { LegalFooter } from "@/components/legal-footer";
@@ -55,6 +56,9 @@ export default async function LoginPage({
             <RememberSessionField title={t.auth.rememberTitle} description={t.auth.rememberDescription} />
             <FormButton className="w-full">{t.auth.enter}</FormButton>
           </form>
+          <Link href="/demo" className={buttonClass({ variant: "secondary", size: "full", className: "mt-3" })}>
+            {locale === "es" ? "Ver demo sin iniciar sesión" : "View demo without signing in"}
+          </Link>
           <div className="mt-6 rounded-md border border-zinc-200 bg-zinc-50 p-4">
             <p className="text-sm font-medium text-zinc-900">{t.auth.noVerification}</p>
             <p className="mt-1 text-sm text-zinc-600">{t.auth.resendText}</p>

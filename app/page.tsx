@@ -5,9 +5,7 @@ import { buttonClass } from "@/components/button-styles";
 import { FAQItem } from "@/components/faq-item";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { LegalFooter } from "@/components/legal-footer";
-import { PricingCard } from "@/components/pricing-card";
 import { UseCaseCard } from "@/components/use-case-card";
-import { betaAccessHref } from "@/lib/beta-config";
 import { getDictionary, getLocale } from "@/lib/i18n";
 
 export default async function HomePage() {
@@ -27,9 +25,6 @@ export default async function HomePage() {
             </Link>
             <Link href="/login" className={buttonClass({ variant: "secondary", size: "sm" })}>
               {t.common.login}
-            </Link>
-            <Link href="/register" className={buttonClass({ variant: "primary", size: "sm" })}>
-              {t.common.register}
             </Link>
           </nav>
         </header>
@@ -105,58 +100,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="border-t border-zinc-200 bg-white">
-        <div className="mx-auto grid max-w-6xl gap-4 px-4 py-10 sm:px-6 sm:py-12 lg:grid-cols-3 lg:px-8">
-          <PricingCard
-            name="Gratis"
-            price="0 EUR"
-            description={t.pricing.freeDescription}
-            features={[
-              t.pricing.features.fiveClients,
-              t.pricing.features.twentyDocuments,
-              t.pricing.features.invoicesBudgets,
-              t.pricing.features.printA4,
-            ]}
-            cta={t.common.createFreeAccount}
-            href="/register"
-          />
-          <PricingCard
-            name="Pro"
-            price="7,90 EUR/mes + IVA"
-            description={t.pricing.proDescription}
-            features={[
-              t.pricing.features.thirtyClients,
-              t.pricing.features.oneHundredDocuments,
-              t.pricing.features.companyLogo,
-              t.pricing.features.savedCompanyData,
-              t.pricing.features.duplicateDocuments,
-              t.pricing.features.basicTemplates,
-              t.pricing.features.basicCsvExport,
-            ]}
-            cta={t.pricing.choosePro}
-            href={betaAccessHref}
-            highlighted
-            recommendedLabel={t.common.recommended}
-          />
-          <PricingCard
-            name="Premium"
-            price="14,90 EUR/mes + IVA"
-            description={t.pricing.premiumDescription}
-            features={[
-              t.pricing.features.unlimitedClients,
-              t.pricing.features.unlimitedDocuments,
-              t.pricing.features.companyLogo,
-              t.pricing.features.bulkMonthly,
-              t.pricing.features.recurringPlans,
-              t.pricing.features.advancedExports,
-              t.pricing.features.prioritySupport,
-            ]}
-            cta={t.pricing.choosePremium}
-            href={betaAccessHref}
-          />
-        </div>
-      </section>
-
       <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-12 lg:px-8">
         <h2 className="text-2xl font-semibold text-zinc-950">{t.home.useCasesTitle}</h2>
         <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -177,6 +120,16 @@ export default async function HomePage() {
             ))}
           </div>
         </div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-12 lg:px-8">
+        <figure className="max-w-3xl rounded-xl border border-zinc-200 bg-white p-6 shadow-sm sm:p-8">
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-blue-700">{t.home.testimonialEyebrow}</p>
+          <blockquote className="mt-4 text-xl font-medium leading-8 text-zinc-900 sm:text-2xl">
+            “{t.home.testimonialQuote}”
+          </blockquote>
+          <figcaption className="mt-4 text-sm text-zinc-600">{t.home.testimonialAuthor}</figcaption>
+        </figure>
       </section>
 
       <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-12 lg:px-8">
