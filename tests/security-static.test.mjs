@@ -60,12 +60,13 @@ test("RLS policies tie invoice relationships to the authenticated owner", () => 
   assert.match(schema, /where invoices\.id = invoice_items\.invoice_id\s+and invoices\.owner_id = auth\.uid\(\)/);
 });
 
-test("dependency policy pins patched Next and overrides vulnerable PostCSS", () => {
+test("dependency policy pins coordinated patched Next packages and overrides vulnerable PostCSS", () => {
   const packageJson = JSON.parse(readProjectFile("package.json"));
 
-  assert.equal(packageJson.dependencies.next, "16.2.6");
-  assert.equal(packageJson.devDependencies["eslint-config-next"], "16.2.6");
-  assert.equal(packageJson.overrides.postcss, "8.5.13");
+  assert.equal(packageJson.dependencies.next, "16.3.8");
+  assert.equal(packageJson.devDependencies["eslint-config-next"], packageJson.dependencies.next);
+  assert.equal(packageJson.overrides.postcss, "8.5.28");
+  assert.equal(packageJson.overrides["@next/eslint-plugin-next"]["fast-glob"], "npm:tinyglobby@0.2.17");
 });
 
 test("registration keeps the email after password validation errors", () => {
