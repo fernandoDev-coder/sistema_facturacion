@@ -63,7 +63,7 @@ test("RLS policies tie invoice relationships to the authenticated owner", () => 
 test("dependency policy pins coordinated patched Next packages and overrides vulnerable PostCSS", () => {
   const packageJson = JSON.parse(readProjectFile("package.json"));
 
-  assert.equal(packageJson.dependencies.next, "16.3.8");
+  assert.equal(packageJson.dependencies.next, "16.4.3");
   assert.equal(packageJson.devDependencies["eslint-config-next"], packageJson.dependencies.next);
   assert.equal(packageJson.overrides.postcss, "8.5.28");
   assert.equal(packageJson.overrides["@next/eslint-plugin-next"]["fast-glob"], "npm:tinyglobby@0.2.17");
