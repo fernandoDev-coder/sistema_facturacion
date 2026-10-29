@@ -247,8 +247,8 @@ test("repository does not contain published default passwords or privileged pers
   assert.doesNotMatch(combined, privilegedEmailNames);
   assert.doesNotMatch(combined, oldContactEmail);
   assert.doesNotMatch(readProjectFile(".env.example"), /SEED_FREE_USER_PASSWORD=.+/);
-  assert.match(readProjectFile(".env.example"), /SUPER_ADMIN_EMAIL=\n/);
-  assert.match(readProjectFile(".env.example"), /LIFETIME_PREMIUM_EMAIL=\n/);
+  assert.match(readProjectFile(".env.example"), /SUPER_ADMIN_EMAIL=\r?\n/);
+  assert.match(readProjectFile(".env.example"), /LIFETIME_PREMIUM_EMAIL=\r?\n/);
 });
 
 test("service role stays in server-only modules or node scripts", () => {
