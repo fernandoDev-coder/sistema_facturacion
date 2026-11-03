@@ -83,6 +83,25 @@ No se fuerza minimatch 11 sobre consumidores de APIs antiguas, ni se silencia
 el aviso. Se conserva `npm audit --audit-level=high`; un código de salida cero
 con ese umbral no equivale a ausencia de vulnerabilidades moderadas.
 
+## Reparacion de sesiones para la puesta en produccion
+
+La renovacion de sesiones se realiza en `proxy.ts`, antes de los Server
+Components, y propaga las cookies renovadas y las cabeceras de no cache.
+La preferencia de recordar sesion se conserva entre login, renovacion en
+servidor/navegador y callback PKCE. Sin preferencia explicita se usan cookies
+de sesion; las eliminaciones conservan su caducidad. El callback valida el
+destino tras normalizar la URL y transmite el identificador de flujo PKCE.
+
+Las pruebas usan el SDK real con transporte simulado y credenciales sinteticas:
+login, logout, renovacion, cookies fragmentadas, persistencia y callback.
+No equivalen a pruebas con cuentas reales. Los tres tests RLS siguen pendientes:
+no se ha confirmado un proyecto exclusivo de integracion. No se ejecutan
+fixtures que escriben datos contra el proyecto compartido con `.env.local`.
+
+El inventario de variables de Vercel devuelve HTTP 403. La rotacion de
+credenciales potencialmente expuestas sigue pendiente de acceso administrativo;
+una compilacion limpia no revoca credenciales ni demuestra ausencia de exfiltracion.
+
 ## Informacion sensible encontrada
 
 - Correos reales asociados a privilegios (`super_admin`, plan `enterprise`, plan `premium` y acceso vitalicio) en codigo y documentacion.
