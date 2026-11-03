@@ -61,6 +61,28 @@ recordar sesión y RLS requieren validación en un proyecto de prueba identifica
 Los checks remotos `verify` y `Secret scan` de los nuevos commits requieren su
 publicación autorizada; las comprobaciones locales no sustituyen ese resultado.
 
+## Revalidación de dependencias — 2026-11-03
+
+Next y eslint-config-next quedan coordinados en `16.4.3`; source-map-js en
+`1.2.2` y Zod en `4.6.7`. La auditoría del 29 de octubre devolvió cero avisos.
+Al retomar el trabajo apareció el aviso moderado
+[GHSA-g3hv-75wg-m249](https://github.com/advisories/GHSA-g3hv-75wg-m249), incorporado
+a la base de advisories el 30 de octubre, para `minimatch <11.0.1`.
+
+Se inspeccionaron las cadenas reales y los metadatos actuales del registro:
+`@eslint/config-array`, `@eslint/eslintrc`, `@typescript-eslint/typescript-estree`,
+`eslint`, `eslint-plugin-import`, `eslint-plugin-jsx-a11y` y `eslint-plugin-react`.
+Sus últimas versiones publicadas siguen requiriendo minimatch 3 o 10. No hay
+una actualización de esas cadenas que satisfaga el aviso sin salir de sus
+contratos de dependencia. Además, los plugins actuales no declaran soporte
+para ESLint 10; subir únicamente ESLint tampoco elimina el aviso.
+
+Queda pendiente una actualización compatible de los paquetes ascendentes o
+una reparación específica de compatibilidad, revisada y probada por separado.
+No se fuerza minimatch 11 sobre consumidores de APIs antiguas, ni se silencia
+el aviso. Se conserva `npm audit --audit-level=high`; un código de salida cero
+con ese umbral no equivale a ausencia de vulnerabilidades moderadas.
+
 ## Informacion sensible encontrada
 
 - Correos reales asociados a privilegios (`super_admin`, plan `enterprise`, plan `premium` y acceso vitalicio) en codigo y documentacion.
