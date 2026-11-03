@@ -63,7 +63,7 @@ test("RLS policies tie invoice relationships to the authenticated owner", () => 
 test("dependency policy pins coordinated patched Next packages and overrides vulnerable PostCSS", () => {
   const packageJson = JSON.parse(readProjectFile("package.json"));
 
-  assert.equal(packageJson.dependencies.next, "16.3.8");
+  assert.equal(packageJson.dependencies.next, "16.4.3");
   assert.equal(packageJson.devDependencies["eslint-config-next"], packageJson.dependencies.next);
   assert.equal(packageJson.overrides.postcss, "8.5.28");
   assert.equal(packageJson.overrides["@next/eslint-plugin-next"]["fast-glob"], "npm:tinyglobby@0.2.17");
@@ -247,8 +247,8 @@ test("repository does not contain published default passwords or privileged pers
   assert.doesNotMatch(combined, privilegedEmailNames);
   assert.doesNotMatch(combined, oldContactEmail);
   assert.doesNotMatch(readProjectFile(".env.example"), /SEED_FREE_USER_PASSWORD=.+/);
-  assert.match(readProjectFile(".env.example"), /SUPER_ADMIN_EMAIL=\n/);
-  assert.match(readProjectFile(".env.example"), /LIFETIME_PREMIUM_EMAIL=\n/);
+  assert.match(readProjectFile(".env.example"), /SUPER_ADMIN_EMAIL=\r?\n/);
+  assert.match(readProjectFile(".env.example"), /LIFETIME_PREMIUM_EMAIL=\r?\n/);
 });
 
 test("service role stays in server-only modules or node scripts", () => {

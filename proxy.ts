@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
-import { NextResponse } from "next/server";
+import { updateSession } from "@/lib/supabase/proxy";
 
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
   const isDevelopment = process.env.NODE_ENV === "development";
   const scriptSrc = [
@@ -34,11 +34,7 @@ export function proxy(request: NextRequest) {
   requestHeaders.set("x-nonce", nonce);
   requestHeaders.set("Content-Security-Policy", contentSecurityPolicy);
 
-  const response = NextResponse.next({
-    request: {
-      headers: requestHeaders,
-    },
-  });
+  const response = await updateSession(request, requestHeaders);
   response.headers.set("Content-Security-Policy", contentSecurityPolicy);
 
   return response;
