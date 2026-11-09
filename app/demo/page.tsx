@@ -1,8 +1,10 @@
+import { MonthlyDemo } from "@/components/monthly-demo";
+import { LanguageSwitcher } from "@/components/language-switcher";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BrandLogo } from "@/components/brand-logo";
 import { buttonClass } from "@/components/button-styles";
-import { getLocale } from "@/lib/i18n";
+import { getDictionary, getLocale } from "@/lib/i18n";
 
 export const metadata: Metadata = {
   title: "Demo del panel",
@@ -18,6 +20,7 @@ const documents = [
 export default async function DemoPage() {
   const locale = await getLocale();
   const copy = locale === "es" ? es : en;
+  const t = getDictionary(locale);
 
   return (
     <main className="min-h-screen bg-zinc-50 text-zinc-950">
@@ -26,34 +29,19 @@ export default async function DemoPage() {
         <span className="mt-5 inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 ring-1 ring-blue-200">
           {copy.readOnly}
         </span>
-        <nav className="mt-7 space-y-1" aria-label={copy.demoNavigation}>
-          {copy.nav.map((item, index) => (
-            <a
-              key={item}
-              href={index === 0 ? "#dashboard" : `#${index}`}
-              className={`block rounded-md px-3 py-2 text-sm font-medium transition ${index === 0 ? "bg-blue-50 text-blue-700" : "text-zinc-700 hover:bg-zinc-100 hover:text-zinc-950"}`}
-            >
-              {item}
-            </a>
-          ))}
-        </nav>
+        <a href="#monthly-demo" className="mt-7 block text-blue-700 underline">{locale === "es" ? "Cierre mensual" : "Monthly closing"}</a>
+        <div className="mt-4"><LanguageSwitcher locale={locale} labels={{ language: t.common.language, es: t.common.spanish, en: t.common.english }} /></div>
         <Link href="/" className={buttonClass({ variant: "secondary", size: "full", className: "absolute bottom-6 left-5 right-5 w-auto" })}>
           {copy.leaveDemo}
         </Link>
       </aside>
 
-      <header className="sticky top-0 z-20 border-b border-zinc-200 bg-white/95 px-4 py-3 backdrop-blur lg:hidden">
+      <header className="sticky top-0 z-20 border-b border-zinc-200 bg-white/95 px-4 py-3 lg:hidden">
         <div className="flex items-center justify-between gap-3">
           <BrandLogo href="/" markClassName="h-7 w-7" textClassName="text-base" />
           <Link href="/" className={buttonClass({ variant: "secondary", size: "sm" })}>{copy.leaveDemo}</Link>
         </div>
-        <nav className="mt-3 flex gap-2 overflow-x-auto pb-1" aria-label={copy.demoNavigation}>
-          {copy.nav.slice(0, 4).map((item, index) => (
-            <a key={item} href={index === 0 ? "#dashboard" : `#${index}`} className="shrink-0 rounded-md border border-zinc-200 bg-white px-3 py-2 text-xs font-medium">
-              {item}
-            </a>
-          ))}
-        </nav>
+        <div className="mt-3 flex items-center gap-3"><a href="#monthly-demo" className="text-sm text-blue-700 underline">{locale === "es" ? "Cierre mensual" : "Monthly closing"}</a><LanguageSwitcher locale={locale} labels={{ language: t.common.language, es: t.common.spanish, en: t.common.english }} /></div>
       </header>
 
       <div className="lg:pl-64">
@@ -79,24 +67,9 @@ export default async function DemoPage() {
             <DemoMetric label={copy.budgets} value="31" hint={copy.proPlan} />
           </section>
 
-          <section>
-            <h2 className="text-lg font-semibold">{copy.quickActions}</h2>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-              {copy.actions.map((action, index) => (
-                <button
-                  key={action}
-                  type="button"
-                  disabled
-                  title={copy.readOnlyHelp}
-                  className={`min-h-11 rounded-md border px-4 py-2.5 text-left text-sm font-semibold opacity-80 ${index === 0 ? "border-blue-700 bg-blue-700 text-white" : "border-zinc-300 bg-white text-zinc-800"}`}
-                >
-                  {action}
-                </button>
-              ))}
-            </div>
-          </section>
+          <MonthlyDemo locale={locale} labels={t.forms.monthly} months={t.months} />
 
-          <section className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm">
+          <section className="overflow-hidden rounded-xl border border-zinc-200 bg-white">
             <div className="flex items-center justify-between border-b border-zinc-200 px-5 py-4">
               <h2 className="font-semibold">{copy.recentInvoices}</h2>
               <span className="text-xs text-zinc-500">{copy.exampleData}</span>
@@ -127,7 +100,7 @@ export default async function DemoPage() {
 
 function DemoMetric({ label, value, hint, progress }: { label: string; value: string; hint: string; progress?: number }) {
   return (
-    <article className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
+    <article className="rounded-xl border border-zinc-200 bg-white p-5">
       <p className="text-sm text-zinc-500">{label}</p>
       <p className="mt-2 text-3xl font-semibold">{value}</p>
       {progress !== undefined ? (
@@ -148,12 +121,12 @@ function DemoMetric({ label, value, hint, progress }: { label: string; value: st
 }
 
 const es = {
-  readOnly: "Demo · solo lectura",
+  readOnly: "Demo · Premium",
   demoNavigation: "Navegación de demostración",
   nav: ["Dashboard", "Clientes", "Facturas", "Presupuestos", "Gastos", "Empresa"],
   leaveDemo: "Salir de la demo",
   previewTitle: "Estás viendo una demostración segura",
-  previewDescription: "Puedes explorar el aspecto del panel sin cuenta. Los controles de edición están desactivados y no se consulta información real.",
+  previewDescription: "Explora el panel y simula un cierre mensual sin cuenta, con datos ficticios.",
   noRealData: "Datos ficticios",
   eyebrow: "Vista interior",
   title: "Panel principal",
@@ -165,7 +138,7 @@ const es = {
   invoices: "Facturas creadas",
   issued: "emitidas",
   budgets: "Presupuestos creados",
-  proPlan: "Plan Pro de demostración",
+  proPlan: "Plan Premium de demostración",
   quickActions: "Accesos rápidos",
   actions: ["Crear factura", "Crear presupuesto", "Crear cliente", "Facturación mensual", "Datos de empresa", "Ver plan y límites"],
   readOnlyHelp: "Acción desactivada en la demo de solo lectura",
@@ -176,12 +149,12 @@ const es = {
 } as const;
 
 const en = {
-  readOnly: "Demo · read only",
+  readOnly: "Demo · Premium",
   demoNavigation: "Demo navigation",
   nav: ["Dashboard", "Clients", "Invoices", "Quotes", "Expenses", "Company"],
   leaveDemo: "Exit demo",
   previewTitle: "You are viewing a safe demonstration",
-  previewDescription: "Explore the dashboard without an account. Editing controls are disabled and no real information is queried.",
+  previewDescription: "Explore the dashboard and simulate monthly closing without an account, using fictional data.",
   noRealData: "Fictional data",
   eyebrow: "Inside view",
   title: "Main dashboard",
@@ -193,7 +166,7 @@ const en = {
   invoices: "Invoices created",
   issued: "issued",
   budgets: "Quotes created",
-  proPlan: "Demo Pro plan",
+  proPlan: "Demo Premium plan",
   quickActions: "Quick actions",
   actions: ["Create invoice", "Create quote", "Create client", "Monthly invoicing", "Company details", "View plan and limits"],
   readOnlyHelp: "Action disabled in the read-only demo",

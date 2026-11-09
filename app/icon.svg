@@ -1,21 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160">
-  <defs>
-    <linearGradient id="fd-blue" x1="74" y1="18" x2="138" y2="82" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#1d6bff"/>
-      <stop offset="1" stop-color="#0f46e8"/>
-    </linearGradient>
-    <linearGradient id="fd-chart" x1="86" y1="94" x2="146" y2="146" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#1557f0"/>
-      <stop offset="1" stop-color="#13c8a5"/>
-    </linearGradient>
-  </defs>
+
   <rect width="160" height="160" rx="32" fill="#ffffff"/>
   <path d="M45 19h58l36 38v68c0 9-7 16-16 16H45c-9 0-16-7-16-16V35c0-9 7-16 16-16z" fill="#ffffff" stroke="#071a3d" stroke-width="8" stroke-linejoin="round"/>
-  <path d="M103 20v29c0 8 6 14 14 14h22" fill="url(#fd-blue)"/>
+  <path d="M103 20v29c0 8 6 14 14 14h22" fill="#1d4ed8"/>
   <path d="M77 48c-7-6-24-5-32 8-7 13 2 29 18 29 7 0 13-2 18-7" fill="none" stroke="#071a3d" stroke-width="8" stroke-linecap="round"/>
   <path d="M42 63h34M42 75h31" stroke="#071a3d" stroke-width="7" stroke-linecap="round"/>
   <path d="M49 103h45M49 120h35" stroke="#071a3d" stroke-width="7" stroke-linecap="round"/>
-  <circle cx="112" cy="112" r="39" fill="url(#fd-chart)" stroke="#ffffff" stroke-width="7"/>
+  <circle cx="112" cy="112" r="39" fill="#1d4ed8" stroke="#ffffff" stroke-width="7"/>
   <path d="M91 119l17-17 14 5 24-26" fill="none" stroke="#ffffff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
   <path d="M91 130v-15M108 130v-24M125 130V96" stroke="#ffffff" stroke-width="8" stroke-linecap="round"/>
 </svg>

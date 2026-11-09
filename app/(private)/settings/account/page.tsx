@@ -33,6 +33,7 @@ export default async function AccountSettingsPage({
       </div>
 
       <Message text={message} />
+      <Link href="/auth/mfa" className={buttonClass({ variant: "secondary" })}>{locale === "es" ? "Configurar verificación en dos pasos" : "Set up two-step verification"}</Link>
 
       <section className="grid gap-4 lg:grid-cols-3">
         <AccountMetric label={account.email} value={user.email ?? account.noEmail} />
@@ -41,7 +42,7 @@ export default async function AccountSettingsPage({
       </section>
 
       <section className="grid gap-4 lg:grid-cols-[1fr_360px]">
-        <div className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
+        <div className="rounded-lg border border-zinc-200 bg-white p-5">
           <h2 className="text-lg font-semibold text-zinc-950">{account.personalData}</h2>
           <form action={saveAccountProfileAction} className="mt-4 space-y-4">
             <label className="block">
@@ -53,7 +54,7 @@ export default async function AccountSettingsPage({
                 maxLength={120}
                 defaultValue={profile?.full_name ?? ""}
                 placeholder={account.namePlaceholder}
-                className="mt-1 min-h-11 w-full rounded-md border border-zinc-300 px-3 text-sm outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
+                className="mt-1 min-h-11 w-full rounded-md border border-zinc-300 px-3 text-sm focus:border-slate-900"
               />
             </label>
             <label className="block">
@@ -62,14 +63,14 @@ export default async function AccountSettingsPage({
                 type="email"
                 value={user.email ?? ""}
                 readOnly
-                className="mt-1 min-h-11 w-full rounded-md border border-zinc-200 bg-zinc-50 px-3 text-sm text-zinc-600 outline-none"
+                className="mt-1 min-h-11 w-full rounded-md border border-zinc-200 bg-zinc-50 px-3 text-sm text-zinc-600"
               />
             </label>
             <button className={buttonClass({ variant: "primary" })}>{account.saveProfile}</button>
           </form>
         </div>
 
-        <div className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
+        <div className="rounded-lg border border-zinc-200 bg-white p-5">
           <h2 className="text-lg font-semibold text-zinc-950">{account.activePlan}</h2>
           <p className="mt-2 text-2xl font-semibold text-zinc-950">{getPlanLabel(effectivePlan, account)}</p>
           <dl className="mt-4 space-y-3 text-sm">
@@ -87,7 +88,7 @@ export default async function AccountSettingsPage({
         </div>
       </section>
 
-      <section className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
+      <section className="rounded-lg border border-zinc-200 bg-white p-5">
         <div className="max-w-2xl">
           <h2 className="text-lg font-semibold text-zinc-950">{account.changePassword}</h2>
           <p className="mt-2 text-sm leading-6 text-zinc-600">{account.passwordHelp}</p>
@@ -102,7 +103,7 @@ export default async function AccountSettingsPage({
         </div>
       </section>
 
-      <section className="rounded-lg border border-red-200 bg-white p-5 shadow-sm">
+      <section className="rounded-lg border border-red-200 bg-white p-5">
         <div className="max-w-2xl">
           <h2 className="text-lg font-semibold text-red-900">{account.dangerTitle}</h2>
           <p className="mt-2 text-sm leading-6 text-zinc-700">{account.deleteDescription}</p>
@@ -120,7 +121,7 @@ export default async function AccountSettingsPage({
                   autoComplete="off"
                   required
                   placeholder={user.email ?? "tu@email.com"}
-                  className="mt-1 min-h-11 w-full rounded-md border border-zinc-300 px-3 text-sm outline-none focus:border-red-700 focus:ring-2 focus:ring-red-100"
+                  className="mt-1 min-h-11 w-full rounded-md border border-zinc-300 px-3 text-sm focus:border-red-700"
                 />
               </label>
               <button className={buttonClass({ variant: "danger" })}>{account.deleteAccount}</button>
@@ -134,7 +135,7 @@ export default async function AccountSettingsPage({
 
 function AccountMetric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
+    <div className="rounded-lg border border-zinc-200 bg-white p-5">
       <p className="text-sm text-zinc-500">{label}</p>
       <p className="mt-2 break-words text-lg font-semibold text-zinc-950">{value}</p>
     </div>
@@ -168,7 +169,7 @@ function PasswordInput({
         minLength={10}
         autoComplete={autoComplete}
         required
-        className="mt-1 min-h-11 w-full rounded-md border border-zinc-300 px-3 text-sm outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
+        className="mt-1 min-h-11 w-full rounded-md border border-zinc-300 px-3 text-sm focus:border-slate-900"
       />
     </label>
   );

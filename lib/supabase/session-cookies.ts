@@ -18,7 +18,8 @@ export function sessionCookies(store: CookieStore, remember?: boolean) {
         ({ name, value }) => name === SESSION_PREFERENCE_COOKIE && value === "1",
       );
       const writes = cookies.map(({ name, value, options }) => {
-        const nextOptions = { ...options };
+        const nextOptions = { ...options, httpOnly: true, sameSite: "lax" as const, path: "/",
+          secure: process.env.NODE_ENV === "production" || process.env.NEXT_PUBLIC_SITE_URL?.startsWith("https://") === true };
         // Deletions must keep their expiry, even for a session-only login.
         if (!value) {
           nextOptions.maxAge = 0;
@@ -27,6 +28,8 @@ export function sessionCookies(store: CookieStore, remember?: boolean) {
           && !(nextOptions.expires && nextOptions.expires.getTime() <= Date.now())) {
           delete nextOptions.maxAge;
           delete nextOptions.expires;
+        } else if (value) {
+          nextOptions.maxAge = Math.min(nextOptions.maxAge ?? 2592000, 2592000);
         }
         return { name, value, options: nextOptions };
       });
@@ -37,7 +40,8 @@ export function sessionCookies(store: CookieStore, remember?: boolean) {
           options: {
             path: "/",
             sameSite: "lax",
-            secure: process.env.NODE_ENV === "production",
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production" || process.env.NEXT_PUBLIC_SITE_URL?.startsWith("https://") === true,
             ...(remember ? { maxAge: 60 * 60 * 24 * 365 } : {}),
           },
         });

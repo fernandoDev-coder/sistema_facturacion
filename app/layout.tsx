@@ -1,19 +1,10 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { headers } from "next/headers";
 import { ExperienceTools } from "@/components/experience-tools";
+import { TextareaAutosize } from "@/components/textarea-autosize";
 import { getDictionary, getLocale } from "@/lib/i18n";
-import { getSiteUrl } from "@/lib/site-url";
+import { getSiteUrl, getPublicShareUrl } from "@/lib/site-url";
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   metadataBase: getSiteUrl(),
@@ -79,15 +70,22 @@ export default async function RootLayout({
 }>) {
   const locale = await getLocale();
   const t = getDictionary(locale);
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
 
   return (
     <html
       lang={locale}
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className="h-full antialiased"
+      suppressHydrationWarning
     >
+      <head>
+        <script nonce={nonce} dangerouslySetInnerHTML={{ __html: `(()=>{let t;try{t=localStorage.getItem('faktudash-theme')}catch{}if(t!=='dark'&&t!=='light')t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.dataset.theme=t;document.documentElement.style.colorScheme=t})()` }} />
+      </head>
       <body className="min-h-full flex flex-col">
         {children}
+        <TextareaAutosize />
         <ExperienceTools
+          publicUrl={getPublicShareUrl()}
           labels={{
             ...t.experience,
             home: locale === "es" ? "Inicio" : "Home",

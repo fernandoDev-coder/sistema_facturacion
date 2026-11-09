@@ -20,7 +20,7 @@ export default async function ForgotPasswordPage({
   return (
     <main className="flex min-h-screen flex-col bg-zinc-50">
       <section className="flex flex-1 items-center justify-center px-4 py-6 sm:py-10">
-        <div className="w-full max-w-md rounded-lg border border-zinc-200 bg-white p-5 shadow-sm sm:p-8">
+        <div className="w-full max-w-md rounded-lg border border-zinc-200 bg-white p-5 sm:p-8">
           <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
             <BrandLogo href="/" />
             <LanguageSwitcher locale={locale} labels={languageLabels} />
@@ -37,7 +37,7 @@ export default async function ForgotPasswordPage({
                 autoComplete="email"
                 required
                 defaultValue={email}
-                className="mt-1 min-h-11 w-full rounded-md border border-zinc-300 px-3 text-sm outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
+                className="mt-1 min-h-11 w-full rounded-md border border-zinc-300 px-3 text-sm focus:border-slate-900"
               />
             </label>
             <FormButton className="w-full" pendingText={t.auth.sendingRecovery}>

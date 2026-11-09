@@ -59,7 +59,7 @@ export default async function ExpensesPage({
       <Message text={params.message} />
 
       <section className="grid gap-4 lg:grid-cols-[360px_1fr]">
-        <form action={createExpenseDocumentAction} className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
+        <form action={createExpenseDocumentAction} className="rounded-lg border border-zinc-200 bg-white p-5">
           <div className="space-y-4">
             <Field label={labels.supplier} name="supplier_name" required />
             <Field label={labels.invoiceNumber} name="invoice_number" />
@@ -90,7 +90,7 @@ export default async function ExpensesPage({
         </form>
 
         <section className="space-y-4">
-          <form className="grid gap-3 rounded-lg border border-zinc-200 bg-white p-4 shadow-sm sm:grid-cols-[1fr_1fr_auto]">
+          <form className="grid gap-3 rounded-lg border border-zinc-200 bg-white p-4 sm:grid-cols-[1fr_1fr_auto]">
             <label>
               <span className="text-sm font-medium text-zinc-800">{labels.year}</span>
               <input
@@ -121,7 +121,7 @@ export default async function ExpensesPage({
             </div>
           </form>
 
-          <div className="overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm">
+          <div className="overflow-hidden rounded-lg border border-zinc-200 bg-white">
             <div className="hidden overflow-x-auto md:block">
               <table className="min-w-full divide-y divide-zinc-200 text-sm">
                 <thead className="bg-zinc-50 text-left text-xs font-semibold uppercase tracking-wide text-zinc-500">
@@ -253,7 +253,7 @@ function Field({
       <span className="text-sm font-medium text-zinc-800">{label}</span>
       <input
         name={name}
-        className="mt-1 min-h-11 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
+        className="mt-1 min-h-11 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm focus:border-slate-900"
         {...props}
       />
     </label>

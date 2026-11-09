@@ -1,10 +1,14 @@
 export const contactEmails = {
-  legal: getPublicContactEmail("NEXT_PUBLIC_LEGAL_CONTACT_EMAIL"),
-  privacy: getPublicContactEmail("NEXT_PUBLIC_PRIVACY_CONTACT_EMAIL"),
-  support: getPublicContactEmail("NEXT_PUBLIC_SUPPORT_CONTACT_EMAIL"),
+  legal: getPublicContactEmail(process.env.NEXT_PUBLIC_LEGAL_CONTACT_EMAIL),
+  privacy: getPublicContactEmail(process.env.NEXT_PUBLIC_PRIVACY_CONTACT_EMAIL),
+  support: getPublicContactEmail(process.env.NEXT_PUBLIC_SUPPORT_CONTACT_EMAIL),
 } as const;
 
-export const betaAccessHref = `mailto:${contactEmails.support}?subject=Solicitud%20de%20acceso%20beta%20FaktuDash`;
+export function contactHref(email: string, subject = "FaktuDash") {
+  return email ? `mailto:${email}?subject=${encodeURIComponent(subject)}` : "/contact";
+}
+
+export const betaAccessHref = contactHref(contactEmails.support, "Solicitud de acceso beta FaktuDash");
 
 export function isBetaMode() {
   return process.env.BETA_MODE !== "false";
@@ -22,6 +26,7 @@ export function getPaymentUnavailableMessage() {
   return "Los pagos todavia no estan disponibles durante la beta privada.";
 }
 
-function getPublicContactEmail(key: string) {
-  return process.env[key] || "contact@example.com";
+function getPublicContactEmail(value: string | undefined) {
+  const email = value?.trim() ?? "";
+  return /^[^\s@?&#]+@[^\s@?&#]+\.[^\s@?&#]+$/.test(email) ? email : "";
 }

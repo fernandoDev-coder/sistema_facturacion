@@ -1,9 +1,12 @@
+import { EnglishLegalPage } from "@/components/english-legal-page";
+import { getLocale } from "@/lib/i18n";
 import { LegalPage, LegalSection } from "@/components/legal-page";
-import { contactEmails } from "@/lib/beta-config";
+import { contactEmails, contactHref } from "@/lib/beta-config";
 
-export default function TermsPage() {
+export default async function TermsPage() {
+  if (await getLocale() === "en") return <EnglishLegalPage kind="terms" />;
   return (
-    <LegalPage title="Terminos y condiciones" updatedAt="Junio 2026">
+    <LegalPage title="Terminos y condiciones" updatedAt="Noviembre 2026">
       <LegalSection title="Servicio en beta privada">
         <p>
           FaktuDash permite gestionar clientes, facturas, presupuestos, gastos, datos de empresa y planes de uso desde
@@ -45,7 +48,7 @@ export default function TermsPage() {
       <LegalSection title="Datos y seguridad">
         <p>
           El usuario debe custodiar sus credenciales y mantener actualizados sus datos de cuenta. Para incidencias de
-          soporte puedes escribir a <a href={`mailto:${contactEmails.support}`}>{contactEmails.support}</a>.
+          soporte puedes escribir a <a href={contactHref(contactEmails.support)}>{contactEmails.support}</a>.
         </p>
       </LegalSection>
     </LegalPage>

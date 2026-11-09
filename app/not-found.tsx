@@ -23,8 +23,7 @@ export default async function NotFound() {
 
   return (
     <main className="grid min-h-screen place-items-center overflow-hidden bg-zinc-50 px-4 py-10 text-zinc-950">
-      <section className="relative w-full max-w-2xl rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm sm:p-10">
-        <div className="absolute -right-16 -top-20 h-48 w-48 rounded-full bg-blue-100 blur-3xl" aria-hidden="true" />
+      <section className="relative w-full max-w-2xl rounded-2xl border border-zinc-200 bg-white p-6 sm:p-10">
         <BrandLogo href="/" />
         <p className="mt-10 text-sm font-semibold uppercase tracking-[0.18em] text-blue-700">{copy.eyebrow}</p>
         <h1 className="mt-3 max-w-xl text-3xl font-semibold leading-tight sm:text-5xl">{copy.title}</h1>

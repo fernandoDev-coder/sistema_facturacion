@@ -1,5 +1,7 @@
 "use server";
 
+import { enforceActionLimit } from "@/lib/rate-limit";
+
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { nullableText, requiredText, toDecimal } from "@/lib/format";
@@ -12,6 +14,7 @@ const maxExpenseFileBytes = 5 * 1024 * 1024;
 
 export async function createExpenseDocumentAction(formData: FormData) {
   const user = await requireUser();
+  await enforceActionLimit("mutation", user.id, "/dashboard");
   const supabase = await createClient();
   const supplierName = requiredText(formData.get("supplier_name"));
   const issueDate = requiredText(formData.get("issue_date"));

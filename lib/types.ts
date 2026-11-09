@@ -203,6 +203,18 @@ export type Database = {
     };
     Views: Record<string, never>;
     Functions: {
+      claim_billing_event: { Args: { p_event_id: string }; Returns: { status: "done" | "busy" | "acquired"; token?: string } };
+      finish_billing_event: { Args: { p_event_id: string; p_token: string; p_error?: string }; Returns: boolean };
+      create_monthly_drafts: {
+        Args: { p_operation_id: string; p_month: number; p_year: number; p_rows: { community_id: string; amount: number; vat_rate: number; subject: string; notes: string | null }[]; p_confirm_duplicates: boolean };
+        Returns: string[];
+      };
+      mfa_required: { Args: Record<string, never>; Returns: boolean };
+      mfa_access_allowed: { Args: Record<string, never>; Returns: boolean };
+      consume_rate_limit: {
+        Args: { p_key: string; p_limit: number; p_window_seconds: number };
+        Returns: { allowed: boolean; retry_after: number };
+      };
       is_super_admin: {
         Args: Record<string, never>;
         Returns: boolean;

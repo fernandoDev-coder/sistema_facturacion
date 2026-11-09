@@ -16,7 +16,7 @@ export function UsageLimitIndicator({
   const reached = capped && used >= limit;
 
   return (
-    <div className={`rounded-lg border bg-white p-5 shadow-sm ${reached ? "border-amber-300" : "border-zinc-200"}`}>
+    <div className={`rounded-lg border bg-white p-5  ${reached ? "border-amber-300" : "border-zinc-200"}`}>
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-sm text-zinc-500">{label}</p>

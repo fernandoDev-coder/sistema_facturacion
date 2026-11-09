@@ -3,7 +3,6 @@ import { BrandLogo } from "@/components/brand-logo";
 import { buttonClass } from "@/components/button-styles";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { LegalFooter } from "@/components/legal-footer";
-import { PricingCard } from "@/components/pricing-card";
 import { betaAccessHref } from "@/lib/beta-config";
 import { getDictionary, getLocale } from "@/lib/i18n";
 
@@ -98,97 +97,36 @@ export default async function PricingPage() {
           </div>
         </section>
 
-        <section className="grid gap-4 lg:grid-cols-3">
-          {plans.map((plan) => (
-            <PricingCard
-              key={plan.name}
-              name={plan.name}
-              price={plan.price}
-              cadence={plan.cadence}
-              description={plan.description}
-              features={plan.features}
-              notIncluded={plan.notIncluded}
-              notIncludedLabel={t.pricing.notIncluded}
-              cta={plan.cta}
-              href={plan.href}
-              highlighted={plan.highlighted}
-              recommendedLabel={t.common.recommended}
-            />
-          ))}
+        <section className="overflow-x-auto rounded-lg border border-zinc-200 bg-white" tabIndex={0} aria-label={t.pricing.comparison}>
+          <table className="min-w-[680px] w-full text-left text-sm">
+            <caption className="p-5 text-left font-semibold">{t.pricing.comparison}</caption>
+            <thead className="bg-zinc-50">
+              <tr>
+                <th scope="col" className="p-4">{t.pricing.featureColumn}</th>
+                {plans.map((plan) => <th scope="col" className="p-4" key={plan.name}>
+                  <p className="text-lg">{plan.name === "Gratis" && locale === "en" ? "Free" : plan.name}</p>
+                  <p className="mt-2">{plan.price}</p>
+                  <p className="font-normal text-zinc-600">{plan.cadence}</p>
+                </th>)}
+              </tr>
+            </thead>
+            <tbody>
+              {t.pricing.comparisonRows.map(([label, ...values]) => <tr key={label} className="border-t border-zinc-200">
+                <th scope="row" className="p-4 font-medium">{label}</th>
+                {values.map((value, index) => <td className="p-4" key={index}>{value}</td>)}
+              </tr>)}
+              <tr className="border-t border-zinc-200">
+                <th scope="row" className="p-4">{locale === "es" ? "Acceso durante la beta" : "Access during beta"}</th>
+                {plans.map((plan) => <td key={plan.name} className="p-4">
+                  <Link href={plan.href} className={buttonClass({ variant: "secondary" })}>{plan.cta}</Link>
+                </td>)}
+              </tr>
+            </tbody>
+          </table>
         </section>
-
-        <section className="mt-10 overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm">
-          <div className="border-b border-zinc-200 px-5 py-4">
-            <h2 className="font-semibold">{t.pricing.comparison}</h2>
-          </div>
-          <div className="hidden overflow-x-auto sm:block">
-            <div className="min-w-[680px] divide-y divide-zinc-100">
-              <div className="grid grid-cols-4 gap-3 bg-zinc-50 px-5 py-3 text-sm font-semibold text-zinc-900">
-                <p>{t.pricing.featureColumn}</p>
-                <p>Gratis</p>
-                <p>Pro</p>
-                <p>Premium</p>
-              </div>
-              {t.pricing.comparisonRows.map(([label, free, pro, premium]) => (
-                <div key={label} className="grid grid-cols-4 gap-3 px-5 py-4 text-sm">
-                  <p className="font-medium text-zinc-950">{label}</p>
-                  <PlanValue value={free} />
-                  <PlanValue value={pro} strong />
-                  <PlanValue value={premium} strong />
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="divide-y divide-zinc-100 sm:hidden">
-            {t.pricing.comparisonRows.map(([label, free, pro, premium]) => (
-              <div key={label} className="px-5 py-4 text-sm">
-                <p className="font-medium text-zinc-950">{label}</p>
-                <div className="mt-3 grid gap-2">
-                  <MobilePlanValue plan="Gratis" value={free} />
-                  <MobilePlanValue plan="Pro" value={pro} />
-                  <MobilePlanValue plan="Premium" value={premium} />
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="mt-10 rounded-lg border border-blue-200 bg-blue-50 p-6">
-          <h2 className="text-lg font-semibold text-blue-950">{t.pricing.securePaymentTitle}</h2>
-          <p className="mt-2 text-sm leading-6 text-blue-900">{t.pricing.securePayment}</p>
-        </section>
+        <p className="mt-4 text-sm text-zinc-600">{locale === "es" ? "El alta gratuita comienza en el registro. Si se solicita confirmaci\u00f3n, revisa tu correo antes de iniciar sesi\u00f3n. Para Pro y Premium, prepara una solicitud de acceso por email." : "Free access starts with registration. If confirmation is requested, check your email before signing in. For Pro and Premium, prepare an access request by email."}</p>
       </section>
       <LegalFooter />
     </main>
-  );
-}
-
-function MobilePlanValue({ plan, value }: { plan: string; value: string }) {
-  return (
-    <div className="flex items-start justify-between gap-3 rounded-md bg-zinc-50 px-3 py-2">
-      <span className="font-medium text-zinc-700">{plan}</span>
-      <PlanValue value={value} strong />
-    </div>
-  );
-}
-
-function PlanValue({ value, strong = false }: { value: string; strong?: boolean }) {
-  const included = value === "Incluido" || value === "Included";
-  const excluded = value === "No incluido" || value === "Not included";
-
-  return (
-    <p
-      className={`${
-        included
-          ? "font-medium text-emerald-700"
-          : excluded
-            ? "font-medium text-red-700"
-            : strong
-              ? "font-medium text-zinc-900"
-              : "text-zinc-600"
-      }`}
-    >
-      {value}
-    </p>
   );
 }

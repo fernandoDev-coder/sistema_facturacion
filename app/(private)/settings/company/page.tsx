@@ -32,7 +32,7 @@ export default async function CompanySettingsPage({
         <p className="mt-1 text-sm text-zinc-600">{t.pages.company.description}</p>
       </div>
       <Message text={message} />
-      <section className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm sm:p-6">
+      <section className="rounded-lg border border-zinc-200 bg-white p-4 sm:p-6">
         <form action={saveCompanySettingsAction} encType="multipart/form-data" className="space-y-6">
           <div className="grid gap-4 md:grid-cols-2">
             <Field label={t.pages.company.fiscalName} name="fiscal_name" defaultValue={company?.fiscal_name} />
@@ -135,7 +135,7 @@ export default async function CompanySettingsPage({
                 name="invoice_footer"
                 defaultValue={company?.invoice_footer ?? ""}
                 rows={4}
-                className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
+                className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm focus:border-slate-900"
               />
             </label>
           </div>
@@ -163,7 +163,7 @@ function Field({
       <input
         name={name}
         defaultValue={defaultValue ?? ""}
-        className="mt-1 min-h-11 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
+        className="mt-1 min-h-11 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm focus:border-slate-900"
         {...props}
       />
     </label>

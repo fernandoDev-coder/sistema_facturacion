@@ -1,3 +1,5 @@
+import { hasMfaAccess } from "@/lib/supabase/mfa";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
 import { NextResponse } from "next/server";
 import { createAuditLog } from "@/lib/audit";
 import { canExportInvoices, getProfileForLimits } from "@/lib/plan-limits";
@@ -37,6 +39,9 @@ export async function GET(request: Request) {
   if (!user) {
     return csvError("No autenticado.", 401);
   }
+  if (!await hasMfaAccess(supabase)) return csvError("MFA required.", 403);
+  const limit = await checkRateLimit("export", user.id);
+  if (!limit.allowed) return rateLimitResponse(limit);
 
   const profile = await getProfileForLimits(supabase, user.id);
 

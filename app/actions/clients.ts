@@ -1,5 +1,7 @@
 "use server";
 
+import { enforceActionLimit } from "@/lib/rate-limit";
+
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createAuditLog } from "@/lib/audit";
@@ -42,6 +44,7 @@ function clientPayload(formData: FormData) {
 
 export async function createClientAction(formData: FormData) {
   const user = await requireUser();
+  await enforceActionLimit("mutation", user.id, "/dashboard");
   const supabase = await createClient();
   const limitError = await assertCanCreateClient(supabase, user.id);
 
@@ -78,6 +81,7 @@ export async function createClientAction(formData: FormData) {
 
 export async function updateClientAction(formData: FormData) {
   const user = await requireUser();
+  await enforceActionLimit("mutation", user.id, "/dashboard");
   const id = requiredText(formData.get("id"));
   const supabase = await createClient();
   let payload: ReturnType<typeof clientPayload>;
@@ -108,6 +112,7 @@ export async function updateClientAction(formData: FormData) {
 
 export async function deleteClientAction(formData: FormData) {
   const user = await requireUser();
+  await enforceActionLimit("mutation", user.id, "/dashboard");
   const id = requiredText(formData.get("id"));
   const supabase = await createClient();
 

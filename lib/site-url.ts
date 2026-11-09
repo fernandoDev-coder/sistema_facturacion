@@ -1,5 +1,9 @@
 const defaultSiteUrl = "https://www.faktudash.com";
 
+export function getPublicShareUrl(path = "/") {
+  return new URL(["/", "/demo", "/pricing", "/contact"].includes(path) ? path : "/", defaultSiteUrl).toString();
+}
+
 export function getSiteUrl() {
   const configuredUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
 

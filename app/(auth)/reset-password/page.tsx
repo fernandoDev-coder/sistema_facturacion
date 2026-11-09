@@ -26,7 +26,7 @@ export default async function ResetPasswordPage({
   return (
     <main className="flex min-h-screen flex-col bg-zinc-50">
       <section className="flex flex-1 items-center justify-center px-4 py-6 sm:py-10">
-        <div className="w-full max-w-md rounded-lg border border-zinc-200 bg-white p-5 shadow-sm sm:p-8">
+        <div className="w-full max-w-md rounded-lg border border-zinc-200 bg-white p-5 sm:p-8">
           <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
             <BrandLogo href="/" />
             <LanguageSwitcher locale={locale} labels={languageLabels} />

@@ -1,10 +1,13 @@
 "use server";
 
+import { getLocale } from "@/lib/i18n";
+import { enforceActionLimit } from "@/lib/rate-limit";
+
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createAuditLog } from "@/lib/audit";
-import { calculateTotals, documentNumber, nullableText, requiredText, toDecimal } from "@/lib/format";
-import { assertCanCreateDocuments, assertCanUseMonthlyBulkInvoices } from "@/lib/plan-limits";
+import { calculateTotals, nullableText, requiredText, toDecimal } from "@/lib/format";
+import { assertCanCreateDocuments } from "@/lib/plan-limits";
 import { createClient, requireUser } from "@/lib/supabase/server";
 import type { Community, DocumentType, InvoiceStatus } from "@/lib/types";
 
@@ -126,6 +129,7 @@ export async function updateBudgetAction(formData: FormData) {
 
 export async function deleteInvoiceAction(formData: FormData) {
   const user = await requireUser();
+  await enforceActionLimit("mutation", user.id, "/dashboard");
   const id = requiredText(formData.get("id"));
   const redirectPath = safeDocumentRedirectPath(formData.get("redirect_path"));
   const supabase = await createClient();
@@ -169,6 +173,7 @@ export async function deleteInvoiceAction(formData: FormData) {
 
 export async function issueInvoiceAction(formData: FormData) {
   const user = await requireUser();
+  await enforceActionLimit("mutation", user.id, "/dashboard");
   const id = requiredText(formData.get("id"));
 
   try {
@@ -184,6 +189,7 @@ export async function issueInvoiceAction(formData: FormData) {
 
 export async function cancelInvoiceAction(formData: FormData) {
   const user = await requireUser();
+  await enforceActionLimit("mutation", user.id, "/dashboard");
   const id = requiredText(formData.get("id"));
   const reason = requiredText(formData.get("reason"));
 
@@ -200,6 +206,7 @@ export async function cancelInvoiceAction(formData: FormData) {
 
 export async function issueInvoice(invoiceId: string, userId: string) {
   const user = await requireUser();
+  await enforceActionLimit("mutation", user.id, "/dashboard");
 
   if (user.id !== userId) {
     throw new Error("Usuario no autorizado.");
@@ -217,6 +224,7 @@ export async function issueInvoice(invoiceId: string, userId: string) {
 
 export async function cancelInvoice(invoiceId: string, userId: string, reason: string) {
   const user = await requireUser();
+  await enforceActionLimit("mutation", user.id, "/dashboard");
 
   if (user.id !== userId) {
     throw new Error("Usuario no autorizado.");
@@ -234,148 +242,41 @@ export async function cancelInvoice(invoiceId: string, userId: string, reason: s
 
 export async function createMonthlyInvoicesAction(formData: FormData) {
   const user = await requireUser();
+  await enforceActionLimit("monthly", user.id, "/invoices/create-month");
   const supabase = await createClient();
   const month = Number(formData.get("month"));
   const year = Number(formData.get("year"));
-  const confirmDuplicates = formData.get("confirm_duplicates") === "yes";
-  const selectedCommunityIds = Array.from(new Set(formData.getAll("include").map(String)));
-
-  if (!month || !year || selectedCommunityIds.length === 0) {
-    redirect("/invoices/create-month?message=Selecciona mes, año y al menos un cliente.");
+  const operationId = String(formData.get("operation_id") ?? "");
+  const selected = Array.from(new Set(formData.getAll("include").map(String)));
+  const es = await getLocale() === "es";
+  const rows = selected.map((id) => ({
+    community_id: id,
+    amount: Number(String(formData.get(`amount_${id}`) ?? "").trim().replace(",", ".")),
+    vat_rate: Number(String(formData.get(`vat_${id}`) ?? "").trim().replace(",", ".")),
+    subject: requiredText(formData.get(`subject_${id}`)),
+    notes: nullableText(formData.get(`notes_${id}`)),
+  }));
+  if (!/^[0-9a-f-]{36}$/i.test(operationId) || !rows.length || rows.some((row) => !row.subject || !Number.isFinite(row.amount) || row.amount < 0 || !Number.isFinite(row.vat_rate) || row.vat_rate < 0 || row.vat_rate > 100)) {
+    redirect(`/invoices/create-month?${new URLSearchParams({ message: es ? "Revisa los datos del cierre mensual." : "Check the monthly closing details." })}`);
   }
-
-  const bulkError = await assertCanUseMonthlyBulkInvoices(supabase, user.id);
-  if (bulkError) {
-    redirect(`/invoices/create-month?message=${encodeURIComponent(bulkError)}`);
-  }
-
-  const limitError = await assertCanCreateDocuments(supabase, user.id, selectedCommunityIds.length);
-  if (limitError) {
-    redirect(`/invoices/create-month?message=${encodeURIComponent(limitError)}`);
-  }
-
-  const { data: duplicates, error: duplicateError } = await supabase
-    .from("invoices")
-    .select("community_id")
-    .eq("owner_id", user.id)
-    .eq("document_type", "invoice")
-    .eq("month", month)
-    .eq("year", year)
-    .in("community_id", selectedCommunityIds);
-
-  if (duplicateError) {
-    redirect(`/invoices/create-month?message=${encodeURIComponent(duplicateError.message)}`);
-  }
-
-  if ((duplicates?.length ?? 0) > 0 && !confirmDuplicates) {
-    redirect(
-      `/invoices/create-month?month=${month}&year=${year}&message=${encodeURIComponent(
-        "Ya existen facturas para algun cliente seleccionado. Confirma los duplicados para continuar.",
-      )}`,
-    );
-  }
-
-  const { count } = await supabase
-    .from("invoices")
-    .select("id", { count: "exact", head: true })
-    .eq("owner_id", user.id)
-    .eq("year", year)
-    .eq("document_type", "invoice");
-
-  const { data: selectedCommunities, error: communitiesError } = await supabase
-    .from("communities")
-    .select("*")
-    .eq("owner_id", user.id)
-    .in("id", selectedCommunityIds);
-
-  if (communitiesError) {
-    redirect(`/invoices/create-month?message=${encodeURIComponent(communitiesError.message)}`);
-  }
-
-  const communitiesById = new Map((selectedCommunities ?? []).map((community) => [community.id, community]));
-
-  if (communitiesById.size !== selectedCommunityIds.length) {
-    redirect("/invoices/create-month?message=Alguno de los clientes seleccionados no existe o no pertenece a tu cuenta.");
-  }
-
-  const rows = selectedCommunityIds.map((communityId, index) => {
-    const community = communitiesById.get(communityId);
-    const amount = toDecimal(formData.get(`amount_${communityId}`));
-    const vatRate = toDecimal(formData.get(`vat_${communityId}`), 21);
-    const totals = calculateTotals(amount, vatRate);
-    const subject = requiredText(formData.get(`subject_${communityId}`)) || `Factura ${month}/${year}`;
-
-    return {
-      owner_id: user.id,
-      community_id: communityId,
-      document_type: "invoice" as const,
-      ...snapshotFromCommunity(community),
-      invoice_number: documentNumber("invoice", year, (count ?? 0) + index + 1),
-      invoice_date: `${year}-${String(month).padStart(2, "0")}-01`,
-      month,
-      year,
-      subject,
-      amount,
-      vat_rate: vatRate,
-      vat_amount: totals.vatAmount,
-      total: totals.total,
-      status: "draft" as const,
-      notes: nullableText(formData.get(`notes_${communityId}`)),
-      items: [
-        {
-          description: subject,
-          amount,
-          vat_rate: vatRate,
-          vat_amount: totals.vatAmount,
-          total: totals.total,
-          sort_order: 0,
-        },
-      ],
-    };
+  const { data: ids, error } = await supabase.rpc("create_monthly_drafts", {
+    p_operation_id: operationId, p_month: month, p_year: year, p_rows: rows,
+    p_confirm_duplicates: formData.get("confirm_duplicates") === "yes",
   });
-
-  const { data: createdInvoices, error } = await supabase
-    .from("invoices")
-    .insert(
-      rows.map((row) => {
-        const { items, ...invoiceRow } = row;
-        void items;
-        return invoiceRow;
-      }),
-    )
-    .select("id, community_id");
-
-  if (error || !createdInvoices) {
-    redirect(`/invoices/create-month?message=${encodeURIComponent(error?.message ?? "No se pudieron crear las facturas.")}`);
+  if (error || !ids) {
+    const message = error?.code === "23505"
+      ? (es ? "Ya existen facturas en este periodo. Confirma si deseas crear otras adicionales." : "Invoices already exist in this period. Confirm to create additional ones.")
+      : (es ? "No se pudo completar el cierre. Comprueba el plan, los datos y la disponibilidad del servicio." : "Could not complete closing. Check the plan, details and service availability.");
+    redirect(`/invoices/create-month?${new URLSearchParams({ message })}`);
   }
-
-  await Promise.all(
-    createdInvoices.map((invoice) => createAuditLog(supabase, user.id, "invoice", invoice.id, "invoice_created", { source: "monthly_bulk" })),
-  );
-
-  const itemsByCommunity = new Map(rows.map((row) => [row.community_id, row.items]));
-  const itemRows = createdInvoices.flatMap((invoice) =>
-    (itemsByCommunity.get(invoice.community_id) ?? []).map((item) => ({
-      owner_id: user.id,
-      invoice_id: invoice.id,
-      ...item,
-    })),
-  );
-
-  if (itemRows.length) {
-    const { error: itemError } = await supabase.from("invoice_items").insert(itemRows);
-    if (itemError) {
-      redirect(`/invoices/create-month?message=${encodeURIComponent(itemError.message)}`);
-    }
-  }
-
   revalidatePath("/invoices");
   revalidatePath("/dashboard");
-  redirect(`/invoices?message=${encodeURIComponent(`Se han creado ${createdInvoices.length} facturas en borrador.`)}`);
+  redirect(`/invoices?${new URLSearchParams({ message: es ? `${ids.length} borradores preparados.` : `${ids.length} drafts prepared.` })}`);
 }
 
 async function createDocumentAction(formData: FormData, documentType: DocumentType) {
   const user = await requireUser();
+  await enforceActionLimit("mutation", user.id, "/dashboard");
   const supabase = await createClient();
   const limitError = await assertCanCreateDocuments(supabase, user.id);
 
@@ -426,6 +327,7 @@ async function createDocumentAction(formData: FormData, documentType: DocumentTy
 
 async function updateDocumentAction(formData: FormData, documentType: DocumentType) {
   const user = await requireUser();
+  await enforceActionLimit("mutation", user.id, "/dashboard");
   const id = requiredText(formData.get("id"));
   const supabase = await createClient();
   const payload = parseInvoicePayload(formData);

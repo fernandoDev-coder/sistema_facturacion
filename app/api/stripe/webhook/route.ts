@@ -3,6 +3,7 @@ import Stripe from "stripe";
 import { getStripe } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase/server";
 import type { ProfilePlan } from "@/lib/types";
+import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
   const signature = request.headers.get("stripe-signature");
@@ -45,6 +46,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: eventError.message }, { status: 500 });
   }
 
+  const limit = await checkRateLimit("webhook", event.account || "platform");
+  if (!limit.allowed) return rateLimitResponse(limit);
+  const { data: claim, error: claimError } = await admin.rpc("claim_billing_event", { p_event_id: event.id });
+  if (claim?.status === "done") return NextResponse.json({ received: true, duplicate: true });
+  if (claimError || claim?.status !== "acquired" || !claim.token) {
+    return NextResponse.json({ error: "Retry later." }, { status: 503, headers: { "Retry-After": "30" } });
+  }
+
   try {
     switch (event.type) {
       case "checkout.session.completed": {
@@ -63,18 +72,14 @@ export async function POST(request: Request) {
       }
     }
   } catch (error) {
-    await admin
-      .from("billing_events")
-      .update({ processing_error: (error as Error).message })
-      .eq("event_id", event.id);
+    void error;
+    await admin.rpc("finish_billing_event", { p_event_id: event.id, p_token: claim.token, p_error: "processing_failed" });
 
-    return NextResponse.json({ error: (error as Error).message }, { status: 500 });
+    return NextResponse.json({ error: "Processing failed." }, { status: 500 });
   }
 
-  await admin
-    .from("billing_events")
-    .update({ processed_at: new Date().toISOString(), processing_error: null })
-    .eq("event_id", event.id);
+  const finished = await admin.rpc("finish_billing_event", { p_event_id: event.id, p_token: claim.token });
+  if (finished.error || !finished.data) return NextResponse.json({ error: "Retry later." }, { status: 503, headers: { "Retry-After": "30" } });
 
   return NextResponse.json({ received: true });
 }

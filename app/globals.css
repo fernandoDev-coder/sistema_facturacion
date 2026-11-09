@@ -1,17 +1,16 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f8fafc;
+  --background: #f5f3ee;
   --foreground: #18181b;
-  --surface: #ffffff;
-  --surface-subtle: #f4f4f5;
+  --surface: #faf8f3;
+  --surface-subtle: #eeece6;
   --border: #e4e4e7;
   --muted: #52525b;
   --accent: #1d4ed8;
   --accent-strong: #1e40af;
   --danger: #b91c1c;
   --success: #047857;
-  --shadow-soft: 0 14px 40px rgb(15 23 42 / 0.12);
   --radius-control: 0.5rem;
   --radius-panel: 0.75rem;
   --motion-fast: 160ms;
@@ -22,8 +21,8 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, Consolas, monospace;
   --color-app-surface: var(--surface);
   --color-app-subtle: var(--surface-subtle);
   --color-app-border: var(--border);
@@ -43,8 +42,7 @@
     --accent-strong: #93c5fd;
     --danger: #f87171;
     --success: #34d399;
-    --shadow-soft: 0 18px 50px rgb(0 0 0 / 0.35);
-    color-scheme: dark;
+      color-scheme: dark;
   }
 }
 
@@ -59,7 +57,6 @@
   --accent-strong: #93c5fd;
   --danger: #f87171;
   --success: #34d399;
-  --shadow-soft: 0 18px 50px rgb(0 0 0 / 0.35);
   --color-zinc-50: #111113;
   --color-zinc-100: #27272a;
   --color-zinc-200: #3f3f46;
@@ -181,13 +178,13 @@ textarea::placeholder {
   background: var(--surface);
   padding: 0.625rem 0.75rem;
   font-size: 0.875rem;
-  transition: border-color var(--motion-fast) ease, box-shadow var(--motion-fast) ease;
+  transition: border-color var(--motion-fast) ease;
 }
 
 .field-control:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
-  outline: none;
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
 }
 
 .autosave-status {
@@ -210,14 +207,11 @@ textarea::placeholder {
 .skeleton {
   overflow: hidden;
   border-radius: 0.5rem;
-  background: linear-gradient(90deg, var(--surface-subtle) 25%, color-mix(in srgb, var(--surface-subtle) 55%, var(--surface)) 50%, var(--surface-subtle) 75%);
-  background-size: 200% 100%;
-  animation: skeleton-shimmer 1.35s ease-in-out infinite;
+  background: var(--surface-subtle);
+  animation: skeleton-pulse 1.35s ease-in-out infinite;
 }
 
 @supports (animation-timeline: view()) {
-  main > section,
-  main > div > section,
   [data-reveal] {
     animation: section-slide-reveal linear both;
     animation-timeline: view();
@@ -261,7 +255,6 @@ textarea::placeholder {
   border-radius: 999px;
   background: #1d4ed8;
   color: #fff;
-  box-shadow: var(--shadow-soft);
   transition: transform var(--motion-base) var(--ease-out), background-color var(--motion-fast) ease;
 }
 
@@ -297,10 +290,8 @@ textarea::placeholder {
   overflow: hidden;
   border: 1px solid var(--border);
   border-radius: var(--radius-panel);
-  background: color-mix(in srgb, var(--surface) 94%, transparent);
+  background: var(--surface);
   padding: 0.375rem;
-  box-shadow: var(--shadow-soft);
-  backdrop-filter: blur(16px);
   animation: tool-menu-in var(--motion-base) var(--ease-out) both;
 }
 
@@ -329,7 +320,7 @@ kbd {
   background: var(--surface-subtle);
   padding: 0.1rem 0.35rem;
   color: var(--muted);
-  font-family: var(--font-geist-mono), monospace;
+  font-family: ui-monospace, Consolas, monospace;
   font-size: 0.68rem;
   white-space: nowrap;
 }
@@ -342,7 +333,6 @@ kbd {
   place-items: start center;
   background: rgb(9 9 11 / 0.58);
   padding: min(18vh, 8rem) 1rem 1rem;
-  backdrop-filter: blur(5px);
   animation: fade-in var(--motion-fast) ease both;
 }
 
@@ -352,7 +342,6 @@ kbd {
   border: 1px solid var(--border);
   border-radius: 1rem;
   background: var(--surface);
-  box-shadow: 0 28px 80px rgb(0 0 0 / 0.32);
   animation: palette-in var(--motion-base) var(--ease-out) both;
 }
 
@@ -369,7 +358,8 @@ kbd {
   min-height: 2rem;
   border: 0;
   background: transparent !important;
-  outline: none;
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
   font-size: 1rem;
 }
 
@@ -441,7 +431,6 @@ kbd {
   z-index: 20;
   width: 100%;
   background: rgb(9 9 11 / 0.35);
-  backdrop-filter: blur(2px);
 }
 
 .mobile-nav-panel {
@@ -456,7 +445,6 @@ kbd {
   border-radius: var(--radius-panel);
   background: var(--surface);
   padding: 0.5rem;
-  box-shadow: var(--shadow-soft);
   animation: tool-menu-in var(--motion-base) var(--ease-out) both;
 }
 
@@ -509,8 +497,8 @@ kbd {
   to { transform: rotate(360deg); }
 }
 
-@keyframes skeleton-shimmer {
-  to { background-position: -200% 0; }
+@keyframes skeleton-pulse {
+  50% { opacity: 0.55; }
 }
 
 @keyframes tool-menu-in {
@@ -617,6 +605,18 @@ kbd {
   .print-page {
     width: 100%;
     min-height: auto;
-    box-shadow: none;
-  }
+    }
+}
+
+@media screen {
+  .bg-white, .bg-white\/95 { background-color: var(--surface); }
+  :root:not([data-theme="dark"]) .bg-zinc-50 { background-color: var(--background); }
+  body { padding-bottom: calc(5rem + env(safe-area-inset-bottom)); }
+}
+textarea { max-height: 24rem; overflow-y: auto; }
+.tool-notice { position: fixed; bottom: 5.5rem; right: 1rem; max-width: calc(100vw - 2rem); z-index: 80; padding: .75rem; background: var(--surface); border: 1px solid var(--border); border-radius: .5rem; }
+@media print {
+  :root, :root[data-theme="dark"] { --foreground: #18181b; --surface: #fff; --background: #fff; --muted: #52525b; color-scheme: light; }
+  .print-page, .print-page * { color: #18181b !important; background-color: transparent !important; }
+  .experience-tools, .tool-notice { display: none; }
 }

@@ -1,5 +1,8 @@
 "use server";
 
+import { enforceActionLimit } from "@/lib/rate-limit";
+import { reauthenticatePassword } from "@/lib/supabase/reauthenticate";
+
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { validatePassword } from "@/lib/password";
@@ -15,6 +18,7 @@ function accountRedirect(message: string): never {
 
 export async function saveAccountProfileAction(formData: FormData) {
   const user = await requireUser();
+  await enforceActionLimit("mutation", user.id, "/dashboard");
   const fullName = String(formData.get("full_name") ?? "").trim();
 
   if (fullName.length > 120) {
@@ -36,6 +40,7 @@ export async function saveAccountProfileAction(formData: FormData) {
 
 export async function changePasswordAction(formData: FormData) {
   const user = await requireUser();
+  await enforceActionLimit("mutation", user.id, "/dashboard");
   const currentPassword = String(formData.get("current_password") ?? "");
   const newPassword = String(formData.get("new_password") ?? "");
   const confirmPassword = String(formData.get("confirm_password") ?? "");
@@ -58,12 +63,7 @@ export async function changePasswordAction(formData: FormData) {
   }
 
   const supabase = await createClient();
-  const { error: signInError } = await supabase.auth.signInWithPassword({
-    email: user.email,
-    password: currentPassword,
-  });
-
-  if (signInError) {
+  if (!await reauthenticatePassword(user, currentPassword)) {
     accountRedirect("La contrasena actual no es correcta.");
   }
 
@@ -78,6 +78,7 @@ export async function changePasswordAction(formData: FormData) {
 
 export async function deleteAccountAction(formData: FormData) {
   const user = await requireUser();
+  await enforceActionLimit("mutation", user.id, "/dashboard");
   const confirmationEmail = String(formData.get("confirm_email") ?? "").trim().toLowerCase();
   const userEmail = user.email?.trim().toLowerCase();
 

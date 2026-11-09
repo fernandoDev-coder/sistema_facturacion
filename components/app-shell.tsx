@@ -63,7 +63,7 @@ export function AppShell({
         </div>
       </aside>
 
-      <header className="sticky top-0 z-20 border-b border-zinc-200 bg-white/95 px-4 py-3 backdrop-blur lg:hidden print:hidden">
+      <header className="sticky top-0 z-20 border-b border-zinc-200 bg-white/95 px-4 py-3 lg:hidden print:hidden">
         <div className="flex items-center justify-between gap-3">
           <BrandLogo href="/dashboard" markClassName="h-7 w-7" textClassName="text-base" />
           <div className="flex min-w-0 items-center gap-2">
