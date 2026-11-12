@@ -1,5 +1,8 @@
 "use server";
 
+import { enforceActionLimit } from "@/lib/rate-limit";
+import { hasMfaAccess } from "@/lib/supabase/mfa";
+
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -31,13 +34,13 @@ function translateAuthError(message: string) {
     return "Email o contraseña incorrectos.";
   }
 
-  return message;
+  return "No se pudo completar la autenticación. Inténtalo de nuevo.";
 }
 
 async function getEmailRedirectTo() {
   const baseUrl = await getBaseUrl();
   if (baseUrl) {
-    return `${baseUrl}/login?message=${encodeURIComponent("Email verificado. Ya puedes iniciar sesión.")}`;
+    return `${baseUrl}/auth/callback?next=/welcome`;
   }
 
   return undefined;
@@ -73,6 +76,7 @@ async function getBaseUrl() {
 }
 
 export async function loginAction(formData: FormData) {
+  await enforceActionLimit("login", undefined, "/login");
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   const remember = formData.get("remember") === "on";
@@ -97,6 +101,7 @@ export async function loginAction(formData: FormData) {
   }
 
   const user = data.user;
+  if (!await hasMfaAccess(supabase)) redirect("/auth/mfa");
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -111,6 +116,7 @@ export async function loginAction(formData: FormData) {
 }
 
 export async function registerAction(formData: FormData) {
+  await enforceActionLimit("register", undefined, "/register");
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   const passwordConfirm = String(formData.get("password_confirm") ?? "");
@@ -154,6 +160,7 @@ export async function registerAction(formData: FormData) {
 }
 
 export async function resendVerificationAction(formData: FormData) {
+  await enforceActionLimit("email", undefined, "/login");
   const email = String(formData.get("email") ?? "").trim();
 
   if (!email) {
@@ -177,6 +184,7 @@ export async function resendVerificationAction(formData: FormData) {
 }
 
 export async function requestPasswordResetAction(formData: FormData) {
+  await enforceActionLimit("email", undefined, "/forgot-password");
   const email = String(formData.get("email") ?? "").trim();
 
   if (!email) {
@@ -221,6 +229,8 @@ export async function updateRecoveredPasswordAction(formData: FormData) {
     authRedirect("/forgot-password", "El enlace de recuperación ha caducado o no es válido. Solicita uno nuevo.");
   }
 
+  if (!await hasMfaAccess(supabase)) redirect("/auth/mfa?next=/reset-password");
+  await enforceActionLimit("mutation", user.id, "/reset-password");
   const { error } = await supabase.auth.updateUser({ password });
 
   if (error) {
@@ -241,6 +251,8 @@ export async function completeOnboardingAction() {
     redirect("/login");
   }
 
+  if (!await hasMfaAccess(supabase)) redirect("/auth/mfa");
+  await enforceActionLimit("mutation", user.id, "/welcome");
   await supabase
     .from("profiles")
     .update({ onboarding_completed_at: new Date().toISOString() })
@@ -251,6 +263,7 @@ export async function completeOnboardingAction() {
 
 export async function logoutAction() {
   const supabase = await createClient();
-  await supabase.auth.signOut();
+  const { error } = await supabase.auth.signOut();
+  if (error) authRedirect("/login", "No se pudo cerrar la sesión. Inténtalo de nuevo.");
   redirect("/login");
 }

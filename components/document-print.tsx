@@ -61,7 +61,7 @@ export function DocumentPrint({
         <PrintButton label={labels.print} />
       </div>
 
-      <article className="print-page mx-auto min-h-[297mm] max-w-[210mm] bg-white p-10 text-zinc-950 shadow-sm ring-1 ring-zinc-200 print:p-0 print:shadow-none print:ring-0">
+      <article className="print-page mx-auto min-h-[297mm] max-w-[210mm] bg-white p-10 text-zinc-950 ring-1 ring-zinc-200 print:p-0 print:shadow-none print:ring-0">
         <header className="flex items-start justify-between gap-10 border-b border-zinc-300 pb-8">
           <div className="min-w-0 flex-1">
             <InvoiceLogo src={showCompanyLogo ? company?.logo_url : null} reserveSpace />

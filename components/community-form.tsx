@@ -137,7 +137,7 @@ function Field({
       <input
         name={name}
         defaultValue={defaultValue ?? ""}
-        className="mt-1 min-h-11 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
+        className="mt-1 min-h-11 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm focus:border-slate-900"
         {...props}
       />
     </label>
@@ -160,7 +160,7 @@ function Textarea({
         name={name}
         defaultValue={defaultValue ?? ""}
         rows={4}
-        className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
+        className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm focus:border-slate-900"
       />
     </label>
   );

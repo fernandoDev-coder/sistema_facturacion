@@ -1,8 +1,11 @@
+import { EnglishLegalPage } from "@/components/english-legal-page";
+import { getLocale } from "@/lib/i18n";
 import { LegalPage, LegalSection } from "@/components/legal-page";
 
-export default function CookiesPage() {
+export default async function CookiesPage() {
+  if (await getLocale() === "en") return <EnglishLegalPage kind="cookies" />;
   return (
-    <LegalPage title="Politica de cookies" updatedAt="Junio 2026">
+    <LegalPage title="Politica de cookies" updatedAt="Noviembre 2026">
       <LegalSection title="Uso de cookies">
         <p>
           FaktuDash utiliza cookies tecnicas necesarias para iniciar sesion, mantener la seguridad, recordar
@@ -13,6 +16,8 @@ export default function CookiesPage() {
         <p>
           Se pueden usar cookies de autenticacion de Supabase, cookies de sesion necesarias y la cookie
           faktudash_locale para recordar el idioma elegido por el usuario.
+          La sesión recordada dura hasta 30 días; sin esa opción se usan cookies de sesión. El tema y los borradores
+          se guardan localmente en el dispositivo. Las contraseñas y códigos MFA se excluyen del autoguardado.
         </p>
       </LegalSection>
       <LegalSection title="Analitica o marketing">

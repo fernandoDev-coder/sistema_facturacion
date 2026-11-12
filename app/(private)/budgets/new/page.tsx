@@ -34,7 +34,7 @@ export default async function NewBudgetPage({
       </div>
       <Message text={message} />
       {communities?.length ? (
-        <section className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm sm:p-6">
+        <section className="rounded-lg border border-zinc-200 bg-white p-4 sm:p-6">
           <InvoiceForm
             action={createBudgetAction}
             communities={communities}

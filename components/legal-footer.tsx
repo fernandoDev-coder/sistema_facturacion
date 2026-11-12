@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { contactEmails } from "@/lib/beta-config";
+import { contactEmails, contactHref } from "@/lib/beta-config";
 import { getDictionary, getLocale } from "@/lib/i18n";
 
 export async function LegalFooter({ className = "" }: { className?: string }) {
@@ -13,9 +13,9 @@ export async function LegalFooter({ className = "" }: { className?: string }) {
   ];
   const contactLinks = [
     { href: "/contact", label: t.legalFooter.contact },
-    { href: `mailto:${contactEmails.support}`, label: `${t.legalFooter.support}: ${contactEmails.support}` },
-    { href: `mailto:${contactEmails.legal}`, label: `${t.legalFooter.legalContact}: ${contactEmails.legal}` },
-    { href: `mailto:${contactEmails.privacy}`, label: `${t.legalFooter.privacyContact}: ${contactEmails.privacy}` },
+    { href: contactHref(contactEmails.support), label: `${t.legalFooter.support}: ${contactEmails.support}` },
+    { href: contactHref(contactEmails.legal), label: `${t.legalFooter.legalContact}: ${contactEmails.legal}` },
+    { href: contactHref(contactEmails.privacy), label: `${t.legalFooter.privacyContact}: ${contactEmails.privacy}` },
   ];
 
   return (

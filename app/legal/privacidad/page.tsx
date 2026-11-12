@@ -1,14 +1,17 @@
+import { EnglishLegalPage } from "@/components/english-legal-page";
+import { getLocale } from "@/lib/i18n";
 import { LegalPage, LegalSection } from "@/components/legal-page";
-import { contactEmails } from "@/lib/beta-config";
+import { contactEmails, contactHref } from "@/lib/beta-config";
 
-export default function PrivacyPage() {
+export default async function PrivacyPage() {
+  if (await getLocale() === "en") return <EnglishLegalPage kind="privacy" />;
   return (
-    <LegalPage title="Politica de privacidad" updatedAt="Junio 2026">
+    <LegalPage title="Politica de privacidad" updatedAt="Noviembre 2026">
       <LegalSection title="Responsable">
         <p>
           FaktuDash actua como responsable del tratamiento de los datos necesarios para prestar la beta privada del
           servicio. Para consultas de privacidad puedes escribir a{" "}
-          <a href={`mailto:${contactEmails.privacy}`}>{contactEmails.privacy}</a>.
+          <a href={contactHref(contactEmails.privacy)}>{contactEmails.privacy}</a>.
         </p>
       </LegalSection>
       <LegalSection title="Datos tratados">
@@ -48,7 +51,7 @@ export default function PrivacyPage() {
       <LegalSection title="Derechos">
         <p>
           Puedes solicitar acceso, rectificacion, supresion, oposicion, limitacion y portabilidad cuando proceda,
-          escribiendo a <a href={`mailto:${contactEmails.privacy}`}>{contactEmails.privacy}</a>.
+          escribiendo a <a href={contactHref(contactEmails.privacy)}>{contactEmails.privacy}</a>.
         </p>
       </LegalSection>
       <LegalSection title="Cambios antes del lanzamiento">

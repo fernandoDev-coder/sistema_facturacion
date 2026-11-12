@@ -73,7 +73,7 @@ export default async function WelcomePage() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-8">
-      <section className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm sm:p-8">
+      <section className="rounded-lg border border-zinc-200 bg-white p-5 sm:p-8">
         <p className="text-sm font-medium uppercase tracking-[0.18em] text-zinc-500">{t.pages.welcome.eyebrow}</p>
         <h1 className="mt-3 text-2xl font-semibold text-zinc-950 sm:text-3xl">{t.pages.welcome.title}</h1>
         <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-600">
@@ -93,7 +93,7 @@ export default async function WelcomePage() {
 
       <section className="grid gap-4 md:grid-cols-2">
         {checklist.map((item) => (
-          <article key={item.title} className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm sm:p-6">
+          <article key={item.title} className="rounded-lg border border-zinc-200 bg-white p-5 sm:p-6">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
               {item.done ? t.pages.welcome.done : t.pages.welcome.pending}
             </p>

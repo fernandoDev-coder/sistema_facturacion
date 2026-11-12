@@ -8,6 +8,7 @@ type FormButtonProps = {
   className?: string;
   pendingText?: string;
   variant?: ButtonVariant;
+  disabled?: boolean;
 };
 
 export function FormButton({
@@ -15,13 +16,14 @@ export function FormButton({
   className = "",
   pendingText = "Guardando...",
   variant = "primary",
+  disabled = false,
 }: FormButtonProps) {
   const { pending } = useFormStatus();
 
   return (
     <button
       type="submit"
-      disabled={pending}
+      disabled={pending || disabled}
       className={buttonClass({ variant, size: className.includes("w-full") ? "full" : "md", className })}
     >
       {pending ? <span className="spinner" aria-hidden="true" /> : null}

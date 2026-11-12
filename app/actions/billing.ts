@@ -1,5 +1,7 @@
 "use server";
 
+import { enforceActionLimit } from "@/lib/rate-limit";
+
 import { redirect } from "next/navigation";
 import {
   arePaymentsEnabled,
@@ -21,6 +23,7 @@ export async function createCheckoutSessionAction(formData?: FormData) {
   }
 
   const user = await requireUser();
+  await enforceActionLimit("mutation", user.id, "/dashboard");
   const selectedPlan = parseCheckoutPlan(formData);
   const supabase = await createClient();
   const { data: profile } = await supabase
@@ -125,6 +128,7 @@ export async function createCustomerPortalSessionAction() {
   }
 
   const user = await requireUser();
+  await enforceActionLimit("mutation", user.id, "/dashboard");
   const supabase = await createClient();
   const { data: profile } = await supabase
     .from("profiles")

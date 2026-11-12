@@ -241,11 +241,15 @@ test("repository does not contain published default passwords or privileged pers
     .join("\n");
   const publishedSeedPassword = ["Test", "Gratis", "2026", "!"].join("");
   const privilegedEmailNames = new RegExp(`${["fernando", "laramillan"].join("")}|${["jandry", "38"].join("")}`, "i");
-  const oldContactEmail = new RegExp(`${["faktudash", "gmail"].join("@").replace("@", "@")}\\.com`, "i");
+  const configuredContactEmail = new RegExp(`${["faktudash", "gmail"].join("@")}\\.com`, "i");
 
   assert.doesNotMatch(combined, new RegExp(publishedSeedPassword.replace("!", "\\!")));
   assert.doesNotMatch(combined, privilegedEmailNames);
-  assert.doesNotMatch(combined, oldContactEmail);
+  // The owner authorized this public mailbox. Documentation may identify it;
+  // application code must still obtain the address from environment configuration.
+  const application = listTextProjectFiles().filter((file) => /\/(app|components|lib)\//.test(file.pathname))
+    .map((file) => readFileSync(file, "utf8")).join("\n");
+  assert.doesNotMatch(application, configuredContactEmail);
   assert.doesNotMatch(readProjectFile(".env.example"), /SEED_FREE_USER_PASSWORD=.+/);
   assert.match(readProjectFile(".env.example"), /SUPER_ADMIN_EMAIL=\r?\n/);
   assert.match(readProjectFile(".env.example"), /LIFETIME_PREMIUM_EMAIL=\r?\n/);
@@ -267,6 +271,7 @@ test("service role stays in server-only modules or node scripts", () => {
         || normalized.endsWith("/.env.example")
         || normalized.endsWith("/README.md")
         || normalized.endsWith("/SECURITY_CLEANUP.md")
+        || normalized.endsWith("/docs/faktudash-entrega-2026-11-09.md")
         || normalized.endsWith("/tests/security-static.test.mjs");
     }),
   );

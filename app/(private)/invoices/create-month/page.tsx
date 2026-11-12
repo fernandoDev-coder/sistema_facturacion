@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { randomUUID } from "node:crypto";
 import { buttonClass } from "@/components/button-styles";
 import { CreateMonthForm } from "@/components/create-month-form";
 import { Message } from "@/components/message";
@@ -51,6 +52,7 @@ export default async function CreateMonthPage({
         </section>
       ) : communities?.length ? (
         <CreateMonthForm
+          operationId={randomUUID()}
           communities={communities}
           existingInvoices={existingInvoices ?? []}
           initialMonth={month}

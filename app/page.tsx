@@ -47,8 +47,8 @@ export default async function HomePage() {
               <Link href="/register" className={buttonClass({ variant: "primary", size: "full", className: "sm:w-auto" })}>
                 {t.common.createFreeAccount}
               </Link>
-              <Link href="/pricing" className={buttonClass({ variant: "secondary", size: "full", className: "sm:w-auto" })}>
-                {t.common.viewPlans}
+              <Link href="/demo" className={buttonClass({ variant: "secondary", size: "full", className: "sm:w-auto" })}>
+                {locale === "es" ? "Probar la demo" : "Try the demo"}
               </Link>
             </div>
           </div>
@@ -102,7 +102,7 @@ export default async function HomePage() {
 
       <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-12 lg:px-8">
         <h2 className="text-2xl font-semibold text-zinc-950">{t.home.useCasesTitle}</h2>
-        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-5 grid gap-3 sm:grid-cols-2">
           {t.home.useCases.map((useCase) => (
             <UseCaseCard key={useCase.title} title={useCase.title} description={useCase.description} />
           ))}
@@ -123,13 +123,14 @@ export default async function HomePage() {
       </section>
 
       <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-12 lg:px-8">
-        <figure className="max-w-3xl rounded-xl border border-zinc-200 bg-white p-6 shadow-sm sm:p-8">
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-blue-700">{t.home.testimonialEyebrow}</p>
-          <blockquote className="mt-4 text-xl font-medium leading-8 text-zinc-900 sm:text-2xl">
-            “{t.home.testimonialQuote}”
-          </blockquote>
-          <figcaption className="mt-4 text-sm text-zinc-600">{t.home.testimonialAuthor}</figcaption>
-        </figure>
+        <div className="max-w-3xl border-t border-zinc-200 pt-8" data-reveal>
+          <h2 className="text-2xl font-semibold">{locale === "es" ? "Prueba un cierre mensual" : "Try a monthly closing"}</h2>
+          <p className="mt-4 leading-7 text-zinc-600">{locale === "es" ? "Tres comunidades, una cuota con un extra y una comunidad omitida. Revisa las bases, los impuestos y el total de los borradores en la demo Premium con datos ficticios." : "Three communities, one fee with an extra and one community left out. Review the bases, taxes and draft totals in the Premium demo with fictional data."}</p>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Link href="/register" className={buttonClass({ variant: "primary" })}>{t.common.createFreeAccount}</Link>
+            <Link href="/demo" className={buttonClass({ variant: "secondary" })}>{locale === "es" ? "Probar la demo" : "Try the demo"}</Link>
+          </div>
+        </div>
       </section>
 
       <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-12 lg:px-8">
@@ -147,7 +148,7 @@ export default async function HomePage() {
 
 function InvoicePreview({ copy }: { copy: ReturnType<typeof getDictionary>["home"] }) {
   return (
-    <div className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm sm:p-6">
+    <div className="rounded-lg border border-zinc-200 bg-white p-4 sm:p-6">
       <div className="flex items-start justify-between gap-4 border-b border-zinc-200 pb-5">
         <div className="flex min-w-0 items-start gap-3">
           <Image

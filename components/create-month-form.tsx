@@ -12,7 +12,7 @@ type ExistingInvoiceKey = {
   year: number;
 };
 
-type CreateMonthLabels = {
+export type CreateMonthLabels = {
   previewTitle: string;
   selectedFor: string;
   alreadyHaveInvoice: string;
@@ -32,7 +32,7 @@ type CreateMonthLabels = {
 };
 
 type CreateMonthFormProps = {
-  communities: Community[];
+  communities: Pick<Community, "id" | "name" | "default_subject" | "default_vat">[];
   existingInvoices: ExistingInvoiceKey[];
   initialMonth: number;
   initialYear: number;
@@ -40,6 +40,10 @@ type CreateMonthFormProps = {
   months?: readonly string[];
   monthLabel?: string;
   yearLabel?: string;
+  operationId?: string;
+  initialAmounts?: Record<string, number>;
+  initiallyExcluded?: string[];
+  onSimulate?: (data: FormData) => void;
 };
 
 const defaultLabels: CreateMonthLabels = {
@@ -47,7 +51,7 @@ const defaultLabels: CreateMonthLabels = {
   selectedFor: "clientes seleccionados para",
   alreadyHaveInvoice: "ya tienen factura en ese mes.",
   selectOne: "Selecciona al menos un cliente.",
-  duplicatesConfirm: "Ya existen facturas para algún cliente seleccionado en ese mes. ¿Quieres crear duplicados?",
+  duplicatesConfirm: "Ya existen facturas para algún cliente seleccionado en ese mes. ¿Quieres crear facturas adicionales?",
   createConfirmStart: "Vas a crear",
   createConfirmEnd: "facturas en borrador. ¿Quieres continuar?",
   include: "Incluir",
@@ -70,10 +74,14 @@ export function CreateMonthForm({
   months = defaultMonthNames,
   monthLabel = "Mes",
   yearLabel = "Año",
+  operationId,
+  initialAmounts = {},
+  initiallyExcluded = [],
+  onSimulate,
 }: CreateMonthFormProps) {
   const [month, setMonth] = useState(initialMonth);
   const [year, setYear] = useState(initialYear);
-  const [selected, setSelected] = useState(() => new Set(communities.map((community) => community.id)));
+  const [selected, setSelected] = useState(() => new Set(communities.map((community) => community.id).filter((id) => !initiallyExcluded.includes(id))));
   const [confirmDuplicates, setConfirmDuplicates] = useState("no");
 
   const duplicateKeys = useMemo(
@@ -89,8 +97,13 @@ export function CreateMonthForm({
 
   return (
     <form
-      action={createMonthlyInvoicesAction}
+      action={onSimulate ? undefined : createMonthlyInvoicesAction}
       onSubmit={(event) => {
+        if (onSimulate) {
+          event.preventDefault();
+          onSimulate(new FormData(event.currentTarget));
+          return;
+        }
         const duplicates = selectedIds.filter(hasDuplicate);
 
         if (selectedIds.length === 0) {
@@ -118,11 +131,13 @@ export function CreateMonthForm({
 
         if (!accepted) {
           event.preventDefault();
+          setConfirmDuplicates("no");
         }
       }}
       className="space-y-6"
     >
       <input type="hidden" name="confirm_duplicates" value={confirmDuplicates} />
+      <input type="hidden" name="operation_id" value={operationId ?? ""} />
       <section className="rounded-md border border-blue-200 bg-blue-50 p-4 text-sm text-blue-950">
         <p className="font-semibold">{labels.previewTitle}</p>
         <p className="mt-1">
@@ -155,6 +170,9 @@ export function CreateMonthForm({
           <input
             name="year"
             type="number"
+            min={2000}
+            max={2200}
+            required
             value={year}
             onChange={(event) => {
               setYear(Number(event.target.value));
@@ -179,12 +197,13 @@ export function CreateMonthForm({
           <tbody className="block divide-y divide-zinc-100 sm:table-row-group">
             {communities.map((community) => (
               <tr key={community.id} className={`block p-4 sm:table-row sm:p-0 ${hasDuplicate(community.id) ? "bg-amber-50/60" : ""}`}>
-                <td className="block align-top sm:w-14 sm:px-4 sm:py-3">
+                <td className="block align-top sm:table-cell sm:w-14 sm:px-4 sm:py-3">
                   <label className="flex items-start gap-3 sm:block">
                     <input
                       type="checkbox"
                       name="include"
                       value={community.id}
+                      aria-label={`${labels.include}: ${community.name}`}
                       checked={selected.has(community.id)}
                       onChange={(event) => {
                         const next = new Set(selected);
@@ -198,37 +217,42 @@ export function CreateMonthForm({
                     <span className="text-sm font-medium text-zinc-800 sm:hidden">{labels.include}</span>
                   </label>
                 </td>
-                <td className="mt-3 block align-top sm:mt-0 sm:px-4 sm:py-3">
+                <td className="mt-3 block align-top sm:table-cell sm:mt-0 sm:px-4 sm:py-3">
                   <p className="break-words font-medium text-zinc-900">{community.name}</p>
                   {hasDuplicate(community.id) ? (
                     <p className="mt-1 text-xs text-amber-700">{labels.duplicate}</p>
                   ) : null}
                 </td>
-                <td className="mt-3 block align-top sm:mt-0 sm:px-4 sm:py-3">
+                <td className="mt-3 block align-top sm:table-cell sm:mt-0 sm:px-4 sm:py-3">
                   <span className="mb-1 block text-sm font-medium text-zinc-800 sm:hidden">{labels.concept}</span>
                   <textarea
                     key={`${community.id}-${month}-${year}`}
                     name={`subject_${community.id}`}
+                    aria-label={`${labels.concept}: ${community.name}`}
+                    required
+                    maxLength={2000}
                     defaultValue={community.default_subject ?? `${labels.monthlyService} ${months[month - 1]} ${year}`}
                     rows={3}
                     className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm leading-6"
                   />
                 </td>
-                <td className="mt-3 block align-top sm:mt-0 sm:w-36 sm:px-4 sm:py-3">
+                <td className="mt-3 block align-top sm:table-cell sm:mt-0 sm:w-36 sm:px-4 sm:py-3">
                   <span className="mb-1 block text-sm font-medium text-zinc-800 sm:hidden">{labels.base}</span>
                   <input
                     name={`amount_${community.id}`}
+                    aria-label={`${labels.base}: ${community.name}`}
                     type="text"
                     inputMode="decimal"
-                    defaultValue="0"
+                    defaultValue={initialAmounts[community.id] ?? 0}
                     placeholder="0,00"
                     className="min-h-11 w-full rounded-md border border-zinc-300 px-3 text-sm"
                   />
                 </td>
-                <td className="mt-3 block align-top sm:mt-0 sm:w-28 sm:px-4 sm:py-3">
+                <td className="mt-3 block align-top sm:table-cell sm:mt-0 sm:w-28 sm:px-4 sm:py-3">
                   <span className="mb-1 block text-sm font-medium text-zinc-800 sm:hidden">{labels.vat}</span>
                   <input
                     name={`vat_${community.id}`}
+                    aria-label={`${labels.vat}: ${community.name}`}
                     type="text"
                     inputMode="decimal"
                     defaultValue={community.default_vat ?? 21}

@@ -31,7 +31,7 @@ export function PasswordField({
           minLength={minLength}
           autoComplete={autoComplete}
           required
-          className="min-h-11 min-w-0 flex-1 rounded-l-md px-3 text-sm outline-none"
+          className="min-h-11 min-w-0 flex-1 rounded-l-md px-3 text-sm"
         />
         <button
           type="button"

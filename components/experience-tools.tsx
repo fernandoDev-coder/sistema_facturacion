@@ -30,13 +30,15 @@ type Theme = "light" | "dark";
 
 const THEME_KEY = "faktudash-theme";
 
-export function ExperienceTools({ labels }: { labels: ExperienceLabels }) {
+export function ExperienceTools({ labels, publicUrl }: { labels: ExperienceLabels; publicUrl: string }) {
   const router = useRouter();
   const [theme, setTheme] = useState<Theme>("light");
   const [toolsOpen, setToolsOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [notice, setNotice] = useState("");
+  const [showTop, setShowTop] = useState(false);
+  const paletteRef = useRef<HTMLElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const scrollFrameRef = useRef<number | null>(null);
 
@@ -58,7 +60,8 @@ export function ExperienceTools({ labels }: { labels: ExperienceLabels }) {
   );
 
   useEffect(() => {
-    const saved = window.localStorage.getItem(THEME_KEY);
+    let saved: string | null = null;
+    try { saved = window.localStorage.getItem(THEME_KEY); } catch { /* Optional preference. */ }
     const nextTheme: Theme = saved === "dark" || saved === "light"
       ? saved
       : window.matchMedia("(prefers-color-scheme: dark)").matches
@@ -80,23 +83,33 @@ export function ExperienceTools({ labels }: { labels: ExperienceLabels }) {
       const nextTheme = current === "dark" ? "light" : "dark";
       document.documentElement.dataset.theme = nextTheme;
       document.documentElement.style.colorScheme = nextTheme;
-      window.localStorage.setItem(THEME_KEY, nextTheme);
+      try { window.localStorage.setItem(THEME_KEY, nextTheme); } catch { /* Theme still works. */ }
       return nextTheme;
     });
   }, []);
 
   useEffect(() => {
     if (!paletteOpen) return;
+    const previous = document.activeElement as HTMLElement | null;
     const frame = window.requestAnimationFrame(() => searchRef.current?.focus());
-    return () => window.cancelAnimationFrame(frame);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      previous?.focus();
+    };
   }, [paletteOpen]);
+
+  useEffect(() => {
+    const onScroll = () => setShowTop(window.scrollY > 400);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null;
       const isEditing = target?.matches("input, textarea, select, [contenteditable='true']");
 
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+      if (!isEditing && (event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
         event.preventDefault();
         setPaletteOpen((current) => !current);
         setToolsOpen(false);
@@ -134,7 +147,10 @@ export function ExperienceTools({ labels }: { labels: ExperienceLabels }) {
 
   async function sharePage() {
     setToolsOpen(false);
-    const shareData = { title: document.title, url: window.location.href };
+    const es = document.documentElement.lang === "es";
+    const publicPaths = ["/", "/contact", "/pricing", "/demo"];
+    const path = publicPaths.includes(window.location.pathname) ? window.location.pathname : "/";
+    const shareData = { title: "FaktuDash", url: new URL(path, publicUrl).href };
     try {
       if (navigator.share) {
         await navigator.share(shareData);
@@ -144,7 +160,9 @@ export function ExperienceTools({ labels }: { labels: ExperienceLabels }) {
         setNotice(labels.copied);
       }
     } catch (error) {
-      if ((error as DOMException).name !== "AbortError") setNotice(labels.copied);
+      setNotice((error as DOMException).name === "AbortError"
+        ? (es ? "Compartir cancelado." : "Sharing cancelled.")
+        : (es ? "No se pudo compartir ni copiar el enlace." : "Could not share or copy the link."));
     }
     window.setTimeout(() => setNotice(""), 2200);
   }
@@ -198,10 +216,9 @@ export function ExperienceTools({ labels }: { labels: ExperienceLabels }) {
 
       <div className="experience-tools print:hidden">
         {toolsOpen ? (
-          <div className="tool-menu" role="menu" aria-label={labels.tools}>
+          <div className="tool-menu" aria-label={labels.tools}>
             <button
               type="button"
-              role="menuitem"
               onClick={() => {
                 setToolsOpen(false);
                 setPaletteOpen(true);
@@ -213,7 +230,6 @@ export function ExperienceTools({ labels }: { labels: ExperienceLabels }) {
             </button>
             <button
               type="button"
-              role="menuitem"
               onClick={() => {
                 toggleTheme();
                 setToolsOpen(false);
@@ -223,7 +239,7 @@ export function ExperienceTools({ labels }: { labels: ExperienceLabels }) {
               <span>{theme === "dark" ? labels.lightMode : labels.darkMode}</span>
               <kbd>Alt T</kbd>
             </button>
-            <button type="button" role="menuitem" onClick={sharePage}>
+            <button type="button" onClick={sharePage}>
               <Icon name="share" />
               <span>{labels.share}</span>
             </button>
@@ -231,7 +247,7 @@ export function ExperienceTools({ labels }: { labels: ExperienceLabels }) {
         ) : null}
 
         <div className="tool-fab-row">
-          <button
+          {showTop ? <button
             type="button"
             className="tool-fab tool-fab-secondary"
             aria-label={labels.backToTop}
@@ -239,7 +255,7 @@ export function ExperienceTools({ labels }: { labels: ExperienceLabels }) {
             onClick={scrollToTop}
           >
             <Icon name="arrowUp" />
-          </button>
+          </button> : null}
           <button
             type="button"
             className="tool-fab"
@@ -255,11 +271,24 @@ export function ExperienceTools({ labels }: { labels: ExperienceLabels }) {
       {paletteOpen ? (
         <div className="command-backdrop print:hidden" role="presentation" onMouseDown={() => setPaletteOpen(false)}>
           <section
+            ref={paletteRef}
             className="command-palette"
             role="dialog"
             aria-modal="true"
             aria-label={labels.commandPalette}
             onMouseDown={(event) => event.stopPropagation()}
+            onKeyDown={(event) => {
+              const controls = Array.from(paletteRef.current?.querySelectorAll<HTMLElement>("input, button") ?? []);
+              const index = controls.indexOf(document.activeElement as HTMLElement);
+              if (event.key === "Tab") {
+                event.preventDefault();
+                controls[(index + (event.shiftKey ? -1 : 1) + controls.length) % controls.length]?.focus();
+              }
+              if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+                event.preventDefault();
+                controls[(index + (event.key === "ArrowUp" ? -1 : 1) + controls.length) % controls.length]?.focus();
+              }
+            }}
           >
             <div className="command-search">
               <Icon name="search" />
@@ -275,23 +304,12 @@ export function ExperienceTools({ labels }: { labels: ExperienceLabels }) {
             <div className="command-results">
               <p className="command-group-label">{labels.navigation}</p>
               {filteredCommands.length ? (
-                filteredCommands.map((command, index) => (
+                filteredCommands.map((command) => (
                   <button
                     key={command.href}
                     type="button"
                     className="command-item"
                     onClick={() => runCommand(command.href)}
-                    onKeyDown={(event) => {
-                      if (event.key === "ArrowDown") {
-                        event.preventDefault();
-                        (event.currentTarget.nextElementSibling as HTMLButtonElement | null)?.focus();
-                      }
-                      if (event.key === "ArrowUp") {
-                        event.preventDefault();
-                        (event.currentTarget.previousElementSibling as HTMLButtonElement | null)?.focus();
-                      }
-                    }}
-                    autoFocus={index === 0 && Boolean(query)}
                   >
                     <span>{command.label}</span>
                     {command.shortcut ? <kbd>{command.shortcut}</kbd> : null}
@@ -306,7 +324,7 @@ export function ExperienceTools({ labels }: { labels: ExperienceLabels }) {
         </div>
       ) : null}
 
-      <p className="sr-only" aria-live="polite">{notice}</p>
+      <p className={notice ? "tool-notice" : "sr-only"} role="status">{notice}</p>
     </>
   );
 }

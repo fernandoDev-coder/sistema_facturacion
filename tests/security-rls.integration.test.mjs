@@ -11,7 +11,12 @@ const requiredEnv = [
   "SECURITY_TEST_USER_B_PASSWORD",
 ];
 
-const hasIntegrationEnv = requiredEnv.every((key) => process.env[key]);
+const testRef = process.env.SECURITY_TEST_PROJECT_REF;
+const productionRef = process.env.SECURITY_TEST_PRODUCTION_PROJECT_REF;
+const configuredRef = process.env.NEXT_PUBLIC_SUPABASE_URL ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname.split(".")[0] : undefined;
+const hasIntegrationEnv = requiredEnv.every((key) => process.env[key])
+  && process.env.APP_ENV === "test" && process.env.SECURITY_TEST_ALLOW_WRITES === "true"
+  && Boolean(testRef && productionRef && testRef !== productionRef && testRef === configuredRef);
 const integrationTest = hasIntegrationEnv ? test : test.skip;
 const { createClient } = hasIntegrationEnv ? await import("@supabase/supabase-js") : { createClient: null };
 

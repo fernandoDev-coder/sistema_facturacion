@@ -1,19 +1,22 @@
+import { EnglishLegalPage } from "@/components/english-legal-page";
+import { getLocale } from "@/lib/i18n";
 import { LegalPage, LegalSection } from "@/components/legal-page";
-import { contactEmails } from "@/lib/beta-config";
+import { contactEmails, contactHref } from "@/lib/beta-config";
 
-export default function LegalNoticePage() {
+export default async function LegalNoticePage() {
+  if (await getLocale() === "en") return <EnglishLegalPage kind="notice" />;
   return (
-    <LegalPage title="Aviso legal" updatedAt="Junio 2026">
+    <LegalPage title="Aviso legal" updatedAt="Noviembre 2026">
       <LegalSection title="Estado del servicio">
         <p>
-          FaktuDash se encuentra en fase beta privada y pre-lanzamiento comercial. El acceso al servicio esta limitado
-          a usuarios invitados o aceptados para validar el producto antes de su apertura publica.
+          FaktuDash se encuentra en fase beta previa al lanzamiento comercial. El acceso gratuito comienza con el
+          registro y la confirmación del email. El acceso anticipado a Pro y Premium se solicita por correo.
         </p>
       </LegalSection>
       <LegalSection title="Informacion de contacto">
         <p>
           Nombre comercial: FaktuDash. Dominio principal: https://www.faktudash.com. Para cuestiones legales puedes
-          escribir a <a href={`mailto:${contactEmails.legal}`}>{contactEmails.legal}</a>.
+          escribir a <a href={contactHref(contactEmails.legal)}>{contactEmails.legal}</a>.
         </p>
       </LegalSection>
       <LegalSection title="Objeto">

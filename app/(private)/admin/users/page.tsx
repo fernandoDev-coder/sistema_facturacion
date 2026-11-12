@@ -4,6 +4,7 @@ import type { Locale } from "@/lib/i18n-config";
 import { getCurrentProfile } from "@/lib/profiles";
 import { createClient, requireUser } from "@/lib/supabase/server";
 import type { ProfilePlan } from "@/lib/types";
+import { enforceActionLimit } from "@/lib/rate-limit";
 
 type AdminLabels = ReturnType<typeof getDictionary>["pages"]["admin"];
 
@@ -24,12 +25,13 @@ type AdminUser = {
 };
 
 export default async function AdminUsersPage() {
-  await requireUser();
+  const user = await requireUser();
   const profile = await getCurrentProfile();
 
   if (!profile?.is_super_admin) {
     redirect("/dashboard");
   }
+  await enforceActionLimit("admin", user.id, "/dashboard");
 
   const locale = await getLocale();
   const t = getDictionary(locale).pages.admin;
@@ -64,7 +66,7 @@ export default async function AdminUsersPage() {
       </section>
 
       <section className="grid gap-4 lg:grid-cols-[1fr_360px]">
-        <div className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
+        <div className="rounded-lg border border-zinc-200 bg-white p-5">
           <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="text-lg font-semibold text-zinc-950">{t.plans}</h2>
@@ -82,7 +84,7 @@ export default async function AdminUsersPage() {
           </div>
         </div>
 
-        <div className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
+        <div className="rounded-lg border border-zinc-200 bg-white p-5">
           <h2 className="text-lg font-semibold text-zinc-950">{t.recentUsers}</h2>
           <div className="mt-4 space-y-3">
             {recentUsers.map((user) => (
@@ -98,7 +100,7 @@ export default async function AdminUsersPage() {
         </div>
       </section>
 
-      <section className="rounded-lg border border-zinc-200 bg-white shadow-sm">
+      <section className="rounded-lg border border-zinc-200 bg-white">
         <div className="border-b border-zinc-200 px-5 py-4">
           <h2 className="text-lg font-semibold text-zinc-950">{t.users}</h2>
           <p className="mt-1 text-sm text-zinc-500">{t.usersTableDescription}</p>
@@ -200,7 +202,7 @@ async function getAdminUsers(supabase: Awaited<ReturnType<typeof createClient>>)
 
 function Metric({ label, value, hint }: { label: string; value: string; hint: string }) {
   return (
-    <div className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
+    <div className="rounded-lg border border-zinc-200 bg-white p-5">
       <p className="text-sm text-zinc-500">{label}</p>
       <p className="mt-2 text-2xl font-semibold text-zinc-950">{value}</p>
       <p className="mt-1 text-xs text-zinc-500">{hint}</p>

@@ -111,7 +111,7 @@ export default async function BillingSettingsPage({
           />
         </div>
 
-        <div className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
+        <div className="rounded-lg border border-zinc-200 bg-white p-5">
           <p className="text-sm text-zinc-600">{t.pages.billing.currentStatus}</p>
           <p className="mt-1 text-lg font-semibold text-zinc-950">
             {hasPaidPlan ? `${getPlanLabel(effectivePlan, t.pages.billing.premiumTitle)} ${t.pages.billing.activeSuffix}` : t.pages.billing.freePlan}
@@ -145,7 +145,7 @@ export default async function BillingSettingsPage({
 
 function Metric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
+    <div className="rounded-lg border border-zinc-200 bg-white p-5">
       <p className="text-sm text-zinc-500">{label}</p>
       <p className="mt-2 text-2xl font-semibold text-zinc-950">{value}</p>
     </div>
@@ -174,7 +174,7 @@ function PaidPlanCard({
   highlighted?: boolean;
 }) {
   return (
-    <article className={`rounded-lg border bg-white p-5 shadow-sm ${highlighted ? "border-blue-300" : "border-zinc-200"}`}>
+    <article className={`rounded-lg border bg-white p-5  ${highlighted ? "border-blue-300" : "border-zinc-200"}`}>
       <h2 className="text-lg font-semibold text-zinc-950">{name}</h2>
       <p className="mt-3 text-2xl font-semibold leading-tight">{price}</p>
       <p className="mt-2 text-sm leading-6 text-zinc-600">{description}</p>

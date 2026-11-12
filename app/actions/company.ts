@@ -1,5 +1,7 @@
 "use server";
 
+import { enforceActionLimit } from "@/lib/rate-limit";
+
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -27,6 +29,7 @@ const allowedLogoTypes = {
 
 export async function saveCompanySettingsAction(formData: FormData) {
   const user = await requireUser();
+  await enforceActionLimit("mutation", user.id, "/dashboard");
   const supabase = await createClient();
   const taxId = cleanTaxId(nullableText(formData.get("tax_id")));
   const postalCode = cleanPostalCode(nullableText(formData.get("postal_code")));

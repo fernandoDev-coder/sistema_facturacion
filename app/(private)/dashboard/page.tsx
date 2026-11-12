@@ -198,7 +198,7 @@ function Metric({
   warn?: boolean;
 }) {
   return (
-    <div className={`rounded-lg border bg-white p-5 shadow-sm ${warn ? "border-amber-300" : "border-zinc-200"}`}>
+    <div className={`rounded-lg border bg-white p-5  ${warn ? "border-amber-300" : "border-zinc-200"}`}>
       <p className="text-sm text-zinc-500">{label}</p>
       <p className="mt-2 text-3xl font-semibold text-zinc-950">{value}</p>
       {hint ? <p className="mt-1 text-xs text-zinc-500">{hint}</p> : null}
@@ -216,7 +216,7 @@ function QuickLink({
   variant: ButtonVariant;
 }) {
   return (
-    <Link href={href} className={buttonClass({ variant, size: "full", className: "justify-center shadow-sm sm:justify-start" })}>
+    <Link href={href} className={buttonClass({ variant, size: "full", className: "justify-center  sm:justify-start" })}>
       {label}
     </Link>
   );
@@ -240,7 +240,7 @@ function RecentDocuments({
   unnamedClient: string;
 }) {
   return (
-    <section className="rounded-lg border border-zinc-200 bg-white shadow-sm">
+    <section className="rounded-lg border border-zinc-200 bg-white">
       <div className="border-b border-zinc-200 px-5 py-4">
         <h2 className="font-semibold text-zinc-950">{title}</h2>
       </div>

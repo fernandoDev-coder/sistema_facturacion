@@ -157,7 +157,7 @@ export default async function InvoicesPage({
       {invoices.length ? (
         <div className="grid gap-3 sm:hidden">
           {invoices.map((invoice) => (
-            <article key={invoice.id} className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
+            <article key={invoice.id} className="rounded-lg border border-zinc-200 bg-white p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <h2 className="break-words text-base font-semibold text-zinc-950">{invoice.invoice_number}</h2>

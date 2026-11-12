@@ -66,6 +66,9 @@ for (const remember of [false, true]) {
     const activeWrites = f.writes.filter(({ name, value }) => name.startsWith("sb-") && value);
     assert.ok(activeWrites.length > 0);
     for (const { options } of activeWrites) {
+      assert.equal(options.httpOnly, true);
+      assert.equal(options.sameSite, "lax");
+      assert.equal(options.path, "/");
       if (remember) assert.ok(options.maxAge > 0);
       else {
         assert.equal(options.maxAge, undefined);
@@ -86,6 +89,23 @@ for (const remember of [false, true]) {
     }
   });
 }
+
+test("HTTPS auth cookies are Secure and HttpOnly, including fragmented deletes", () => {
+  const previous = process.env.NEXT_PUBLIC_SITE_URL;
+  process.env.NEXT_PUBLIC_SITE_URL = "https://app.example.test";
+  try {
+    let written;
+    sessionCookies({ getAll: () => [], setAll: (cookies) => { written = cookies; } }, false).setAll([
+      { name: "sb-test-auth-token.0", value: "synthetic", options: { httpOnly: false, secure: false, sameSite: "none" } },
+      { name: "sb-test-auth-token.1", value: "", options: {} },
+    ]);
+    for (const cookie of written) { assert.equal(cookie.options.httpOnly, true); assert.equal(cookie.options.secure, true); }
+    assert.equal(written[1].options.maxAge, 0);
+  } finally {
+    if (previous === undefined) delete process.env.NEXT_PUBLIC_SITE_URL;
+    else process.env.NEXT_PUBLIC_SITE_URL = previous;
+  }
+});
 
 test("PKCE callback removes the verifier and retains session-only cookies", async () => {
   const f = fixture();

@@ -196,7 +196,7 @@ export function InvoiceForm({
             required
             value={communityId}
             onChange={(event) => handleCommunityChange(event.target.value)}
-            className="mt-1 min-h-11 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
+            className="mt-1 min-h-11 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm focus:border-slate-900"
           >
             {communities.map((community) => (
               <option key={community.id} value={community.id}>
@@ -225,7 +225,7 @@ export function InvoiceForm({
             name="month"
             required
             defaultValue={invoice?.month ?? new Date().getMonth() + 1}
-            className="mt-1 min-h-11 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
+            className="mt-1 min-h-11 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm focus:border-slate-900"
           >
             {months.map((name, index) => (
               <option key={name} value={index + 1}>
@@ -249,7 +249,7 @@ export function InvoiceForm({
             <select
               name="status"
               defaultValue={invoice?.status ?? "draft"}
-              className="mt-1 min-h-11 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
+              className="mt-1 min-h-11 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm focus:border-slate-900"
             >
               {availableStatuses.map((status) => (
                 <option key={status.value} value={status.value}>
@@ -283,7 +283,7 @@ export function InvoiceForm({
                   rows={3}
                   value={item.description}
                   onChange={(event) => updateItem(index, { description: event.target.value })}
-                  className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
+                  className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm focus:border-slate-900"
                 />
               </label>
               <label className="block">
@@ -296,7 +296,7 @@ export function InvoiceForm({
                   value={item.amount}
                   onChange={(event) => updateItem(index, { amount: event.target.value })}
                   placeholder="0,00"
-                  className="mt-1 min-h-11 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
+                  className="mt-1 min-h-11 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm focus:border-slate-900"
                 />
               </label>
               <label className="block">
@@ -309,7 +309,7 @@ export function InvoiceForm({
                   value={item.vat_rate}
                   onChange={(event) => updateItem(index, { vat_rate: event.target.value })}
                   placeholder="21"
-                  className="mt-1 min-h-11 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
+                  className="mt-1 min-h-11 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm focus:border-slate-900"
                 />
               </label>
               <div className="flex items-end">
@@ -339,7 +339,7 @@ export function InvoiceForm({
           name="notes"
           defaultValue={invoice?.notes ?? ""}
           rows={4}
-          className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
+          className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm focus:border-slate-900"
         />
       </label>
 
@@ -373,7 +373,7 @@ function Field({
       <input
         name={name}
         defaultValue={defaultValue ?? ""}
-        className="mt-1 min-h-11 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
+        className="mt-1 min-h-11 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm focus:border-slate-900"
         {...props}
       />
     </label>

@@ -5,9 +5,9 @@ import { ContactForm } from "@/components/contact-form";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { LegalFooter } from "@/components/legal-footer";
 import { SocialShareButtons } from "@/components/social-share-buttons";
-import { contactEmails } from "@/lib/beta-config";
+import { contactEmails, contactHref } from "@/lib/beta-config";
 import { getDictionary, getLocale } from "@/lib/i18n";
-import { getAbsoluteUrl } from "@/lib/site-url";
+import { getPublicShareUrl } from "@/lib/site-url";
 
 export default async function ContactPage() {
   const locale = await getLocale();
@@ -31,15 +31,15 @@ export default async function ContactPage() {
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-blue-700">{copy.eyebrow}</p>
             <h1 className="mt-3 text-3xl font-semibold leading-tight sm:text-5xl">{copy.title}</h1>
             <p className="mt-4 max-w-lg leading-7 text-zinc-600">{copy.description}</p>
-            <a href={`mailto:${contactEmails.support}`} className="mt-5 inline-block font-medium text-blue-700 hover:underline">
+            <a href={contactHref(contactEmails.support)} className="mt-5 inline-block font-medium text-blue-700 hover:underline">
               {contactEmails.support}
             </a>
             <div className="mt-8">
-              <SocialShareButtons label={copy.share} url={getAbsoluteUrl("/contact")} title="FaktuDash" />
+              <SocialShareButtons label={copy.share} url={getPublicShareUrl("/contact")} title="FaktuDash" />
             </div>
           </div>
 
-          <section className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm sm:p-7" aria-labelledby="contact-form-title">
+          <section className="rounded-xl border border-zinc-200 bg-white p-5 sm:p-7" aria-labelledby="contact-form-title">
             <h2 id="contact-form-title" className="text-xl font-semibold">{copy.formTitle}</h2>
             <p className="mt-2 text-sm leading-6 text-zinc-600">{copy.formHelp}</p>
             <div className="mt-6">

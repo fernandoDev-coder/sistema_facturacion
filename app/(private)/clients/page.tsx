@@ -45,7 +45,7 @@ export default async function ClientsPage({
       {clients?.length ? (
         <div className="grid gap-3 sm:hidden">
           {clients.map((client) => (
-            <article key={client.id} className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
+            <article key={client.id} className="rounded-lg border border-zinc-200 bg-white p-4">
               <div className="min-w-0">
                 <h2 className="break-words text-base font-semibold text-zinc-950">{client.name}</h2>
                 <dl className="mt-3 grid gap-2 text-sm">

@@ -27,7 +27,7 @@ export function PricingCard({
   recommendedLabel?: string;
 }) {
   return (
-    <article className={`rounded-lg border bg-white p-5 shadow-sm sm:p-6 ${highlighted ? "border-blue-300 ring-2 ring-blue-100" : "border-zinc-200"}`}>
+    <article className={`rounded-lg border bg-white p-5  sm:p-6 ${highlighted ? "border-blue-300 ring-2 ring-blue-100" : "border-zinc-200"}`}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3 className="text-xl font-semibold text-zinc-950">{name}</h3>
